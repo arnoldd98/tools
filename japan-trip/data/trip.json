@@ -1,0 +1,44 @@
+{
+  "title": "Japan Trip — Okinawa & Kansai",
+  "days": [
+    {
+      "id": "d1",
+      "date": "2026-12-01",
+      "city": "Naha (Okinawa)",
+      "items": [
+        { "id": "i1", "time": "10:00", "text": "Land at Naha Airport (OKA)", "done": false },
+        { "id": "i2", "time": "15:00", "text": "Check in to hotel", "done": false },
+        { "id": "i3", "time": "", "text": "Walk Kokusai-dori", "done": false }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "d2",
+      "date": "2026-12-02",
+      "city": "Okinawa",
+      "items": [
+        { "id": "i4", "time": "", "text": "Placeholder: replace with your plans", "done": false }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "d3",
+      "date": "2026-12-04",
+      "city": "Osaka",
+      "items": [
+        { "id": "i5", "time": "", "text": "Fly OKA → KIX", "done": false },
+        { "id": "i6", "time": "", "text": "Dotonbori in the evening", "done": false }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "d4",
+      "date": "2026-12-06",
+      "city": "Kyoto",
+      "items": [
+        { "id": "i7", "time": "", "text": "Day trip from Osaka", "done": false }
+      ],
+      "notes": ""
+    }
+  ]
+}

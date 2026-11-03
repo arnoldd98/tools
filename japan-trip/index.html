@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>Japan Trip</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="top-row">
+      <h1 id="title">Japan Trip</h1>
+      <button id="sync-btn" class="btn" title="Save changes to GitHub">Sync</button>
+    </div>
+    <div class="progress"><div id="progress-bar"></div></div>
+    <p id="status" class="muted"></p>
+  </header>
+
+  <main id="days"></main>
+
+  <footer class="bottom">
+    <button class="btn" data-action="add-day">+ Add day</button>
+    <button class="btn" data-action="export">Export JSON</button>
+    <label class="btn">Import JSON<input id="import" type="file" accept="application/json" hidden></label>
+    <button class="btn" data-action="reload">Reload from GitHub</button>
+    <details class="settings">
+      <summary>Sync settings</summary>
+      <form id="settings">
+        <label>Repo owner <input name="owner"></label>
+        <label>Repo name <input name="repo"></label>
+        <label>Branch <input name="branch"></label>
+        <label>Data file path <input name="path"></label>
+        <label>GitHub token (fine-grained, Contents: read &amp; write, this repo only)
+          <input name="token" type="password" autocomplete="off"></label>
+        <button class="btn" type="submit">Save settings</button>
+        <p class="muted">The token is stored only in this browser (localStorage).</p>
+      </form>
+    </details>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
