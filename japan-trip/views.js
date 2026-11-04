@@ -19,6 +19,8 @@ const longDate = (date) => {
   return d ? `${WD[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}` : '';
 };
 
+const dayHref = (id) => `#/day/${esc(encodeURIComponent(id))}`;
+
 const syncBtn = (dirty) =>
   `<button class="btn${dirty ? ' dirty' : ''}" data-action="sync">Sync${dirty ? ' •' : ''}</button>`;
 
@@ -27,7 +29,7 @@ export function renderStrip(days, { today, selectedId, compact } = {}) {
     const dt = parseDate(d.date);
     const done = d.items.filter((i) => i.done).length;
     const cls = `card${d.date && d.date === today ? ' today' : ''}${d.id === selectedId ? ' selected' : ''}`;
-    return `<a class="${cls}" href="#/day/${esc(d.id)}" data-strip="${esc(d.id)}">`
+    return `<a class="${cls}" href="${dayHref(d.id)}" data-strip="${esc(d.id)}">`
       + `<span class="wd">${dt ? WD[dt.getDay()] : '—'}</span><span class="dom">${dt ? dt.getDate() : '?'}</span>`
       + `<span class="city">${esc(d.city)}</span>`
       + `<span class="prog">${d.items.length ? `${done}/${d.items.length}` : ''}</span></a>`;
@@ -41,7 +43,7 @@ export function renderTopRow(route, state, dirty) {
     const idx = days.findIndex((d) => d.id === route.id);
     const day = days[idx];
     const nav = (d, label) => (d
-      ? `<a class="nav" href="#/day/${esc(d.id)}">${label}</a>`
+      ? `<a class="nav" href="${dayHref(d.id)}">${label}</a>`
       : `<span class="nav disabled">${label}</span>`);
     return `<a class="back" href="#/" title="All days">‹</a>`
       + `<span class="when">${esc(longDate(day?.date) || 'Undated')}</span>`
@@ -160,7 +162,7 @@ function renderNow(state, today) {
       : '<p class="what">All done for today</p>';
     return `<section class="now"><p class="eyebrow">Today · ${esc(day.city)}</p>
       ${summary}
-      <div class="actions">${next?.place ? mapsBtn(next.place) : ''}<a class="btn" href="#/day/${esc(day.id)}">Open today</a></div>
+      <div class="actions">${next?.place ? mapsBtn(next.place) : ''}<a class="btn" href="${dayHref(day.id)}">Open today</a></div>
       <p class="eyebrow">Log a spend</p>
       ${renderSpendForm(day.id)}</section>`;
   }

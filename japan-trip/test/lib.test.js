@@ -118,3 +118,15 @@ test('shipped trip.json normalises without change and uses the new fields', () =
   assert.ok(s.days.some((d) => d.spends.length));
   assert.deepEqual(JSON.parse(JSON.stringify(s)), raw, 'seed should already be in normalised shape');
 });
+
+test('normalise gives missing ids unique values', () => {
+  const s = normalise({ days: [{ items: [{ text: 'a' }, { text: 'b' }, { id: 'keep', text: 'c' }], spends: [{ yen: 1 }, { yen: 2 }] }, {}] });
+  const ids = [...s.days.map((d) => d.id), ...s.days[0].items.map((i) => i.id), ...s.days[0].spends.map((x) => x.id)];
+  assert.ok(ids.every(Boolean), 'no empty ids');
+  assert.equal(new Set(ids).size, ids.length, 'ids unique');
+  assert.equal(s.days[0].items[2].id, 'keep');
+});
+test('parseRoute survives malformed escapes', () => {
+  assert.deepEqual(parseRoute('#/day/%'), { view: 'home' });
+  assert.deepEqual(parseRoute('#/day/50%25'), { view: 'day', id: '50%' });
+});

@@ -108,3 +108,12 @@ test('renderView falls back to home for unknown day', () => {
   assert.equal(renderView({ view: 'day', id: 'nope' }, legacyState, '2026-11-04'), renderView({ view: 'home' }, legacyState, '2026-11-04'));
   assert.match(renderView({ view: 'money' }, legacyState, '2026-11-04'), /Rate:/);
 });
+
+test('day links URL-encode ids', () => {
+  const ds = [{ id: '50%', date: '2026-12-01', city: 'A', items: [], spends: [], notes: '' },
+    { id: 'a b', date: '2026-12-02', city: 'B', items: [], spends: [], notes: '' }];
+  assert.match(renderStrip(ds, { today: '' }), /href="#\/day\/50%25"/);
+  assert.match(renderTopRow({ view: 'day', id: '50%' }, { title: 'T', days: ds }, false), /href="#\/day\/a%20b"/);
+  const st = normalise({ days: ds.map((d) => ({ ...d, date: '2026-12-01' })).slice(0, 1) });
+  assert.match(renderHome(st, '2026-12-01'), /href="#\/day\/50%25">Open today/);
+});

@@ -126,7 +126,8 @@ let lastRouteKey = null;
 function render() {
   const route = parseRoute(location.hash);
   if (route.view === 'day' && !findDay(route.id)) {
-    if (location.hash !== '#/') { location.hash = '#/'; return; } // hashchange re-renders
+    // replace, not assign: a dead #/day/<id> entry must not trap the Back button
+    if (location.hash !== '#/') { location.replace('#/'); return; } // hashchange re-renders
   }
   document.title = state.title || 'Japan Trip';
 
@@ -201,12 +202,14 @@ document.addEventListener('click', (e) => {
     day.items = day.items.filter((i) => i.id !== itemId); commit();
   } else if (action === 'del-spend') {
     const spendId = e.target.closest('[data-spend]')?.dataset.spend;
-    for (const d of state.days) d.spends = d.spends.filter((s) => s.id !== spendId);
+    if (!day) return;
+    day.spends = day.spends.filter((s) => s.id !== spendId);
     commit();
   } else if (action === 'del-day') {
     if (el.dataset.confirm) {
-      state.days = state.days.filter((d) => d !== day); commit();
-      location.hash = '#/';
+      state.days = state.days.filter((d) => d !== day);
+      location.replace('#/'); // the deleted day's page leaves history
+      commit();
     } else {
       el.dataset.confirm = '1'; el.textContent = 'Delete?';
       setTimeout(() => render(), 3000);

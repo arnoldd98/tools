@@ -6,6 +6,9 @@ export const CATEGORIES = ['food', 'transport', 'shopping', 'tickets', 'stay', '
 const str = (v) => (v == null ? '' : String(v));
 const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : null);
 const arr = (v) => (Array.isArray(v) ? v : []);
+// Hand-written JSON may omit ids; handlers match on them, so they must be unique.
+const genId = () => Math.random().toString(36).slice(2, 9);
+const idOf = (v) => str(v) || genId();
 
 function normPlace(p) {
   const o = obj(p);
@@ -14,7 +17,7 @@ function normPlace(p) {
 
 function normItem(i) {
   const o = obj(i) || {};
-  const out = { ...o, id: str(o.id), time: str(o.time), text: str(o.text), done: Boolean(o.done) };
+  const out = { ...o, id: idOf(o.id), time: str(o.time), text: str(o.text), done: Boolean(o.done) };
   if (o.place !== undefined) out.place = normPlace(o.place);
   if (out.place === undefined) delete out.place;
   return out;
@@ -24,7 +27,7 @@ function normSpend(s) {
   const o = obj(s) || {};
   return {
     ...o,
-    id: str(o.id),
+    id: idOf(o.id),
     yen: Math.trunc(Number(o.yen)) || 0,
     label: str(o.label),
     category: CATEGORIES.includes(o.category) ? o.category : 'other',
@@ -36,7 +39,7 @@ function normDay(d) {
   const o = obj(d) || {};
   const out = {
     ...o,
-    id: str(o.id),
+    id: idOf(o.id),
     date: str(o.date),
     city: str(o.city),
     items: arr(o.items).map(normItem),
@@ -129,7 +132,9 @@ export function insertItem(items, item) {
 
 export function parseRoute(hash) {
   const parts = str(hash).replace(/^#\/?/, '').split('/');
-  if (parts[0] === 'day' && parts[1]) return { view: 'day', id: decodeURIComponent(parts[1]) };
+  if (parts[0] === 'day' && parts[1]) {
+    try { return { view: 'day', id: decodeURIComponent(parts[1]) }; } catch { return { view: 'home' }; }
+  }
   if (parts[0] === 'money') return { view: 'money' };
   return { view: 'home' };
 }
