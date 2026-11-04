@@ -75,3 +75,36 @@ test('spend form and list', () => {
   assert.match(list, /¥1,200 · S\$10\.43/);
   assert.match(renderSpendList([], fx), /No spends yet/);
 });
+import { renderHome, renderMoney, renderView } from '../views.js';
+import { normalise } from '../lib.js';
+const legacyState = normalise({ title: 'Legacy', days: [
+  { id: 'd1', date: '2026-12-01', city: 'Naha', items: [{ id: 'i1', time: '10:00', text: 'Land', done: false }], notes: '' }] });
+
+test('renderHome phases', () => {
+  assert.match(renderHome(legacyState, '2026-11-04'), /27 days to go · Naha/);
+  const during = renderHome(legacyState, '2026-12-01');
+  assert.match(during, /Today · Naha[\s\S]*Land[\s\S]*href="#\/day\/d1"/);
+  assert.match(during, /<form class="add-spend" data-day="d1">/);
+  assert.match(renderHome({ ...legacyState, days: [...legacyState.days, { ...legacyState.days[0], id: 'd9', date: '2026-12-03' }] }, '2026-12-02'), /No plans today[\s\S]*<form class="add-spend">/);
+  assert.match(renderHome(legacyState, '2026-12-09'), /Trip complete/);
+  assert.match(renderHome(legacyState, '2026-12-09'), /href="#\/money"[\s\S]*¥0 ≈ S\$0\.00/);
+  assert.ok(!renderHome(legacyState, '2026-12-09').includes('class="info"'));
+  const withInfo = { ...legacyState, info: [{ title: 'Emergency', lines: ['Police 110'] }] };
+  assert.match(renderHome(withInfo, '2026-12-09'), /<summary>Emergency<\/summary>[\s\S]*<li>Police 110<\/li>/);
+});
+test('renderMoney groups by day with category line', () => {
+  const s = normalise({ fx: { jpyPerHome: 115 }, days: [
+    { id: 'a', date: '2026-12-02', city: 'Osaka', spends: [{ id: 's1', yen: 5000, label: 'x', category: 'food', at: '2026-12-02T10:00:00Z' }] },
+    { id: 'b', date: '2026-12-01', city: 'Naha', spends: [{ id: 's2', yen: 300, label: 'y', category: 'transport', at: '2026-12-01T10:00:00Z' }] },
+    { id: 'c', date: '2026-12-03', city: 'Kyoto' }] });
+  const html = renderMoney(s);
+  assert.match(html, /¥5,300 ≈ S\$46\.09/);
+  assert.match(html, /food ¥5,000 · transport ¥300/);
+  assert.ok(html.indexOf('Naha') < html.indexOf('Osaka'));
+  assert.ok(!html.includes('Kyoto'));
+  assert.match(html, /1 SGD = 115 JPY · updated never/);
+});
+test('renderView falls back to home for unknown day', () => {
+  assert.equal(renderView({ view: 'day', id: 'nope' }, legacyState, '2026-11-04'), renderView({ view: 'home' }, legacyState, '2026-11-04'));
+  assert.match(renderView({ view: 'money' }, legacyState, '2026-11-04'), /Rate:/);
+});
