@@ -35,3 +35,43 @@ test('renderTopRow per route', () => {
   assert.match(day, /<a class="nav" href="#\/day\/d2">/);     // next day
   assert.match(renderTopRow({ view: 'money' }, state, false), /<h1>Spending<\/h1>/);
 });
+import { renderDay, renderSpendForm, renderSpendList } from '../views.js';
+const fx = { home: 'SGD', jpyPerHome: 115, updatedAt: null };
+const rich = { id: 'd1', date: '2026-12-01', city: 'Naha', notes: 'n',
+  stay: { name: 'Hotel <Z>', address: 'Addr', maps: 'https://m/h' },
+  items: [
+    { id: 'i1', time: '10:00', text: 'Land', done: true },
+    { id: 'i2', time: '', text: 'Walk & eat', done: false, place: { name: 'Kokusai-dori', address: 'Naha' }, note: 'closes 5pm', price: '¥800' },
+  ],
+  spends: [
+    { id: 's1', yen: 1200, label: 'lunch', category: 'food', at: '2026-12-01T12:40:00+09:00' },
+    { id: 's2', yen: 300, label: 'bus <x>', category: 'transport', at: '2026-12-01T14:00:00+09:00' },
+  ] };
+
+test('renderDay shows next up with maps link and escapes text', () => {
+  const html = renderDay({ title: 'T', days: [rich], fx, info: [] }, rich, '2026-12-01');
+  assert.match(html, /class="next-up"[\s\S]*Walk &amp; eat/);
+  assert.match(html, /href="https:\/\/www\.google\.com\/maps\/search\/\?api=1&amp;query=Kokusai-dori%2C%20Naha"/);
+  assert.match(html, /data-action="toggle" data-item="i2"/);
+  assert.match(html, /class="strip compact"/);
+  assert.match(html, /<li class="done" data-item="i1"/);
+  assert.match(html, /closes 5pm[\s\S]*¥800/);
+  assert.match(html, /Hotel &lt;Z&gt;/);
+  assert.ok(!html.includes('<Z>'));
+  assert.match(html, /¥1,500 ≈ S\$13\.04/);
+});
+test('renderDay with everything done shows stay as destination', () => {
+  const day = { ...rich, items: rich.items.map((i) => ({ ...i, done: true })) };
+  const html = renderDay({ title: 'T', days: [day], fx, info: [] }, day, '2026-12-01');
+  assert.match(html, /All done for today[\s\S]*href="https:\/\/m\/h"/);
+});
+test('spend form and list', () => {
+  assert.match(renderSpendForm('d1'), /<form class="add-spend" data-day="d1">/);
+  assert.ok(!renderSpendForm(null).includes('data-day'));
+  assert.match(renderSpendForm('d1'), /<option value="food" selected>/);
+  const list = renderSpendList(rich.spends, fx);
+  assert.ok(list.indexOf('data-spend="s2"') < list.indexOf('data-spend="s1"'));
+  assert.match(list, /bus &lt;x&gt;/);
+  assert.match(list, /¥1,200 · S\$10\.43/);
+  assert.match(renderSpendList([], fx), /No spends yet/);
+});
