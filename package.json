@@ -1,0 +1,1 @@
+{ "name": "tools", "private": true, "type": "module", "scripts": { "test": "node --test japan-trip/test/*.test.js" } }
