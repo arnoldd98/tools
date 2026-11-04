@@ -85,3 +85,76 @@ export function fmtHome(amount, home) {
 }
 
 export const fmtBoth = (yen, fx) => `${fmtYen(yen)} ≈ ${fmtHome(toHome(yen, fx), fx.home)}`;
+
+// "1,200", "¥1200", "1200.5" → 1200. Negative, zero, blank → null.
+export function parseYen(input) {
+  const whole = str(input).split('.')[0];
+  if (whole.includes('-')) return null;
+  const n = parseInt(whole.replace(/\D/g, ''), 10);
+  return n > 0 ? n : null;
+}
+
+export function validRate(input) {
+  if (typeof input === 'string' && input.trim() === '') return null;
+  const n = Number(input);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+export const nextUp = (day) => (day?.items || []).find((i) => !i.done) || null;
+
+export const dayTotal = (day) => (day?.spends || []).reduce((sum, s) => sum + (s.yen || 0), 0);
+export const tripTotal = (state) => state.days.reduce((sum, d) => sum + dayTotal(d), 0);
+export function byCategory(state) {
+  const out = Object.fromEntries(CATEGORIES.map((c) => [c, 0]));
+  for (const d of state.days) for (const s of d.spends || []) {
+    const c = CATEGORIES.includes(s.category) ? s.category : 'other';
+    out[c] += s.yen || 0;
+  }
+  return out;
+}
+
+export function mapsUrl(place) {
+  if (place?.maps) return place.maps;
+  const q = [place?.name, place?.address].filter(Boolean).join(', ');
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+}
+
+// Array order is authoritative: a timed stop goes before the first later-timed stop;
+// untimed stops (and stops later than everything) are appended.
+export function insertItem(items, item) {
+  const idx = item.time ? items.findIndex((i) => i.time && i.time > item.time) : -1;
+  if (idx === -1) return [...items, item];
+  return [...items.slice(0, idx), item, ...items.slice(idx)];
+}
+
+export function parseRoute(hash) {
+  const parts = str(hash).replace(/^#\/?/, '').split('/');
+  if (parts[0] === 'day' && parts[1]) return { view: 'day', id: decodeURIComponent(parts[1]) };
+  if (parts[0] === 'money') return { view: 'money' };
+  return { view: 'home' };
+}
+
+const utcDay = (iso) => { const [y, m, d] = iso.split('-').map(Number); return Date.UTC(y, m - 1, d); };
+
+export function tripPhase(days, today) {
+  const dated = sortDays(days.filter((d) => d.date));
+  if (!dated.length) return { phase: 'none' };
+  const first = dated[0];
+  const last = dated[dated.length - 1];
+  if (today < first.date) {
+    return { phase: 'before', daysToGo: Math.round((utcDay(first.date) - utcDay(today)) / 86400000), first };
+  }
+  if (today > last.date) return { phase: 'after' };
+  return { phase: 'during', day: dated.find((d) => d.date === today) || null };
+}
+
+export function ensureDay(state, date, uid) {
+  const found = state.days.find((d) => d.date === date);
+  if (found) return found;
+  const day = { id: uid(), date, city: '', items: [], spends: [], notes: '' };
+  state.days.push(day);
+  return day;
+}
+
+export const FX_URL = 'https://api.frankfurter.app/latest?from=SGD&to=JPY';
+export const parseFxRate = (json) => validRate(obj(json) && obj(json.rates) ? json.rates.JPY : NaN);

@@ -41,3 +41,69 @@ test('money formatting', () => {
   assert.equal(fmtBoth(1200, fx), '¥1,200 ≈ S$10.43');
   assert.equal(CATEGORIES[0], 'food');
 });
+import { parseYen, validRate, nextUp, dayTotal, tripTotal, byCategory, mapsUrl, insertItem,
+  parseRoute, tripPhase, ensureDay, parseFxRate } from '../lib.js';
+
+test('parseYen accepts messy input and rejects non-positive', () => {
+  assert.equal(parseYen('1,200'), 1200);
+  assert.equal(parseYen('¥1200'), 1200);
+  assert.equal(parseYen('1200.5'), 1200);
+  assert.equal(parseYen('0'), null);
+  assert.equal(parseYen('-5'), null);
+  assert.equal(parseYen(''), null);
+});
+test('validRate', () => {
+  assert.equal(validRate('115.3'), 115.3);
+  for (const bad of ['0', '-1', 'abc', '', 'Infinity']) assert.equal(validRate(bad), null, bad);
+});
+test('nextUp is first undone item in array order regardless of time', () => {
+  const day = { items: [{ id: 'a', time: '12:00', done: true }, { id: 'b', time: '', done: false }, { id: 'c', time: '09:00', done: false }] };
+  assert.equal(nextUp(day).id, 'b');
+  assert.equal(nextUp({ items: [{ done: true }] }), null);
+});
+test('totals and categories', () => {
+  const state = { days: [
+    { spends: [{ yen: 1200, category: 'food' }, { yen: 300, category: 'transport' }] },
+    { spends: [{ yen: 5000, category: 'food' }] }, { spends: [] }] };
+  assert.equal(dayTotal(state.days[0]), 1500);
+  assert.equal(tripTotal(state), 6500);
+  assert.deepEqual(byCategory(state), { food: 6200, transport: 300, shopping: 0, tickets: 0, stay: 0, other: 0 });
+});
+test('mapsUrl prefers explicit link, else builds a search', () => {
+  assert.equal(mapsUrl({ name: 'X', maps: 'https://maps.app.goo.gl/abc' }), 'https://maps.app.goo.gl/abc');
+  assert.equal(mapsUrl({ name: 'Shuri Castle', address: '1-2 Shurikinjocho, Naha' }),
+    'https://www.google.com/maps/search/?api=1&query=Shuri%20Castle%2C%201-2%20Shurikinjocho%2C%20Naha');
+  assert.equal(mapsUrl({ name: 'Shuri Castle' }), 'https://www.google.com/maps/search/?api=1&query=Shuri%20Castle');
+});
+test('insertItem keeps array order authoritative', () => {
+  const items = [{ id: 'a', time: '09:00' }, { id: 'b', time: '' }, { id: 'c', time: '14:00' }];
+  assert.deepEqual(insertItem(items, { id: 'n', time: '12:00' }).map((i) => i.id), ['a', 'b', 'n', 'c']);
+  assert.deepEqual(insertItem(items, { id: 'n', time: '' }).map((i) => i.id), ['a', 'b', 'c', 'n']);
+  assert.deepEqual(insertItem(items, { id: 'n', time: '18:00' }).map((i) => i.id), ['a', 'b', 'c', 'n']);
+  assert.equal(items.length, 3);
+});
+test('parseRoute', () => {
+  for (const h of ['', '#', '#/', '#/xyz', '#/day/']) assert.deepEqual(parseRoute(h), { view: 'home' }, h);
+  assert.deepEqual(parseRoute('#/day/d3'), { view: 'day', id: 'd3' });
+  assert.deepEqual(parseRoute('#/money'), { view: 'money' });
+});
+test('tripPhase', () => {
+  const days = [{ id: 'a', date: '2026-12-01' }, { id: 'b', date: '2026-12-03' }, { id: 'z', date: '' }];
+  assert.deepEqual(tripPhase([], '2026-11-04'), { phase: 'none' });
+  assert.deepEqual(tripPhase(days, '2026-11-04'), { phase: 'before', daysToGo: 27, first: days[0] });
+  assert.deepEqual(tripPhase(days, '2026-12-01'), { phase: 'during', day: days[0] });
+  assert.deepEqual(tripPhase(days, '2026-12-02'), { phase: 'during', day: null });
+  assert.deepEqual(tripPhase(days, '2026-12-04'), { phase: 'after' });
+});
+test('ensureDay finds or creates', () => {
+  const state = { days: [{ id: 'a', date: '2026-12-01', items: [], spends: [], notes: '' }] };
+  assert.equal(ensureDay(state, '2026-12-01', () => 'new'), state.days[0]);
+  const made = ensureDay(state, '2026-12-02', () => 'new');
+  assert.deepEqual(made, { id: 'new', date: '2026-12-02', city: '', items: [], spends: [], notes: '' });
+  assert.equal(state.days.length, 2);
+});
+test('parseFxRate reads frankfurter shape', () => {
+  assert.equal(parseFxRate({ rates: { JPY: 115.3 } }), 115.3);
+  assert.equal(parseFxRate({}), null);
+  assert.equal(parseFxRate(null), null);
+});
