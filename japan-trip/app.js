@@ -1,5 +1,11 @@
 // Japan trip tracker — static page, data in data/trip.json.
 // Edits save instantly to localStorage; "Sync" commits the JSON back to GitHub.
+// Hash routes: #/ home (day strip), #/day/<id> day page, #/money spending.
+
+import {
+  normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, FX_URL, sortDays,
+} from './lib.js';
+import { renderTopRow, renderView } from './views.js';
 
 const CFG_KEY = 'jt.cfg';
 const DRAFT_KEY = 'jt.draft';
@@ -9,14 +15,20 @@ const DEFAULT_CFG = {
 };
 
 let cfg = { ...DEFAULT_CFG, ...readLS(CFG_KEY) };
-let state = { title: 'Japan Trip', days: [] };
+let state = normalise(null);
 let dirty = false;
 
 const $ = (s) => document.querySelector(s);
 const uid = () => Math.random().toString(36).slice(2, 9);
 const todayISO = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
-  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// ISO-8601 in device local time with its offset, e.g. 2026-12-01T12:40:00+09:00.
+function localISO(d = new Date()) {
+  const pad = (n) => String(Math.trunc(Math.abs(n))).padStart(2, '0');
+  const off = -d.getTimezoneOffset();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+    + `T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+    + `${off >= 0 ? '+' : '-'}${pad(off / 60)}:${pad(off % 60)}`;
+}
 
 function readLS(key) {
   try { return JSON.parse(localStorage.getItem(key)) || null; } catch { return null; }
@@ -94,83 +106,119 @@ const findDay = (id) => state.days.find((d) => d.id === id);
 async function load({ force = false } = {}) {
   const draft = readLS(DRAFT_KEY);
   if (!force && draft?.dirty) {
-    state = draft.data; dirty = true;
+    state = normalise(draft.data); dirty = true;
     setStatus('Unsynced changes on this device. Tap Sync to save to GitHub.');
   } else {
     try {
-      state = await fetchRemote(); dirty = false; saveDraft();
+      state = normalise(await fetchRemote()); dirty = false; saveDraft();
       setStatus(state.updated ? `Last synced ${new Date(state.updated).toLocaleString()}` : '');
     } catch (e) {
-      if (draft?.data) state = draft.data;
+      if (draft?.data) state = normalise(draft.data);
       setStatus(`Couldn't load from GitHub (${e.message}). Showing this device's copy.`);
     }
   }
   render();
-  document.querySelector('.day.today')?.scrollIntoView({ block: 'start' });
 }
 
 // ---------- render ----------
+let lastRouteKey = null;
+
 function render() {
+  const route = parseRoute(location.hash);
+  if (route.view === 'day' && !findDay(route.id)) {
+    if (location.hash !== '#/') { location.hash = '#/'; return; } // hashchange re-renders
+  }
   document.title = state.title || 'Japan Trip';
-  $('#title').textContent = state.title || 'Japan Trip';
-  $('#sync-btn').classList.toggle('dirty', dirty);
-  $('#sync-btn').textContent = dirty ? 'Sync •' : 'Sync';
 
   const all = state.days.flatMap((d) => d.items);
   const done = all.filter((i) => i.done).length;
   $('#progress-bar').style.width = all.length ? `${(100 * done) / all.length}%` : '0';
 
-  const today = todayISO();
-  const days = [...state.days].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-  $('#days').innerHTML = days.map((d) => `
-    <section class="day ${d.date === today ? 'today' : ''}" data-day="${d.id}">
-      <div class="day-head">
-        <input class="date" type="date" value="${esc(d.date)}" data-field="date">
-        <input class="city" value="${esc(d.city)}" placeholder="City" data-field="city">
-        ${d.date === today ? '<span class="badge">Today</span>' : ''}
-        <button class="icon" data-action="del-day" title="Delete day">✕</button>
-      </div>
-      <ul class="items">
-        ${d.items.map((i) => `
-          <li class="${i.done ? 'done' : ''}" data-item="${i.id}">
-            <input type="checkbox" ${i.done ? 'checked' : ''} data-action="toggle">
-            <span class="time">${esc(i.time)}</span>
-            <span class="text">${esc(i.text)}</span>
-            <button class="icon" data-action="del-item" title="Delete">✕</button>
-          </li>`).join('')}
-      </ul>
-      <form class="add-item">
-        <input name="time" type="time">
-        <input name="text" placeholder="Add a plan…" required>
-        <button class="btn" type="submit">Add</button>
-      </form>
-      <textarea placeholder="Notes for the day…" data-field="notes">${esc(d.notes)}</textarea>
-    </section>`).join('');
+  const routeKey = route.view + ':' + (route.id || '');
+  const stripScroll = document.querySelector('.strip')?.scrollLeft;
+
+  $('#top').innerHTML = renderTopRow(route, state, dirty);
+  $('#view').innerHTML = renderView(route, state, todayISO());
+
+  const rate = $('#fx [name=rate]');
+  if (document.activeElement !== rate) rate.value = state.fx.jpyPerHome;
+  $('#fx-updated').textContent = state.fx.updatedAt
+    ? `updated ${new Date(state.fx.updatedAt).toLocaleString()}` : '';
+
+  // Scroll the strip to today / the open day only when the route changes, so a
+  // re-render after a checkbox tap doesn't jump around.
+  const strip = document.querySelector('.strip');
+  if (routeKey !== lastRouteKey) {
+    document.querySelector('.strip .card.selected, .strip .card.today')
+      ?.scrollIntoView({ inline: 'center', block: 'nearest' });
+    if (lastRouteKey !== null) window.scrollTo(0, 0);
+  } else if (strip && stripScroll != null) {
+    strip.scrollLeft = stripScroll;
+  }
+  lastRouteKey = routeKey;
+}
+
+function markDirty() {
+  dirty = true; saveDraft();
+  const btn = document.querySelector('#top [data-action=sync]');
+  if (btn) { btn.classList.add('dirty'); btn.textContent = 'Sync •'; }
+}
+
+function setRate(r) {
+  state.fx = { ...state.fx, jpyPerHome: r, updatedAt: new Date().toISOString() };
+  commit();
+}
+
+async function fetchFx() {
+  setStatus('Fetching rate…');
+  let r = null;
+  try {
+    const res = await fetch(FX_URL, { cache: 'no-store' });
+    if (res.ok) r = parseFxRate(await res.json());
+  } catch { /* network error: keep the saved rate */ }
+  if (r === null) { setStatus('Rate fetch failed; kept the saved rate.'); return; }
+  setRate(r);
+  setStatus(`Rate updated: 1 ${state.fx.home} = ${r} JPY`);
 }
 
 // ---------- events ----------
+window.addEventListener('hashchange', render);
+
 document.addEventListener('click', (e) => {
-  const action = e.target.closest('[data-action]')?.dataset.action;
+  const el = e.target.closest('[data-action]');
+  const action = el?.dataset.action;
   if (!action) return;
   const day = findDay(e.target.closest('[data-day]')?.dataset.day);
   const itemId = e.target.closest('[data-item]')?.dataset.item;
 
-  if (action === 'toggle') {
-    const item = day.items.find((i) => i.id === itemId);
+  if (action === 'sync') {
+    sync();
+  } else if (action === 'toggle') {
+    const item = day?.items.find((i) => i.id === itemId);
+    if (!item) return;
     item.done = !item.done; commit();
   } else if (action === 'del-item') {
     day.items = day.items.filter((i) => i.id !== itemId); commit();
+  } else if (action === 'del-spend') {
+    const spendId = e.target.closest('[data-spend]')?.dataset.spend;
+    for (const d of state.days) d.spends = d.spends.filter((s) => s.id !== spendId);
+    commit();
   } else if (action === 'del-day') {
-    if (e.target.dataset.confirm) {
+    if (el.dataset.confirm) {
       state.days = state.days.filter((d) => d !== day); commit();
+      location.hash = '#/';
     } else {
-      e.target.dataset.confirm = '1'; e.target.textContent = 'Delete?';
+      el.dataset.confirm = '1'; el.textContent = 'Delete?';
       setTimeout(() => render(), 3000);
     }
   } else if (action === 'add-day') {
-    const last = [...state.days].sort((a, b) => (a.date || '').localeCompare(b.date || '')).pop();
-    state.days.push({ id: uid(), date: last?.date || todayISO(), city: last?.city || '', items: [], notes: '' });
+    const last = sortDays(state.days).filter((d) => d.date).pop();
+    const d = { id: uid(), date: last?.date || todayISO(), city: last?.city || '', items: [], spends: [], notes: '' };
+    state.days.push(d);
     commit();
+    location.hash = `#/day/${d.id}`;
+  } else if (action === 'fetch-fx') {
+    fetchFx();
   } else if (action === 'export') {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
     const a = Object.assign(document.createElement('a'), {
@@ -189,22 +237,44 @@ document.addEventListener('change', (e) => {
   if (!field || !day) return;
   day[field] = e.target.value;
   if (field === 'date') commit();
-  else { dirty = true; saveDraft(); $('#sync-btn').classList.add('dirty'); $('#sync-btn').textContent = 'Sync •'; }
+  else markDirty();
 });
 
 document.addEventListener('submit', (e) => {
   e.preventDefault();
-  if (e.target.id === 'settings') {
-    cfg = Object.fromEntries(new FormData(e.target));
+  const form = e.target;
+  const fd = new FormData(form);
+  if (form.id === 'settings') {
+    cfg = Object.fromEntries(fd);
     writeLS(CFG_KEY, cfg);
     setStatus('Settings saved.');
-    return;
+  } else if (form.id === 'fx') {
+    const r = validRate(fd.get('rate'));
+    if (r === null) { setStatus('Enter a rate above 0.'); return; }
+    form.querySelector('[name=rate]').blur();
+    setRate(r);
+    setStatus(`Rate saved: 1 ${state.fx.home} = ${r} JPY`);
+  } else if (form.classList.contains('add-spend')) {
+    const yen = parseYen(fd.get('yen'));
+    if (yen === null) { setStatus('Enter an amount in yen above 0.'); return; }
+    const day = form.dataset.day ? findDay(form.dataset.day) : ensureDay(state, todayISO(), uid);
+    if (!day) return;
+    const pos = [...document.querySelectorAll('.add-spend')].indexOf(form);
+    day.spends.push({
+      id: uid(), yen, label: String(fd.get('label') || '').trim(),
+      category: fd.get('category') || 'food', at: localISO(),
+    });
+    commit();
+    setStatus(`Logged ¥${yen.toLocaleString('en-US')}.`);
+    document.querySelectorAll('.add-spend')[pos]?.querySelector('[name=yen]')?.focus();
+  } else if (form.classList.contains('add-item')) {
+    const day = findDay(form.closest('[data-day]')?.dataset.day);
+    if (!day) return;
+    day.items = insertItem(day.items, {
+      id: uid(), time: fd.get('time') || '', text: String(fd.get('text')).trim(), done: false,
+    });
+    commit();
   }
-  const day = findDay(e.target.closest('[data-day]')?.dataset.day);
-  const fd = new FormData(e.target);
-  day.items.push({ id: uid(), time: fd.get('time'), text: fd.get('text').trim(), done: false });
-  day.items.sort((a, b) => (a.time || '99').localeCompare(b.time || '99'));
-  commit();
 });
 
 $('#import').addEventListener('change', async (e) => {
@@ -213,12 +283,10 @@ $('#import').addEventListener('change', async (e) => {
   try {
     const data = JSON.parse(await file.text());
     if (!Array.isArray(data.days)) throw new Error('missing "days" array');
-    state = data; commit(); setStatus('Imported. Tap Sync to save to GitHub.');
+    state = normalise(data); commit(); setStatus('Imported. Tap Sync to save to GitHub.');
   } catch (err) { setStatus(`Import failed: ${err.message}`); }
   e.target.value = '';
 });
-
-$('#sync-btn').addEventListener('click', sync);
 
 // Fill settings form
 for (const [k, v] of Object.entries(cfg)) {
