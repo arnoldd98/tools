@@ -1,14 +1,27 @@
 {
   "title": "Japan Trip — Okinawa & Kansai",
+  "fx": { "home": "SGD", "jpyPerHome": 115, "updatedAt": null },
+  "info": [
+    { "title": "Flights", "lines": ["Placeholder: SIN → OKA, 1 Dec", "Placeholder: OKA → KIX, 4 Dec"] },
+    { "title": "Emergency", "lines": ["Police 110", "Ambulance / Fire 119"] }
+  ],
   "days": [
     {
       "id": "d1",
       "date": "2026-12-01",
       "city": "Naha (Okinawa)",
+      "stay": { "name": "Placeholder hotel, Naha", "address": "Kumoji, Naha, Okinawa", "note": "Check-in 15:00" },
       "items": [
-        { "id": "i1", "time": "10:00", "text": "Land at Naha Airport (OKA)", "done": false },
+        { "id": "i1", "time": "10:00", "text": "Land at Naha Airport (OKA)", "done": false,
+          "place": { "name": "Naha Airport", "address": "150 Kagamizu, Naha, Okinawa" },
+          "note": "Buy a Yui Rail pass at the station", "price": "¥800 one-day pass" },
         { "id": "i2", "time": "15:00", "text": "Check in to hotel", "done": false },
-        { "id": "i3", "time": "", "text": "Walk Kokusai-dori", "done": false }
+        { "id": "i3", "time": "", "text": "Walk Kokusai-dori", "done": false,
+          "place": { "name": "Kokusai-dori", "address": "Matsuo, Naha, Okinawa" },
+          "note": "Makishi Public Market is just off the street" }
+      ],
+      "spends": [
+        { "id": "s1", "yen": 1200, "label": "Airport soba", "category": "food", "at": "2026-12-01T12:40:00+09:00" }
       ],
       "notes": ""
     },
@@ -19,6 +32,7 @@
       "items": [
         { "id": "i4", "time": "", "text": "Placeholder: replace with your plans", "done": false }
       ],
+      "spends": [],
       "notes": ""
     },
     {
@@ -27,8 +41,10 @@
       "city": "Osaka",
       "items": [
         { "id": "i5", "time": "", "text": "Fly OKA → KIX", "done": false },
-        { "id": "i6", "time": "", "text": "Dotonbori in the evening", "done": false }
+        { "id": "i6", "time": "", "text": "Dotonbori in the evening", "done": false,
+          "place": { "name": "Dotonbori", "address": "Chuo Ward, Osaka" } }
       ],
+      "spends": [],
       "notes": ""
     },
     {
@@ -38,6 +54,7 @@
       "items": [
         { "id": "i7", "time": "", "text": "Day trip from Osaka", "done": false }
       ],
+      "spends": [],
       "notes": ""
     }
   ]

@@ -107,3 +107,14 @@ test('parseFxRate reads frankfurter shape', () => {
   assert.equal(parseFxRate({}), null);
   assert.equal(parseFxRate(null), null);
 });
+import { readFileSync } from 'node:fs';
+test('shipped trip.json normalises without change and uses the new fields', () => {
+  const raw = JSON.parse(readFileSync(new URL('../data/trip.json', import.meta.url)));
+  const s = normalise(raw);
+  assert.equal(s.fx.home, 'SGD');
+  assert.ok(s.info.length >= 1);
+  assert.ok(s.days.some((d) => d.stay));
+  assert.ok(s.days.some((d) => d.items.some((i) => i.place)));
+  assert.ok(s.days.some((d) => d.spends.length));
+  assert.deepEqual(JSON.parse(JSON.stringify(s)), raw, 'seed should already be in normalised shape');
+});
