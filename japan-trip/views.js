@@ -1,7 +1,8 @@
 // Pure renderers: (state, …) → HTML string. No DOM access; unit-tested with `npm test`.
 import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
-  fmtYen, fmtHome, fmtBoth, toHome, CATEGORIES,
+  fmtYen, fmtHome, fmtBoth, toHome, CATEGORIES, CATEGORY_LABEL, CATEGORY_ICON,
+  dayNumber, tripSpan, fmtRange,
 } from './lib.js';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -37,7 +38,8 @@ export function renderStrip(days, { today, selectedId, compact } = {}) {
   return `<nav class="strip${compact ? ' compact' : ''}">${cards}</nav>`;
 }
 
-export function renderTopRow(route, state, dirty) {
+// Top row of the sticky header, per route. Always ends with the Sync button.
+export function renderHeader(route, state, dirty, today) {
   if (route.view === 'day') {
     const days = sortDays(state.days);
     const idx = days.findIndex((d) => d.id === route.id);
@@ -45,15 +47,30 @@ export function renderTopRow(route, state, dirty) {
     const nav = (d, label) => (d
       ? `<a class="nav" href="${dayHref(d.id)}">${label}</a>`
       : `<span class="nav disabled">${label}</span>`);
-    return `<a class="back" href="#/" title="All days">‹</a>`
+    return '<a class="back" href="#/days">‹</a>'
       + `<span class="when">${esc(longDate(day?.date) || 'Undated')}</span>`
       + `<span class="navs">${nav(days[idx - 1], '←')}${nav(days[idx + 1], '→')}</span>`
       + syncBtn(dirty);
   }
-  if (route.view === 'money') {
-    return `<a class="back" href="#/" title="All days">‹</a><h1>Spending</h1>${syncBtn(dirty)}`;
+  if (route.view === 'days') {
+    const span = tripSpan(state.days);
+    return `<h1>Days</h1>${span ? `<span class="muted">${fmtRange(span.start, span.end)}</span>` : ''}${syncBtn(dirty)}`;
+  }
+  if (route.view === 'trip') return `<h1>Trip</h1>${syncBtn(dirty)}`;
+  const num = dayNumber(state.days, today);
+  if (num) {
+    const day = state.days.find((d) => d.date === today);
+    const title = [longDate(today), day?.city].filter(Boolean).map(esc).join(' · ');
+    return `<div class="hdr"><b>${title}</b><span class="muted">Day ${num.n} of ${num.of}</span></div>${syncBtn(dirty)}`;
   }
   return `<h1>${esc(state.title)}</h1>${syncBtn(dirty)}`;
+}
+
+export function renderTabs(route) {
+  const active = route.view === 'day' ? 'days' : route.view;
+  const tab = (view, href, label) =>
+    `<a class="tab${active === view ? ' on' : ''}" href="${href}">${label}</a>`;
+  return `<nav class="tabs">${tab('home', '#/', 'Today')}${tab('days', '#/days', 'Days')}${tab('trip', '#/trip', 'Trip')}</nav>`;
 }
 
 const mapsBtn = (place, label = 'Open in Maps', cls = 'btn primary') =>
@@ -61,14 +78,6 @@ const mapsBtn = (place, label = 'Open in Maps', cls = 'btn primary') =>
 
 const timeOf = (at) => (/T(\d{2}:\d{2})/.exec(at || '') || [])[1] || '';
 
-export function renderSpendForm(dayId) {
-  const opts = CATEGORIES.map((c) => `<option value="${c}"${c === 'food' ? ' selected' : ''}>${c}</option>`).join('');
-  return `<form class="add-spend"${dayId ? ` data-day="${esc(dayId)}"` : ''}>`
-    + '<input name="yen" inputmode="numeric" placeholder="¥ amount" required>'
-    + '<input name="label" placeholder="What for?">'
-    + `<select name="category">${opts}</select>`
-    + '<button class="btn" type="submit">Add</button></form>';
-}
 
 export function renderSpendList(spends, fx) {
   if (!spends.length) return '<p class="muted">No spends yet.</p>';
@@ -98,53 +107,82 @@ function renderNextUp(day) {
   </div>`;
 }
 
-function renderItem(i) {
+function renderItem(i, nextId) {
   const detail = [
     i.place ? `${placeLine(i.place)} ${mapsBtn(i.place, 'Map', 'maplink')}` : '',
     i.note ? `<span class="note">${esc(i.note)}</span>` : '',
     i.price ? `<span class="price">${esc(i.price)}</span>` : '',
   ].filter(Boolean);
   return `
-    <li class="${i.done ? 'done' : ''}" data-item="${esc(i.id)}">
+    <li class="${i.done ? 'done' : ''}${i.id === nextId ? ' next' : ''}" data-item="${esc(i.id)}">
       <input type="checkbox" ${i.done ? 'checked' : ''} data-action="toggle" aria-label="Done">
       <span class="time">${esc(i.time)}</span>
       <span class="text">${esc(i.text)}</span>
-      <button class="icon" data-action="del-item" title="Delete">✕</button>
       ${detail.length ? `<div class="detail">${detail.join(' ')}</div>` : ''}
     </li>`;
 }
 
-export function renderDay(state, day, today) {
-  const isToday = day.date && day.date === today;
-  return `<section class="day-page" data-day="${esc(day.id)}">
-    ${renderStrip(state.days, { today, selectedId: day.id, compact: true })}
-    <div class="day-head">
-      <input class="date" type="date" value="${esc(day.date)}" data-field="date">
-      <input class="city" value="${esc(day.city)}" placeholder="City" data-field="city">
-      ${isToday ? '<span class="badge">Today</span>' : ''}
-      <button class="icon" data-action="del-day" title="Delete day">✕</button>
-    </div>
+// Hotel tag first (from day.stay), then the day's keyInfo entries. Tap expands.
+export function renderKeyInfo(day) {
+  const tags = [];
+  if (day.stay) {
+    const summary = ['🏨 ' + esc(day.stay.name || 'Hotel'), esc(day.stay.note)].filter((x) => x).join(' · ');
+    tags.push(`<details class="tag"><summary>${summary}</summary>
+      ${day.stay.address ? `<p>${esc(day.stay.address)}</p>` : ''}${mapsBtn(day.stay, 'Open in Maps', 'btn')}</details>`);
+  }
+  for (const k of day.keyInfo || []) {
+    tags.push(`<details class="tag"><summary>${k.icon ? esc(k.icon) + ' ' : ''}${esc(k.label)}</summary>
+      ${k.lines.map((l) => `<p>${esc(l)}</p>`).join('')}${k.place ? mapsBtn(k.place, 'Open in Maps', 'btn') : ''}</details>`);
+  }
+  if (!tags.length) return '';
+  return `<section class="keyinfo"><p class="eyebrow">Key info</p>${tags.join('')}</section>`;
+}
+
+// Today and the day page share this. `page` adds the compact strip and day-page wording.
+export function renderDayScreen(state, day, today, { page = false } = {}) {
+  const next = nextUp(day);
+  const spentLabel = day.date && day.date === today ? 'Spent today' : 'Spent';
+  return `<section class="day-screen" data-day="${esc(day.id)}">
+    ${page ? renderStrip(state.days, { today, selectedId: day.id, compact: true }) : ''}
     ${renderNextUp(day)}
-    <h3>Plan</h3>
-    ${day.items.length ? `<ol class="timeline">${day.items.map(renderItem).join('')}</ol>` : '<p class="muted">No stops yet.</p>'}
-    <form class="add-item">
-      <input name="time" type="time">
-      <input name="text" placeholder="Add a stop…" required>
-      <button class="btn" type="submit">Add</button>
-    </form>
-    <section class="spend">
-      <h3>Spending <span class="total">${fmtBoth(dayTotal(day), state.fx)}</span></h3>
-      ${renderSpendForm(day.id)}
-      ${renderSpendList(day.spends, state.fx)}
-    </section>
-    ${day.stay ? `<section class="stay"><p class="eyebrow">Stay</p>
-      <p class="what">${esc(day.stay.name)}</p>
-      ${day.stay.address ? `<p class="place">${esc(day.stay.address)}</p>` : ''}
-      ${day.stay.note ? `<p class="muted">${esc(day.stay.note)}</p>` : ''}
-      ${mapsBtn(day.stay, 'Open in Maps', 'btn')}</section>` : ''}
-    <h3>Notes</h3>
-    <textarea placeholder="Notes for the day…" data-field="notes">${esc(day.notes)}</textarea>
+    <h3>${page ? 'Plan' : "Today's plan"}</h3>
+    ${day.items.length
+    ? `<ol class="timeline">${day.items.map((i) => renderItem(i, next?.id)).join('')}</ol>`
+    : '<p class="muted">No stops yet.</p>'}
+    ${renderKeyInfo(day)}
+    <details class="spent"><summary>${spentLabel} <b>${fmtBoth(dayTotal(day), state.fx)}</b></summary>
+      ${renderSpendList(day.spends, state.fx)}</details>
+    <details class="edit-day"><summary>Edit day</summary>
+      <div class="day-head">
+        <input class="date" type="date" value="${esc(day.date)}" data-field="date">
+        <input class="city" value="${esc(day.city)}" placeholder="City" data-field="city">
+      </div>
+      <ul class="edit-items">${day.items.map((i) => `
+        <li data-item="${esc(i.id)}"><span class="time">${esc(i.time)}</span><span class="text">${esc(i.text)}</span>
+          <button class="icon" data-action="del-item" title="Delete stop">✕</button></li>`).join('')}</ul>
+      <form class="add-item">
+        <input name="time" type="time">
+        <input name="text" placeholder="Add a stop…" required>
+        <button class="btn" type="submit">Add</button>
+      </form>
+      <textarea placeholder="Notes for the day…" data-field="notes">${esc(day.notes)}</textarea>
+      <button class="btn danger" data-action="del-day">Delete day</button>
+    </details>
+    <button class="fab" data-action="open-spend" data-day="${esc(day.id)}">＋ ¥ Spend</button>
   </section>`;
+}
+
+export function renderSpendSheet(dayId, fx) {
+  const chips = CATEGORIES.map((c) => `<label class="chip"><input type="radio" name="category" value="${c}"${c === 'food' ? ' checked' : ''}> ${CATEGORY_ICON[c]} ${c === 'misc' ? 'misc' : CATEGORY_LABEL[c]}</label>`).join('');
+  return `<form class="spend-sheet"${dayId ? ` data-day="${esc(dayId)}"` : ''}>
+    <button type="button" class="icon close" data-action="close-spend" title="Close">✕</button>
+    <p class="eyebrow">Log a spend</p>
+    <input name="yen" inputmode="numeric" autocomplete="off" placeholder="¥0" enterkeyhint="done" aria-label="Amount in yen">
+    <p class="live muted">≈ ${fmtHome(0, fx.home)}</p>
+    <div class="chips">${chips}</div>
+    <input name="label" placeholder="What for? (optional)" autocomplete="off">
+    <button class="btn primary save" type="submit">Save</button>
+  </form>`;
 }
 
 function renderNow(state, today) {
