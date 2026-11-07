@@ -11,8 +11,9 @@ export const trip = normalise({ title: 'Trip <1>', fx: { jpyPerHome: 115 }, days
   { id: 'd3', date: '2026-12-06', city: 'Kyoto' }] });
 
 test('header per route', () => {
-  assert.match(renderHeader({ view: 'home' }, trip, false, '2026-12-01'), /<b>Tue 1 Dec · Naha<\/b><span class="muted">Day 1 of 6<\/span>/);
-  assert.match(renderHeader({ view: 'home' }, trip, false, '2026-12-03'), /<b>Thu 3 Dec<\/b><span class="muted">Day 3 of 6<\/span>/);
+  assert.match(renderHeader({ view: 'home' }, trip, false, '2026-12-01'), /<b>Tue 1 Dec · Naha<\/b><span class="hanko" aria-label="Today">今日<\/span><\/div><span class="muted">Day 1 of 6<\/span>/);
+  assert.match(renderHeader({ view: 'home' }, trip, false, '2026-12-03'), /<b>Thu 3 Dec<\/b><span class="hanko" aria-label="Today">今日<\/span><\/div><span class="muted">Day 3 of 6<\/span>/);
+  assert.ok(!renderHeader({ view: 'day', id: 'd1' }, trip, false, '2026-12-01').includes('今日'), 'stamp only on Today');
   assert.match(renderHeader({ view: 'home' }, trip, true, '2026-11-07'), /<h1>Trip &lt;1&gt;<\/h1>[\s\S]*Sync •/);
   assert.match(renderHeader({ view: 'days' }, trip, false, ''), /<h1>Days<\/h1><span class="muted">1–6 Dec 2026<\/span>/);
   const day = renderHeader({ view: 'day', id: 'd1' }, trip, false, '');

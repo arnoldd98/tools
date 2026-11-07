@@ -1,14 +1,10 @@
 :root {
-  --bg: #faf8f5; --card: #fff; --ink: #1f1d1a; --muted: #6b665e;
-  --line: #e6e1d8; --accent: #c8402f; --ok: #2f7d4f; --today: #fff4e8;
+  /* Matcha & kinari: unbleached-cotton cream, matcha green, sumi ink. Light only. */
+  --bg: #f6f3ea; --card: #fdfcf7; --ink: #2c2e26; --muted: #737564;
+  --line: #e6e1d0; --accent: #6e8c4f; --ok: #6e8c4f; --today: #edf1e2;
+  --shu: #b5583c; /* persimmon, for unsynced and destructive */
+  --mincho: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
   color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #161514; --card: #201e1c; --ink: #ece8e2; --muted: #a29b90;
-    --line: #34312d; --accent: #e5604c; --ok: #5cbf86; --today: #2b2219;
-    color-scheme: dark;
-  }
 }
 * { box-sizing: border-box; }
 body {
@@ -28,8 +24,8 @@ h1 { font-size: 20px; margin: 0; }
   font: inherit; font-size: 14px; padding: 6px 12px; border-radius: 8px;
   border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer;
 }
-.btn.dirty { border-color: var(--accent); color: var(--accent); font-weight: 600; }
-.btn.danger { color: var(--accent); }
+.btn.dirty { border-color: var(--shu); color: var(--shu); font-weight: 600; }
+.btn.danger { color: var(--shu); }
 .icon { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 6px; }
 
 .day-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0 4px; }
@@ -262,3 +258,13 @@ section.total .sum { font-size: 28px; font-weight: 800; margin: 0; font-variant-
 .money-day h3 { margin: 6px 0 0; }
 /* iPhone zooms into any focused field under 16px */
 :is(#view, #tools, #sheet) :is(input:not([type=checkbox], [type=radio], [name=yen]), textarea, select) { font-size: 16px; }
+
+/* ---------- Japanese touches ---------- */
+h1, h3, .hdr b, .when, .countdown .big, section.total .sum, .day-row b { font-family: var(--mincho); font-weight: 700; }
+.hdr-title { display: flex; align-items: center; gap: 8px; }
+.hanko {
+  font-family: var(--mincho); font-size: 11px; font-weight: 700; line-height: 1;
+  color: var(--accent); border: 1.5px solid var(--accent); border-radius: 4px; padding: 3px 4px;
+}
+.next-up { border-left-width: 3px; }
+.eyebrow { letter-spacing: .12em; }

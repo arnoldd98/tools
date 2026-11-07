@@ -3,7 +3,7 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtBoth, toHome, CATEGORIES, CATEGORY_LABEL, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview,
-} from './lib.js?v=2';
+} from './lib.js?v=3';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -61,7 +61,8 @@ export function renderHeader(route, state, dirty, today) {
   if (num) {
     const day = state.days.find((d) => d.date === today);
     const title = [longDate(today), day?.city].filter(Boolean).map(esc).join(' · ');
-    return `<div class="hdr"><b>${title}</b><span class="muted">Day ${num.n} of ${num.of}</span></div>${syncBtn(dirty)}`;
+    return `<div class="hdr"><div class="hdr-title"><b>${title}</b><span class="hanko" aria-label="Today">今日</span></div>`
+      + `<span class="muted">Day ${num.n} of ${num.of}</span></div>${syncBtn(dirty)}`;
   }
   return `<h1>${esc(state.title)}</h1>${syncBtn(dirty)}`;
 }
