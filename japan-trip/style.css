@@ -14,7 +14,7 @@
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
-  padding: env(safe-area-inset-top, 0) 16px env(safe-area-inset-bottom, 0);
+  padding: env(safe-area-inset-top, 0) 16px calc(132px + env(safe-area-inset-bottom, 0));
   max-width: 720px; margin-inline: auto;
 }
 .muted { color: var(--muted); font-size: 13px; margin: 4px 0; }
@@ -22,7 +22,7 @@ body {
 .top-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 h1 { font-size: 20px; margin: 0; }
 .progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 8px; }
-#progress-bar { height: 100%; width: 0; background: var(--ok); transition: width .3s; }
+.progress > div { height: 100%; width: 0; background: var(--ok); }
 
 .btn {
   font: inherit; font-size: 14px; padding: 6px 12px; border-radius: 8px;
@@ -68,11 +68,9 @@ h1 { font-size: 20px; margin: 0; }
 .strip.compact .dom { font-size: 18px; }
 
 /* ---------- cards ---------- */
-.now, .tile, .stay, .next-up, .info details, .money-day {
+.next-up, .info-sec, .countdown, section.total, .cats, .spent, .edit-day, .by-day, .tools {
   background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 12px 0;
 }
-.tile { display: block; text-decoration: none; color: inherit; }
-.tile .what::after { content: " ›"; color: var(--muted); }
 .next-up { border-left: 4px solid var(--accent); }
 .next-up.done-all { border-left-color: var(--ok); }
 .eyebrow { margin: 0 0 4px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
@@ -82,7 +80,6 @@ h1 { font-size: 20px; margin: 0; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; }
 .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
 a.btn { display: inline-block; text-decoration: none; }
-.now .add-spend { margin-top: 4px; }
 h3 { font-size: 15px; margin: 16px 0 4px; }
 h3 .total { float: right; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
 
@@ -106,18 +103,9 @@ h3 .total { float: right; font-weight: 600; color: var(--accent); font-variant-n
 .timeline .price { font-variant-numeric: tabular-nums; }
 
 /* ---------- spending ---------- */
-form.add-spend { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-form.add-spend input, form.add-spend select, #fx input {
+#fx input {
   font: inherit; color: inherit; background: var(--bg); min-width: 0;
   border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px;
-}
-/* phone: amount + category, then label + Add */
-form.add-spend select { order: 1; }
-form.add-spend [name=label] { order: 2; }
-form.add-spend .btn { order: 3; }
-@media (min-width: 560px) {
-  form.add-spend { grid-template-columns: 1fr 1.4fr auto auto; }
-  form.add-spend > * { order: 0 !important; }
 }
 ul.spends { list-style: none; padding: 0; margin: 8px 0; }
 ul.spends li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); }
@@ -126,16 +114,6 @@ ul.spends .label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 ul.spends .cat { font-size: 11px; background: var(--line); border-radius: 10px; padding: 1px 8px; color: var(--muted); }
 ul.spends .amt { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
 ul.spends .at { margin: 0; font-size: 12px; font-variant-numeric: tabular-nums; }
-
-/* ---------- money view ---------- */
-.money h2 { font-size: 24px; margin: 8px 0 4px; font-variant-numeric: tabular-nums; }
-.cats { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
-.money-day h3 { margin-top: 0; }
-
-/* ---------- trip info ---------- */
-.info details { padding: 0; }
-.info summary { padding: 12px; cursor: pointer; font-weight: 600; }
-.info ul { margin: 0; padding: 0 12px 12px 32px; }
 
 /* ---------- exchange rate ---------- */
 .fx { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; }
@@ -151,7 +129,122 @@ form.add-item input[name=time] { width: 6.5em; }
 form.add-item input[name=text] { flex: 1; min-width: 0; }
 textarea { width: 100%; margin-top: 8px; min-height: 3em; resize: vertical; }
 
-.bottom { display: flex; flex-wrap: wrap; gap: 8px; padding-block: 16px 32px; border-top: 1px solid var(--line); margin-top: 16px; }
 .settings { width: 100%; margin-top: 8px; }
 #settings { display: grid; gap: 8px; margin-top: 8px; }
 #settings label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+
+/* ---------- header ---------- */
+.hdr { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.hdr b { font-size: 18px; }
+.hdr .muted { margin: 0; }
+.top-row h1 + .muted { flex: 1; margin: 0; }
+#status:empty { display: none; }
+.update { width: 100%; margin-top: 6px; border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+/* ---------- bottom tabs ---------- */
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 2;
+  display: flex; max-width: 720px; margin-inline: auto;
+  background: var(--card); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.tab {
+  flex: 1; text-align: center; padding: 12px 0; min-height: 48px;
+  color: var(--muted); text-decoration: none; font-weight: 600;
+}
+.tab.on { color: var(--accent); }
+
+/* ---------- floating spend button ---------- */
+.fab {
+  position: fixed; right: max(16px, calc(50vw - 344px)); z-index: 2;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0));
+  background: var(--accent); color: #fff; border: 0; border-radius: 28px;
+  padding: 14px 18px; font: inherit; font-weight: 700; box-shadow: 0 4px 14px #0003; cursor: pointer;
+}
+
+/* ---------- spend sheet ---------- */
+.sheet { position: fixed; inset: 0; z-index: 3; }
+.sheet[hidden] { display: none; }
+.backdrop { position: absolute; inset: 0; background: #0006; }
+.spend-sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; max-width: 720px; margin-inline: auto;
+  background: var(--card); border-radius: 16px 16px 0 0; box-shadow: 0 -6px 20px #0003;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0));
+  display: grid; gap: 10px; text-align: center;
+}
+.spend-sheet .close { position: absolute; top: 10px; right: 10px; font-size: 18px; }
+.spend-sheet .eyebrow { margin: 0; }
+.spend-sheet [name=yen] {
+  font: inherit; font-size: 34px; font-weight: 800; text-align: center; width: 100%;
+  border: 0; background: transparent; color: var(--ink); padding: 0; font-variant-numeric: tabular-nums;
+}
+.spend-sheet [name=yen]:focus { outline: none; }
+.spend-sheet .live { margin: -6px 0 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.chip {
+  border: 1px solid var(--line); border-radius: 16px; padding: 6px 10px; font-size: 13px; cursor: pointer;
+  background: var(--bg);
+}
+.chip input { position: absolute; opacity: 0; pointer-events: none; }
+.chip:has(input:checked) { background: var(--accent); border-color: var(--accent); color: #fff; }
+.spend-sheet [name=label] {
+  font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 10px; width: 100%;
+}
+.spend-sheet .save { width: 100%; padding: 12px; font-size: 16px; }
+
+/* ---------- day screen ---------- */
+.timeline li.next .text { font-weight: 700; color: var(--accent); }
+.keyinfo { margin: 12px 0; }
+.tag {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px; margin: 6px 0;
+}
+.tag summary {
+  padding: 8px 12px; cursor: pointer; list-style: none;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tag summary::-webkit-details-marker { display: none; }
+.tag[open] summary { white-space: normal; font-weight: 600; }
+.tag p { margin: 0 12px 6px; font-size: 14px; }
+.tag .btn { margin: 0 12px 10px; }
+details > summary { cursor: pointer; }
+.spent summary b { float: right; color: var(--accent); font-variant-numeric: tabular-nums; }
+.edit-day summary, .by-day summary, .tools > summary { font-weight: 600; }
+.edit-items { list-style: none; padding: 0; margin: 8px 0; }
+.edit-items li { display: flex; gap: 8px; align-items: center; padding: 4px 0; border-top: 1px solid var(--line); }
+.edit-items .time { color: var(--muted); font-size: 13px; min-width: 3em; }
+.edit-items .text { flex: 1; min-width: 0; }
+.edit-day .btn.danger { margin-top: 8px; }
+.icon { min-width: 36px; min-height: 36px; }
+
+/* ---------- countdown ---------- */
+.countdown { text-align: center; padding: 24px 12px; }
+.countdown .big { font-size: 32px; font-weight: 800; margin: 0 0 6px; }
+.countdown p { margin: 4px 0; }
+.countdown .route { color: var(--muted); }
+.countdown .btn { margin-top: 10px; }
+
+/* ---------- days list ---------- */
+.day-list { list-style: none; padding: 0; margin: 8px 0; }
+.day-row {
+  display: grid; grid-template-columns: 1fr auto; column-gap: 8px; align-items: center;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px 12px; margin: 6px 0; text-decoration: none; color: inherit;
+}
+.day-row .sum { grid-column: 1; grid-row: 2; color: var(--muted); font-size: 13px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.day-row .prog { grid-column: 2; grid-row: 1 / 3; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+/* ---------- trip ---------- */
+section.total .sum { font-size: 28px; font-weight: 800; margin: 0; font-variant-numeric: tabular-nums; }
+.cat-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin: 8px 0; }
+.cat-row .amt { font-variant-numeric: tabular-nums; }
+.cat-row .bar { grid-column: 1 / -1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.cat-row .bar i { display: block; height: 100%; background: var(--accent); }
+.cat-row.zero { opacity: .45; }
+.info-sec summary { font-weight: 600; }
+.info-sec ul { margin: 8px 0 0; padding-left: 20px; }
+.tool-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.tools[hidden] { display: none; }
+.money-day { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 4px; }
+.money-day h3 { margin: 6px 0 0; }
