@@ -116,6 +116,9 @@ test('shipped trip.json normalises without change and uses the new fields', () =
   assert.ok(s.days.some((d) => d.stay));
   assert.ok(s.days.some((d) => d.items.some((i) => i.place)));
   assert.ok(s.days.some((d) => d.spends.length));
+  assert.ok(s.days.some((d) => d.keyInfo.length >= 2));
+  assert.ok(s.days.some((d) => d.keyInfo.some((k) => k.place)));
+  assert.ok(s.days.every((d) => d.spends.every((x) => CATEGORIES.includes(x.category))));
   assert.deepEqual(JSON.parse(JSON.stringify(s)), raw, 'seed should already be in normalised shape');
 });
 
