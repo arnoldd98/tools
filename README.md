@@ -32,7 +32,8 @@ phone as an app (PWA) and works offline.
   Safari don't carry over).
 - **Offline**: after one visit the app and your data open with no signal; edits save to
   the phone and Sync when you're back online.
-- **Deploying changes**: bump `VERSION` in `japan-trip/sw.js` whenever any app file
+- **Deploying changes**: bump `VERSION` in `japan-trip/sw.js` (and the matching `?v=` tags in
+  `index.html`, `app.js`, `views.js`; `npm test` fails if they disagree) whenever any app file
   (`index.html`, `*.js`, `style.css`, manifest, icons) changes. Phones then show
   *Updated, tap to reload*; without the bump they keep the old version.
   `data/trip.json` doesn't need a bump. Icons: `python3 japan-trip/icons/make_icons.py`.
