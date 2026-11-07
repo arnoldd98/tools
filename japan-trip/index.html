@@ -10,23 +10,25 @@
 <body>
   <header class="top">
     <div id="top" class="top-row"></div>
-    <div class="progress"><div id="progress-bar"></div></div>
-    <p id="status" class="muted"></p>
+    <p id="status" class="muted" role="status"></p>
+    <button id="update" class="btn update" hidden>Updated, tap to reload</button>
   </header>
 
   <main id="view"></main>
 
-  <footer class="bottom">
-    <button class="btn" data-action="add-day">+ Add day</button>
-    <button class="btn" data-action="export">Export JSON</button>
-    <label class="btn">Import JSON<input id="import" type="file" accept="application/json" hidden></label>
-    <button class="btn" data-action="reload">Reload from GitHub</button>
+  <details id="tools" class="tools" hidden>
+    <summary>Settings</summary>
     <form id="fx" class="fx">
       <label>1 SGD = <input name="rate" inputmode="decimal" size="6"> JPY</label>
       <button class="btn" type="submit">Save rate</button>
       <button class="btn" type="button" data-action="fetch-fx">Fetch latest</button>
       <span id="fx-updated" class="muted"></span>
     </form>
+    <div class="tool-buttons">
+      <button class="btn" data-action="export">Export JSON</button>
+      <label class="btn">Import JSON<input id="import" type="file" accept="application/json" hidden></label>
+      <button class="btn" data-action="reload">Reload from GitHub</button>
+    </div>
     <details class="settings">
       <summary>Sync settings</summary>
       <form id="settings">
@@ -40,7 +42,14 @@
         <p class="muted">The token is stored only in this browser (localStorage).</p>
       </form>
     </details>
-  </footer>
+  </details>
+
+  <div id="tabs"></div>
+
+  <div id="sheet" class="sheet" hidden>
+    <div class="backdrop" data-action="close-spend"></div>
+    <div id="sheet-body"></div>
+  </div>
 
   <script type="module" src="app.js"></script>
 </body>

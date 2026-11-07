@@ -1,11 +1,14 @@
 // Japan trip tracker — static page, data in data/trip.json.
 // Edits save instantly to localStorage; "Sync" commits the JSON back to GitHub.
-// Hash routes: #/ home (day strip), #/day/<id> day page, #/money spending.
+// Hash routes: #/ Today, #/days, #/day/<id>, #/trip. Bottom tabs switch between them.
 
 import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, FX_URL, sortDays,
+  toHome, fmtHome,
 } from './lib.js';
-import { renderTopRow, renderView } from './views.js';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js';
+
+const LOAD_TIMEOUT_MS = 8000;
 
 const CFG_KEY = 'jt.cfg';
 const DRAFT_KEY = 'jt.draft';
@@ -53,25 +56,27 @@ const b64encode = (str) => {
 const b64decode = (b64) =>
   new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\n/g, '')), (c) => c.charCodeAt(0)));
 
-async function apiGet() {
-  const res = await fetch(apiUrl(), { headers: apiHeaders(), cache: 'no-store' });
+async function apiGet(signal) {
+  const res = await fetch(apiUrl(), { headers: apiHeaders(), cache: 'no-store', signal });
   if (!res.ok) throw new Error(`GitHub GET ${res.status}`);
   const json = await res.json();
   return { data: JSON.parse(b64decode(json.content)), sha: json.sha };
 }
 
 // Prefer the API when a token is set (fresh; Pages can lag a minute behind commits).
-async function fetchRemote() {
-  if (cfg.token) return (await apiGet()).data;
-  const res = await fetch('data/trip.json', { cache: 'no-store' });
+async function fetchRemote(signal) {
+  if (cfg.token) return (await apiGet(signal)).data;
+  const res = await fetch('data/trip.json', { cache: 'no-store', signal });
   if (!res.ok) throw new Error(`Load trip.json ${res.status}`);
   return res.json();
 }
 
 async function sync() {
   if (!cfg.token) {
-    setStatus('Add a GitHub token in Sync settings (bottom of page) to sync.');
+    location.hash = '#/trip';
+    $('#tools').open = true;
     $('.settings').open = true;
+    setStatus('Add a GitHub token in Sync settings (Trip → Settings) to sync.');
     return;
   }
   setStatus('Syncing…');
@@ -103,21 +108,45 @@ function commit() { dirty = true; saveDraft(); render(); }
 function setStatus(msg) { $('#status').textContent = msg; }
 const findDay = (id) => state.days.find((d) => d.id === id);
 
+// Fetch remote data, giving up after LOAD_TIMEOUT_MS (weak signal must not hang the app).
+async function fetchRemoteWithTimeout() {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), LOAD_TIMEOUT_MS);
+  try {
+    return await fetchRemote(ctrl.signal);
+  } catch (e) {
+    throw ctrl.signal.aborted ? new Error('timed out') : e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function offlineOr(msg) {
+  return navigator.onLine === false ? 'Offline. Showing the copy on this phone.' : msg;
+}
+
+// Device first: draw the phone's copy immediately, then refresh from remote in the
+// background. Unsynced edits on the device always win unless forced (Reload).
 async function load({ force = false } = {}) {
   const draft = readLS(DRAFT_KEY);
-  if (!force && draft?.dirty) {
-    state = normalise(draft.data); dirty = true;
-    setStatus('Unsynced changes on this device. Tap Sync to save to GitHub.');
-  } else {
-    try {
-      state = normalise(await fetchRemote()); dirty = false; saveDraft();
-      setStatus(state.updated ? `Last synced ${new Date(state.updated).toLocaleString()}` : '');
-    } catch (e) {
-      if (draft?.data) state = normalise(draft.data);
-      setStatus(`Couldn't load from GitHub (${e.message}). Showing this device's copy.`);
-    }
+  const haveCopy = !force && draft?.data;
+  if (haveCopy) {
+    state = normalise(draft.data); dirty = !!draft.dirty;
+    render();
+    if (dirty) setStatus('Unsynced changes on this device. Tap Sync to save to GitHub.');
   }
-  render();
+  try {
+    const remote = normalise(await fetchRemoteWithTimeout());
+    if (force || !dirty) {
+      state = remote; dirty = false; saveDraft();
+      render();
+      setStatus(state.updated ? `Last synced ${new Date(state.updated).toLocaleString()}` : '');
+    }
+  } catch (e) {
+    if (!haveCopy && draft?.data && !force) state = normalise(draft.data);
+    if (!haveCopy) render();
+    setStatus(offlineOr(`Couldn't reach GitHub (${e.message}). Showing this phone's copy.`));
+  }
 }
 
 // ---------- render ----------
@@ -125,36 +154,38 @@ let lastRouteKey = null;
 
 function render() {
   const route = parseRoute(location.hash);
-  if (route.view === 'day' && !findDay(route.id)) {
-    // replace, not assign: a dead #/day/<id> entry must not trap the Back button
-    if (location.hash !== '#/') { location.replace('#/'); return; } // hashchange re-renders
-  }
+  // replace, not assign: dead or old entries must not trap the Back button
+  if (route.view === 'redirect') { location.replace(route.to); return; }
+  if (route.view === 'day' && !findDay(route.id)) { location.replace('#/days'); return; }
   document.title = state.title || 'Japan Trip';
-
-  const all = state.days.flatMap((d) => d.items);
-  const done = all.filter((i) => i.done).length;
-  $('#progress-bar').style.width = all.length ? `${(100 * done) / all.length}%` : '0';
+  const today = todayISO();
 
   const routeKey = route.view + ':' + (route.id || '');
   const stripScroll = document.querySelector('.strip')?.scrollLeft;
+  const openDetails = [...document.querySelectorAll('#view details[open]')].map((d) => d.className);
 
-  $('#top').innerHTML = renderTopRow(route, state, dirty);
-  $('#view').innerHTML = renderView(route, state, todayISO());
+  $('#top').innerHTML = renderHeader(route, state, dirty, today);
+  $('#view').innerHTML = renderView(route, state, today);
+  $('#tabs').innerHTML = renderTabs(route);
+  $('#tools').hidden = route.view !== 'trip';
 
   const rate = $('#fx [name=rate]');
   if (document.activeElement !== rate) rate.value = state.fx.jpyPerHome;
   $('#fx-updated').textContent = state.fx.updatedAt
     ? `updated ${new Date(state.fx.updatedAt).toLocaleString()}` : '';
 
-  // Scroll the strip to today / the open day only when the route changes, so a
-  // re-render after a checkbox tap doesn't jump around.
   const strip = document.querySelector('.strip');
   if (routeKey !== lastRouteKey) {
     document.querySelector('.strip .card.selected, .strip .card.today')
       ?.scrollIntoView({ inline: 'center', block: 'nearest' });
     if (lastRouteKey !== null) window.scrollTo(0, 0);
-  } else if (strip && stripScroll != null) {
-    strip.scrollLeft = stripScroll;
+  } else {
+    if (strip && stripScroll != null) strip.scrollLeft = stripScroll;
+    // keep expanded sections (Spent, Edit day, …) open across re-renders on the same screen
+    for (const cls of openDetails) {
+      const el = document.querySelector(`#view details[class="${cls}"]`);
+      if (el) el.open = true;
+    }
   }
   lastRouteKey = routeKey;
 }
@@ -182,6 +213,36 @@ async function fetchFx() {
   setStatus(`Rate updated: 1 ${state.fx.home} = ${r} JPY`);
 }
 
+// ---------- spend sheet ----------
+// Opening pushes a history entry so the phone's Back closes the sheet; closing any
+// other way pops that entry again, so no stray entry is ever left behind.
+let sheetOpen = false;
+
+function openSheet(dayId) {
+  $('#sheet-body').innerHTML = renderSpendSheet(dayId, state.fx);
+  $('#sheet').hidden = false;
+  sheetOpen = true;
+  $('#sheet [name=yen]').focus(); // must stay inside the tap handler for the iPhone keyboard
+  history.pushState({ sheet: true }, '');
+}
+
+function closeSheet({ fromPop = false } = {}) {
+  if (!sheetOpen) return;
+  sheetOpen = false;
+  $('#sheet').hidden = true;
+  $('#sheet-body').innerHTML = '';
+  if (!fromPop) history.back();
+}
+
+window.addEventListener('popstate', () => { if (sheetOpen) closeSheet({ fromPop: true }); });
+
+function updateSheetPreview(input) {
+  const yen = parseYen(input.value);
+  const form = input.form;
+  form.querySelector('.live').textContent = '≈ ' + fmtHome(toHome(yen || 0, state.fx), state.fx.home);
+  form.querySelector('.save').textContent = yen ? `Save ¥${yen.toLocaleString('en-US')}` : 'Save';
+}
+
 // ---------- events ----------
 window.addEventListener('hashchange', render);
 
@@ -194,11 +255,16 @@ document.addEventListener('click', (e) => {
 
   if (action === 'sync') {
     sync();
+  } else if (action === 'open-spend') {
+    openSheet(el.dataset.day || null);
+  } else if (action === 'close-spend') {
+    closeSheet();
   } else if (action === 'toggle') {
     const item = day?.items.find((i) => i.id === itemId);
     if (!item) return;
     item.done = !item.done; commit();
   } else if (action === 'del-item') {
+    if (!day) return;
     day.items = day.items.filter((i) => i.id !== itemId); commit();
   } else if (action === 'del-spend') {
     const spendId = e.target.closest('[data-spend]')?.dataset.spend;
@@ -208,18 +274,18 @@ document.addEventListener('click', (e) => {
   } else if (action === 'del-day') {
     if (el.dataset.confirm) {
       state.days = state.days.filter((d) => d !== day);
-      location.replace('#/'); // the deleted day's page leaves history
+      location.replace('#/days'); // the deleted day's page leaves history
       commit();
     } else {
-      el.dataset.confirm = '1'; el.textContent = 'Delete?';
+      el.dataset.confirm = '1'; el.textContent = 'Tap again to delete';
       setTimeout(() => render(), 3000);
     }
   } else if (action === 'add-day') {
     const last = sortDays(state.days).filter((d) => d.date).pop();
-    const d = { id: uid(), date: last?.date || todayISO(), city: last?.city || '', items: [], spends: [], notes: '' };
+    const d = { id: uid(), date: last?.date || todayISO(), city: last?.city || '', items: [], spends: [], keyInfo: [], notes: '' };
     state.days.push(d);
     commit();
-    location.hash = `#/day/${d.id}`;
+    location.hash = `#/day/${encodeURIComponent(d.id)}`;
   } else if (action === 'fetch-fx') {
     fetchFx();
   } else if (action === 'export') {
@@ -231,6 +297,10 @@ document.addEventListener('click', (e) => {
   } else if (action === 'reload') {
     load({ force: true });
   }
+});
+
+document.addEventListener('input', (e) => {
+  if (e.target.matches('.spend-sheet [name=yen]')) updateSheetPreview(e.target);
 });
 
 // Field edits (date/city/notes) — save on change, no re-render while typing.
@@ -257,19 +327,22 @@ document.addEventListener('submit', (e) => {
     form.querySelector('[name=rate]').blur();
     setRate(r);
     setStatus(`Rate saved: 1 ${state.fx.home} = ${r} JPY`);
-  } else if (form.classList.contains('add-spend')) {
+  } else if (form.classList.contains('spend-sheet')) {
     const yen = parseYen(fd.get('yen'));
-    if (yen === null) { setStatus('Enter an amount in yen above 0.'); return; }
+    if (yen === null) {
+      setStatus('Enter an amount in yen above 0.');
+      form.querySelector('[name=yen]').focus();
+      return;
+    }
     const day = form.dataset.day ? findDay(form.dataset.day) : ensureDay(state, todayISO(), uid);
     if (!day) return;
-    const pos = [...document.querySelectorAll('.add-spend')].indexOf(form);
     day.spends.push({
       id: uid(), yen, label: String(fd.get('label') || '').trim(),
       category: fd.get('category') || 'food', at: localISO(),
     });
+    closeSheet();
     commit();
     setStatus(`Logged ¥${yen.toLocaleString('en-US')}.`);
-    document.querySelectorAll('.add-spend')[pos]?.querySelector('[name=yen]')?.focus();
   } else if (form.classList.contains('add-item')) {
     const day = findDay(form.closest('[data-day]')?.dataset.day);
     if (!day) return;
