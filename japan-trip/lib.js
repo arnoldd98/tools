@@ -22,6 +22,7 @@ function normPlace(p) {
 function normItem(i) {
   const o = obj(i) || {};
   const out = { ...o, id: idOf(o.id), time: str(o.time), text: str(o.text), done: Boolean(o.done) };
+  if (o.fixed !== undefined) out.fixed = Boolean(o.fixed); // must-make time (flight, ferry…)
   if (o.place !== undefined) out.place = normPlace(o.place);
   if (out.place === undefined) delete out.place;
   return out;
@@ -116,6 +117,26 @@ export function validRate(input) {
   const n = Number(input);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
+
+// '05:10' → '5:10 am'; anything that isn't HH:MM is shown as-is.
+export function fmtTime(t) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(str(t));
+  if (!m) return str(t);
+  const h = Number(m[1]);
+  return `${h % 12 || 12}:${m[2]} ${h < 12 ? 'am' : 'pm'}`;
+}
+
+const toMin = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+export const minutesUntil = (time, now) => toMin(time) - toMin(now);
+export function fmtUntil(min) {
+  if (min <= 0) return 'now';
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if (!h) return `in ${m} min`;
+  return m ? `in ${h} h ${m} min` : `in ${h} h`;
+}
+
+export const nextFixed = (day) => (day?.items || []).find((i) => i.fixed && !i.done) || null;
 
 export const nextUp = (day) => (day?.items || []).find((i) => !i.done) || null;
 

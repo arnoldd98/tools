@@ -178,3 +178,32 @@ test('new routes', () => {
   assert.deepEqual(parseRoute('#/trip'), { view: 'trip' });
   assert.deepEqual(parseRoute('#/money'), { view: 'redirect', to: '#/trip' });
 });
+
+import { fmtTime, minutesUntil, fmtUntil, nextFixed } from '../lib.js';
+test('fmtTime is 12-hour', () => {
+  assert.equal(fmtTime('05:10'), '5:10 am');
+  assert.equal(fmtTime('12:00'), '12:00 pm');
+  assert.equal(fmtTime('00:30'), '12:30 am');
+  assert.equal(fmtTime('23:20'), '11:20 pm');
+  assert.equal(fmtTime(''), '');
+  assert.equal(fmtTime('nonsense'), 'nonsense');
+});
+test('normalise keeps fixed only when set', () => {
+  const s = normalise({ days: [{ id: 'd', items: [{ id: 'a', fixed: 1 }, { id: 'b' }] }] });
+  assert.equal(s.days[0].items[0].fixed, true);
+  assert.ok(!('fixed' in s.days[0].items[1]));
+});
+test('countdown helpers', () => {
+  assert.equal(minutesUntil('05:10', '04:30'), 40);
+  assert.equal(minutesUntil('05:10', '06:00'), -50);
+  assert.equal(fmtUntil(40), 'in 40 min');
+  assert.equal(fmtUntil(135), 'in 2 h 15 min');
+  assert.equal(fmtUntil(120), 'in 2 h');
+  assert.equal(fmtUntil(0), 'now');
+  assert.equal(fmtUntil(-5), 'now');
+});
+test('nextFixed is the first undone fixed stop', () => {
+  const day = { items: [{ id: 'a', fixed: true, done: true }, { id: 'b' }, { id: 'c', fixed: true }, { id: 'd', fixed: true }] };
+  assert.equal(nextFixed(day).id, 'c');
+  assert.equal(nextFixed({ items: [{ id: 'x' }] }), null);
+});

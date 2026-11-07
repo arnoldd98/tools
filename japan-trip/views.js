@@ -2,8 +2,8 @@
 import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtBoth, toHome, CATEGORIES, CATEGORY_LABEL, CATEGORY_ICON,
-  dayNumber, tripSpan, fmtRange, tripOverview,
-} from './lib.js?v=3';
+  dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed,
+} from './lib.js?v=4';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -101,8 +101,9 @@ function renderNextUp(day) {
     return `<div class="next-up done-all"><p class="eyebrow">Next up</p><p class="what">All done for today</p>
       ${day.stay ? `<p class="place">${placeLine(day.stay)}</p>${mapsBtn(day.stay, 'Maps to hotel')}` : ''}</div>`;
   }
-  return `<div class="next-up"><p class="eyebrow">Next up</p>
-    <p class="what">${next.time ? `<span class="time">${esc(next.time)}</span> ` : ''}${esc(next.text)}</p>
+  return `<div class="next-up${next.fixed ? ' fixed' : ''}"><p class="eyebrow">Next up</p>
+    <p class="what">${next.time ? `<span class="time">${esc(fmtTime(next.time))}</span> ` : ''}${esc(next.text)}</p>
+    ${next.fixed ? '<p class="ontime">⏱ be on time</p>' : ''}
     ${next.place ? `<p class="place">${placeLine(next.place)}</p>` : ''}
     <div class="actions">${next.place ? mapsBtn(next.place) : ''}<button class="btn" data-action="toggle" data-item="${esc(next.id)}">Done</button></div>
   </div>`;
@@ -110,18 +111,19 @@ function renderNextUp(day) {
 
 function renderItem(i, nextId, editing) {
   const detail = [
+    i.fixed && !editing ? '<span class="ontime">⏱ be on time</span>' : '',
     i.place ? `${placeLine(i.place)} ${mapsBtn(i.place, 'Map', 'maplink')}` : '',
     i.note ? `<span class="note">${esc(i.note)}</span>` : '',
     i.price ? `<span class="price">${esc(i.price)}</span>` : '',
   ].filter(Boolean);
   return `
-    <li class="${i.done ? 'done' : ''}${i.id === nextId ? ' next' : ''}" data-item="${esc(i.id)}">
+    <li class="${[i.fixed && 'fixed', i.done && 'done', i.id === nextId && 'next'].filter(Boolean).join(' ')}" data-item="${esc(i.id)}">
       ${editing
     ? `<input type="time" value="${esc(i.time)}" data-item-field="time" aria-label="Time">
       <input value="${esc(i.text)}" data-item-field="text" aria-label="Stop">
-      <button class="icon" data-action="del-item" title="Delete stop">✕</button>`
+      <span class="row-btns"><button class="icon fx-toggle${i.fixed ? ' on' : ''}" data-action="toggle-fixed" title="Fixed time (must make it)" aria-pressed="${!!i.fixed}">⏱</button><button class="icon" data-action="del-item" title="Delete stop">✕</button></span>`
     : `<input type="checkbox" ${i.done ? 'checked' : ''} data-action="toggle" aria-label="Done">
-      <span class="time">${esc(i.time)}</span>
+      <span class="time">${esc(fmtTime(i.time))}</span>
       <span class="text">${esc(i.text)}</span>`}
       ${detail.length ? `<div class="detail">${detail.join(' ')}</div>` : ''}
     </li>`;
@@ -145,7 +147,17 @@ export function renderKeyInfo(day) {
 
 // Today and the day page share this. `page` adds the compact strip and day-page wording;
 // `editing` turns the plan into in-place fields (Edit / Done button on the plan heading).
-export function renderDayScreen(state, day, today, { page = false, editing = false } = {}) {
+// The next must-make stop. On today's screen it counts down from `now` ('HH:MM').
+function renderFixedStrip(day, today, now) {
+  const nf = nextFixed(day);
+  if (!nf) return '';
+  const isToday = day.date && day.date === today;
+  const what = esc(nf.text) + (nf.time ? ` · ${esc(fmtTime(nf.time))}` : '');
+  const until = isToday && now && nf.time ? ` · ${fmtUntil(minutesUntil(nf.time, now))}` : '';
+  return `<div class="fixed-strip">⏱ ${isToday ? 'Next fixed' : 'Fixed'}: <b>${what}</b>${until}</div>`;
+}
+
+export function renderDayScreen(state, day, today, { page = false, editing = false, now = '' } = {}) {
   const next = nextUp(day);
   const spentLabel = day.date && day.date === today ? 'Spent today' : 'Spent';
   const editBtn = `<button class="btn small" data-action="toggle-edit">${editing ? 'Done' : '✎ Edit'}</button>`;
@@ -154,6 +166,7 @@ export function renderDayScreen(state, day, today, { page = false, editing = fal
     : (day.notes ? `<h3>Notes</h3><p class="notes">${esc(day.notes)}</p>` : '');
   return `<section class="day-screen${editing ? ' is-editing' : ''}" data-day="${esc(day.id)}">
     ${page ? renderStrip(state.days, { today, selectedId: day.id, compact: true }) : ''}
+    ${renderFixedStrip(day, today, now)}
     ${renderNextUp(day)}
     <div class="plan-head"><h3>${page ? 'Plan' : "Today's plan"}</h3>${editBtn}</div>
     ${editing ? `<div class="day-fields">
@@ -195,10 +208,10 @@ const shortDate = (date) => {
   return d ? `${WD[d.getDay()]} ${d.getDate()}` : 'Undated';
 };
 
-export function renderToday(state, today, { editingId } = {}) {
+export function renderToday(state, today, { editingId, now } = {}) {
   const ph = tripPhase(state.days, today);
   if (ph.phase === 'during' && ph.day) {
-    return renderDayScreen(state, ph.day, today, { page: false, editing: ph.day.id === editingId });
+    return renderDayScreen(state, ph.day, today, { page: false, editing: ph.day.id === editingId, now });
   }
   if (ph.phase === 'during') {
     return `<section class="day-screen">
@@ -270,12 +283,12 @@ export function renderTrip(state) {
     <div class="progress"><div style="width:${pctDone}%"></div></div>`;
 }
 
-export function renderView(route, state, today, { editingId } = {}) {
+export function renderView(route, state, today, { editingId, now } = {}) {
   if (route.view === 'trip') return renderTrip(state);
   if (route.view === 'days') return renderDays(state, today);
   if (route.view === 'day') {
     const day = state.days.find((d) => d.id === route.id);
-    return day ? renderDayScreen(state, day, today, { page: true, editing: day.id === editingId }) : renderDays(state, today);
+    return day ? renderDayScreen(state, day, today, { page: true, editing: day.id === editingId, now }) : renderDays(state, today);
   }
-  return renderToday(state, today, { editingId });
+  return renderToday(state, today, { editingId, now });
 }

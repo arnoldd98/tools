@@ -5,8 +5,8 @@
 import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, FX_URL, sortDays,
   toHome, fmtHome,
-} from './lib.js?v=3';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=3';
+} from './lib.js?v=4';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=4';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -23,6 +23,7 @@ let dirty = false;
 
 const $ = (s) => document.querySelector(s);
 const uid = () => Math.random().toString(36).slice(2, 9);
+const nowHHMM = () => new Date().toTimeString().slice(0, 5); // local 'HH:MM'
 const todayISO = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
 // ISO-8601 in device local time with its offset, e.g. 2026-12-01T12:40:00+09:00.
 function localISO(d = new Date()) {
@@ -174,7 +175,7 @@ function render() {
   const openDetails = [...document.querySelectorAll('#view details')].map((d) => d.open);
 
   $('#top').innerHTML = renderHeader(route, state, dirty, today);
-  $('#view').innerHTML = renderView(route, state, today, { editingId });
+  $('#view').innerHTML = renderView(route, state, today, { editingId, now: nowHHMM() });
   $('#tabs').innerHTML = renderTabs(route);
   $('#tools').hidden = route.view !== 'trip';
 
@@ -265,6 +266,12 @@ function updateSheetPreview(input) {
 // ---------- events ----------
 window.addEventListener('hashchange', render);
 
+// Keep the "Next fixed … in 40 min" countdown current, without disturbing typing.
+setInterval(() => {
+  const typing = document.activeElement?.closest?.('#view, #sheet, #tools') && document.activeElement.matches('input, textarea, select');
+  if (!sheetOpen && !typing && document.visibilityState === 'visible') render();
+}, 60000);
+
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action]');
   const action = el?.dataset.action;
@@ -274,6 +281,11 @@ document.addEventListener('click', (e) => {
 
   if (action === 'sync') {
     sync();
+  } else if (action === 'toggle-fixed') {
+    const item = day?.items.find((i) => i.id === itemId);
+    if (!item) return;
+    if (item.fixed) delete item.fixed; else item.fixed = true;
+    commit();
   } else if (action === 'toggle-edit') {
     editingId = editingId === day?.id ? null : day?.id ?? null;
     render();

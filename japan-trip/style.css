@@ -2,7 +2,8 @@
   /* Matcha & kinari: unbleached-cotton cream, matcha green, sumi ink. Light only. */
   --bg: #f6f3ea; --card: #fdfcf7; --ink: #2c2e26; --muted: #737564;
   --line: #e6e1d0; --accent: #6e8c4f; --ok: #6e8c4f; --today: #edf1e2;
-  --shu: #b5583c; /* persimmon, for unsynced and destructive */
+  --shu: #b5583c; /* persimmon: unsynced, destructive, must-make times */
+  --shu-bg: #f8ebe4; --shu-line: #ebcdbf;
   --mincho: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
   color-scheme: light;
 }
@@ -268,3 +269,24 @@ h1, h3, .hdr b, .when, .countdown .big, section.total .sum, .day-row b { font-fa
 }
 .next-up { border-left-width: 3px; }
 .eyebrow { letter-spacing: .12em; }
+
+/* ---------- fixed (must-make) times ---------- */
+.fixed-strip {
+  margin: 10px 0 0; padding: 7px 12px; border-radius: 10px; font-size: 14px;
+  background: var(--shu-bg); border: 1px solid var(--shu-line); color: var(--shu);
+}
+.ontime { color: var(--shu); font-size: 12px; font-weight: 600; margin: 0 0 6px; }
+.next-up.fixed { border-left-color: var(--shu); }
+.next-up.fixed .what .time { color: var(--shu); }
+.timeline li.fixed .time { color: var(--shu); font-weight: 800; }
+.timeline li.fixed .text { font-weight: 700; }
+.timeline li.fixed input[type=checkbox] { outline: 2px solid var(--shu); outline-offset: 1px; border-radius: 3px; }
+.timeline li.fixed.done .time { color: var(--muted); font-weight: 400; }
+.timeline li.fixed.done .ontime { display: none; }
+.timeline .time { font-size: 12px; white-space: nowrap; }
+.timeline li { grid-template-columns: 18px 4.6em 1fr auto; }
+.row-btns { display: flex; }
+.fx-toggle { opacity: .35; }
+.fx-toggle.on { opacity: 1; color: var(--shu); }
+.timeline.editing li { grid-template-columns: 6.8em 1fr auto; }
+.timeline li.fixed.next .text { color: var(--shu); }

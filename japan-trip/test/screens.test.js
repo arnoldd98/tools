@@ -141,3 +141,25 @@ test('spend sheet puts Save right under the amount (iPhone keyboard covers the b
   const html = renderSpendSheet('d1', trip.fx);
   assert.ok(html.indexOf('class="btn primary save"') < html.indexOf('class="chips"'));
 });
+
+test('fixed stops: 12-hour times, marked rows, next-fixed strip with countdown', () => {
+  const day = normalise({ days: [{ id: 'f', date: '2026-11-13', city: 'Okinawa', items: [
+    { id: 'a', time: '05:10', text: 'Shuttle bus', fixed: true, note: 'or 5:55 am' },
+    { id: 'b', time: '', text: 'Breakfast' },
+    { id: 'c', time: '07:40', text: 'Flight', fixed: true },
+    { id: 'd', time: '14:00', text: 'Check in' }] }] }).days[0];
+  const st = { ...trip, days: [day] };
+  const html = renderDayScreen(st, day, '2026-11-13', { now: '04:30' });
+  assert.match(html, /<div class="fixed-strip">⏱ Next fixed: <b>Shuttle bus · 5:10 am<\/b> · in 40 min<\/div>/);
+  assert.match(html, /<li class="fixed[^"]*" data-item="a">[\s\S]*?<span class="time">5:10 am<\/span>[\s\S]*?<span class="ontime">⏱ be on time<\/span>/);
+  assert.match(html, /<li class="[^"]*" data-item="d">[\s\S]*?<span class="time">2:00 pm<\/span>/);
+  assert.ok(!/data-item="d">[\s\S]*?be on time[\s\S]*?<\/li>/.test(html.slice(html.indexOf('data-item="d"'))), 'flexible stop has no be-on-time');
+  assert.match(html, /class="next-up fixed"[\s\S]*?5:10 am[\s\S]*?be on time/);
+  // another day: no countdown
+  assert.match(renderDayScreen(st, day, '2026-11-12', { page: true }), /⏱ Fixed: <b>Shuttle bus · 5:10 am<\/b><\/div>/);
+  // edit mode has a fixed toggle per stop
+  assert.match(renderDayScreen(st, day, '2026-11-13', { editing: true }), /data-item="a">[\s\S]*?<button class="icon fx-toggle on" data-action="toggle-fixed"/);
+  // no fixed stops left → no strip
+  const done = { ...day, items: day.items.map((i) => ({ ...i, done: !!i.fixed })) };
+  assert.ok(!renderDayScreen(st, done, '2026-11-13', { now: '04:30' }).includes('fixed-strip'));
+});
