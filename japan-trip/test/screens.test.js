@@ -108,3 +108,7 @@ test('legacy file renders every route', () => {
   }
   assert.match(renderTrip(legacy), /miscellaneous[\s\S]*¥300/);
 });
+test('spend sheet puts Save right under the amount (iPhone keyboard covers the bottom)', () => {
+  const html = renderSpendSheet('d1', trip.fx);
+  assert.ok(html.indexOf('class="btn primary save"') < html.indexOf('class="chips"'));
+});

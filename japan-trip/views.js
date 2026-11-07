@@ -179,9 +179,9 @@ export function renderSpendSheet(dayId, fx) {
     <p class="eyebrow">Log a spend</p>
     <input name="yen" inputmode="numeric" autocomplete="off" placeholder="¥0" enterkeyhint="done" aria-label="Amount in yen">
     <p class="live muted">≈ ${fmtHome(0, fx.home)}</p>
+    <button class="btn primary save" type="submit">Save</button>
     <div class="chips">${chips}</div>
     <input name="label" placeholder="What for? (optional)" autocomplete="off">
-    <button class="btn primary save" type="submit">Save</button>
   </form>`;
 }
 

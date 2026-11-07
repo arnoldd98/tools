@@ -248,3 +248,5 @@ section.total .sum { font-size: 28px; font-weight: 800; margin: 0; font-variant-
 .tools[hidden] { display: none; }
 .money-day { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 4px; }
 .money-day h3 { margin: 6px 0 0; }
+/* iPhone zooms into any focused field under 16px */
+:is(#view, #tools, #sheet) :is(input:not([type=checkbox], [type=radio], [name=yen]), textarea, select) { font-size: 16px; }

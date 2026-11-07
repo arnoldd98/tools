@@ -94,6 +94,7 @@ async function sync() {
     });
     if (!res.ok) throw new Error(`GitHub PUT ${res.status}`);
     dirty = false;
+    edits++;
     saveDraft();
     render();
     setStatus(`Synced ${new Date().toLocaleTimeString()}`);
@@ -103,8 +104,11 @@ async function sync() {
 }
 
 // ---------- state ----------
+// Bumped by every local change and every successful Sync. A background load that
+// started before a change must not overwrite it (see load()).
+let edits = 0;
 function saveDraft() { writeLS(DRAFT_KEY, { dirty, data: state }); }
-function commit() { dirty = true; saveDraft(); render(); }
+function commit() { edits++; dirty = true; saveDraft(); render(); }
 function setStatus(msg) { $('#status').textContent = msg; }
 const findDay = (id) => state.days.find((d) => d.id === id);
 
@@ -130,6 +134,7 @@ function offlineOr(msg) {
 async function load({ force = false } = {}) {
   const draft = readLS(DRAFT_KEY);
   const haveCopy = !force && draft?.data;
+  const editsAtStart = edits;
   if (haveCopy) {
     state = normalise(draft.data); dirty = !!draft.dirty;
     render();
@@ -137,6 +142,8 @@ async function load({ force = false } = {}) {
   }
   try {
     const remote = normalise(await fetchRemoteWithTimeout());
+    // Something changed on this phone (an edit, or a Sync) while we waited: keep it.
+    if (!force && edits !== editsAtStart) return;
     if (force || !dirty) {
       state = remote; dirty = false; saveDraft();
       render();
@@ -162,7 +169,7 @@ function render() {
 
   const routeKey = route.view + ':' + (route.id || '');
   const stripScroll = document.querySelector('.strip')?.scrollLeft;
-  const openDetails = [...document.querySelectorAll('#view details[open]')].map((d) => d.className);
+  const openDetails = [...document.querySelectorAll('#view details')].map((d) => d.open);
 
   $('#top').innerHTML = renderHeader(route, state, dirty, today);
   $('#view').innerHTML = renderView(route, state, today);
@@ -182,16 +189,15 @@ function render() {
   } else {
     if (strip && stripScroll != null) strip.scrollLeft = stripScroll;
     // keep expanded sections (Spent, Edit day, …) open across re-renders on the same screen
-    for (const cls of openDetails) {
-      const el = document.querySelector(`#view details[class="${cls}"]`);
-      if (el) el.open = true;
-    }
+    // (by position: several tags share a class name)
+    const now = document.querySelectorAll('#view details');
+    if (now.length === openDetails.length) now.forEach((d, i) => { d.open = openDetails[i]; });
   }
   lastRouteKey = routeKey;
 }
 
 function markDirty() {
-  dirty = true; saveDraft();
+  edits++; dirty = true; saveDraft();
   const btn = document.querySelector('#top [data-action=sync]');
   if (btn) { btn.classList.add('dirty'); btn.textContent = 'Sync •'; }
 }
@@ -224,11 +230,22 @@ function openSheet(dayId) {
   sheetOpen = true;
   $('#sheet [name=yen]').focus(); // must stay inside the tap handler for the iPhone keyboard
   history.pushState({ sheet: true }, '');
+  window.visualViewport?.addEventListener('resize', liftSheet);
+  liftSheet();
+}
+
+// iOS overlays the keyboard on the layout viewport; lift the sheet above it.
+function liftSheet() {
+  const vv = window.visualViewport;
+  const form = $('#sheet .spend-sheet');
+  if (!vv || !form) return;
+  form.style.bottom = `${Math.max(0, window.innerHeight - vv.height - vv.offsetTop)}px`;
 }
 
 function closeSheet({ fromPop = false } = {}) {
   if (!sheetOpen) return;
   sheetOpen = false;
+  window.visualViewport?.removeEventListener('resize', liftSheet);
   $('#sheet').hidden = true;
   $('#sheet-body').innerHTML = '';
   if (!fromPop) history.back();
@@ -375,6 +392,12 @@ function watchForUpdates(reg) {
     const w = reg.installing;
     w?.addEventListener('statechange', () => { if (w.state === 'installed') showIfWaiting(); });
   });
+  // iPhone home-screen apps are resumed, not relaunched: check for a new version on resume.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') reg.update().catch(() => {});
+  });
+  // A worker may already be installing when registration resolves.
+  reg.installing?.addEventListener('statechange', (e) => { if (e.target.state === 'installed') showIfWaiting(); });
   $('#update').addEventListener('click', () => reg.waiting?.postMessage('skip-waiting'));
   // Reload only when an existing worker is replaced, not on the very first install.
   let reloaded = !hadController;
