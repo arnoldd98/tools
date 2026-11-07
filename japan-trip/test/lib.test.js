@@ -43,7 +43,7 @@ test('money formatting', () => {
   assert.equal(CATEGORIES[0], 'food');
 });
 import { parseYen, validRate, nextUp, dayTotal, tripTotal, byCategory, mapsUrl, insertItem,
-  parseRoute, tripPhase, ensureDay, parseFxRate } from '../lib.js';
+  parseRoute, tripPhase, ensureDay, parseFxRate, fxUrls, rateIsStale } from '../lib.js';
 
 test('parseYen accepts messy input and rejects non-positive', () => {
   assert.equal(parseYen('1,200'), 1200);
@@ -102,10 +102,25 @@ test('ensureDay finds or creates', () => {
   assert.deepEqual(made, { id: 'new', date: '2026-12-02', city: '', items: [], spends: [], notes: '' });
   assert.equal(state.days.length, 2);
 });
-test('parseFxRate reads frankfurter shape', () => {
-  assert.equal(parseFxRate({ rates: { JPY: 115.3 } }), 115.3);
-  assert.equal(parseFxRate({}), null);
-  assert.equal(parseFxRate(null), null);
+test('parseFxRate reads the currency-api shape for the home currency', () => {
+  assert.equal(parseFxRate({ date: '2026-11-07', sgd: { jpy: 123.56 } }, 'SGD'), 123.56);
+  assert.equal(parseFxRate({ myr: { jpy: 33.1 } }, 'MYR'), 33.1);
+  assert.equal(parseFxRate({ sgd: { jpy: 0 } }, 'SGD'), null);
+  assert.equal(parseFxRate({ rates: { JPY: 115 } }, 'SGD'), null);
+  assert.equal(parseFxRate(null, 'SGD'), null);
+});
+test('fxUrls: primary CDN then fallback, for the home currency', () => {
+  assert.deepEqual(fxUrls('SGD'), [
+    'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/sgd.json',
+    'https://latest.currency-api.pages.dev/v1/currencies/sgd.json',
+  ]);
+});
+test('rateIsStale after a day or when never fetched', () => {
+  const now = new Date('2026-11-13T10:00:00Z');
+  assert.equal(rateIsStale({ updatedAt: null }, now), true);
+  assert.equal(rateIsStale({ updatedAt: '2026-11-12T09:00:00Z' }, now), true);
+  assert.equal(rateIsStale({ updatedAt: '2026-11-12T11:00:00Z' }, now), false);
+  assert.equal(rateIsStale({ updatedAt: 'garbage' }, now), true);
 });
 import { readFileSync } from 'node:fs';
 // Guards the shipped data file without depending on what the trip contains.
@@ -204,4 +219,13 @@ test('nextFixed is the first undone fixed stop', () => {
   const day = { items: [{ id: 'a', fixed: true, done: true }, { id: 'b' }, { id: 'c', fixed: true }, { id: 'd', fixed: true }] };
   assert.equal(nextFixed(day).id, 'c');
   assert.equal(nextFixed({ items: [{ id: 'x' }] }), null);
+});
+import { newerFx } from '../lib.js';
+test('newerFx keeps the more recently updated rate', () => {
+  const old = { home: 'SGD', jpyPerHome: 115, updatedAt: null };
+  const fresh = { home: 'SGD', jpyPerHome: 123.56, updatedAt: '2026-11-13T02:00:00Z' };
+  assert.equal(newerFx(fresh, old), fresh);
+  assert.equal(newerFx(old, fresh), fresh);
+  assert.equal(newerFx({ ...fresh, updatedAt: '2026-11-14T00:00:00Z' }, fresh).updatedAt, '2026-11-14T00:00:00Z');
+  assert.equal(newerFx(old, { ...old }).jpyPerHome, 115);
 });

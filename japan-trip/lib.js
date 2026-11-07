@@ -234,5 +234,23 @@ export function ensureDay(state, date, uid) {
   return day;
 }
 
-export const FX_URL = 'https://api.frankfurter.app/latest?from=SGD&to=JPY';
-export const parseFxRate = (json) => validRate(obj(json) && obj(json.rates) ? json.rates.JPY : NaN);
+// Exchange rate: Fawaz Ahmed's free currency API (github.com/fawazahmed0/exchange-api),
+// CDN first, Cloudflare mirror as fallback. Returns JPY per 1 unit of the home currency.
+export const fxUrls = (home) => {
+  const c = encodeURIComponent(str(home).toLowerCase());
+  return [
+    `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${c}.json`,
+    `https://latest.currency-api.pages.dev/v1/currencies/${c}.json`,
+  ];
+};
+export const parseFxRate = (json, home) => {
+  const table = obj(obj(json)?.[str(home).toLowerCase()]);
+  return validRate(table ? table.jpy : NaN);
+};
+// Of two rates, the one updated more recently (an unset updatedAt counts as oldest).
+export const newerFx = (a, b) => ((Date.parse(b?.updatedAt || '') || 0) > (Date.parse(a?.updatedAt || '') || 0) ? b : a);
+const DAY_MS = 24 * 60 * 60 * 1000;
+export const rateIsStale = (fx, now = new Date()) => {
+  const t = Date.parse(fx?.updatedAt || '');
+  return Number.isNaN(t) || now - t > DAY_MS;
+};

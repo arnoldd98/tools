@@ -3,10 +3,10 @@
 // Hash routes: #/ Today, #/days, #/day/<id>, #/trip. Bottom tabs switch between them.
 
 import {
-  normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, FX_URL, sortDays,
+  normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx, sortDays,
   toHome, fmtHome,
-} from './lib.js?v=5';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=5';
+} from './lib.js?v=6';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=6';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -144,8 +144,9 @@ async function load({ force = false } = {}) {
   try {
     const remote = normalise(await fetchRemoteWithTimeout());
     // Something changed on this phone (an edit, or a Sync) while we waited: keep it.
-    if (!force && edits !== editsAtStart) return;
+    if (!force && edits !== editsAtStart) { refreshRateIfStale(); return; }
     if (force || !dirty) {
+      remote.fx = newerFx(remote.fx, state.fx); // keep a fresher rate fetched on this phone
       state = remote; dirty = false; saveDraft();
       render();
       setStatus(offlineOr(state.updated ? `Last synced ${new Date(state.updated).toLocaleString()}` : ''));
@@ -155,6 +156,7 @@ async function load({ force = false } = {}) {
     if (!haveCopy) render();
     setStatus(offlineOr(`Couldn't reach GitHub (${e.message}). Showing this phone's copy.`));
   }
+  refreshRateIfStale();
 }
 
 // ---------- render ----------
@@ -210,16 +212,34 @@ function setRate(r) {
   commit();
 }
 
+async function getLatestRate() {
+  for (const url of fxUrls(state.fx.home)) {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      const r = res.ok ? parseFxRate(await res.json(), state.fx.home) : null;
+      if (r !== null) return Math.round(r * 100) / 100;
+    } catch { /* try the fallback */ }
+  }
+  return null;
+}
+
+// Tapped "Fetch latest": counts as an edit (Sync •).
 async function fetchFx() {
   setStatus('Fetching rate…');
-  let r = null;
-  try {
-    const res = await fetch(FX_URL, { cache: 'no-store' });
-    if (res.ok) r = parseFxRate(await res.json());
-  } catch { /* network error: keep the saved rate */ }
+  const r = await getLatestRate();
   if (r === null) { setStatus('Rate fetch failed; kept the saved rate.'); return; }
   setRate(r);
   setStatus(`Rate updated: 1 ${state.fx.home} = ${r} JPY`);
+}
+
+// Background refresh about once a day when online. Not an edit: no Sync •.
+async function refreshRateIfStale() {
+  if (navigator.onLine === false || !rateIsStale(state.fx)) return;
+  const r = await getLatestRate();
+  if (r === null) return;
+  state.fx = { ...state.fx, jpyPerHome: r, updatedAt: new Date().toISOString() };
+  saveDraft();
+  render();
 }
 
 // ---------- spend sheet ----------
@@ -422,7 +442,7 @@ function watchForUpdates(reg) {
   });
   // iPhone home-screen apps are resumed, not relaunched: check for a new version on resume.
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') reg.update().catch(() => {});
+    if (document.visibilityState === 'visible') { reg.update().catch(() => {}); refreshRateIfStale(); }
   });
   // A worker may already be installing when registration resolves.
   reg.installing?.addEventListener('statechange', (e) => { if (e.target.state === 'installed') showIfWaiting(); });

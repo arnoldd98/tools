@@ -7,7 +7,8 @@ phone as an app (PWA) and works offline.
 
 - **Data**: `japan-trip/data/trip.json`. All fields beyond `title` and `days[]` are optional;
   older files are normalised on load.
-  - `fx` — `{ home: "SGD", jpyPerHome: 115, updatedAt }`, the rate used for S$ figures.
+  - `fx` — `{ home: "SGD", jpyPerHome, updatedAt }`, the rate used for S$ figures. Refreshed about
+    daily from the free [currency API](https://github.com/fawazahmed0/exchange-api) when online.
   - `info[]` — `{ title, lines[] }` read-only trip info sections on the Trip tab.
   - `days[]` — `{ id, date, city, items[], spends[], keyInfo[], notes, stay? }`; `stay` is
     `{ name, address, maps?, note? }` and shows as the first key info tag.
