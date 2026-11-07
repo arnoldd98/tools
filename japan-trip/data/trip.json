@@ -1,5 +1,5 @@
 {
-  "title": "Japan Trip — Okinawa & Kansai",
+  "title": "Japan 2026",
   "fx": {
     "home": "SGD",
     "jpyPerHome": 115,
@@ -9,15 +9,28 @@
     {
       "title": "Flights",
       "lines": [
-        "Placeholder: SIN → OKA, 1 Dec",
-        "Placeholder: OKA → KIX, 4 Dec"
+        "12 Nov: arrive Kansai Airport T1 21:25",
+        "13 Nov: Kansai T2 → Naha 07:40–10:05",
+        "19 Nov: Naha → Osaka T2 18:55–20:50",
+        "26 Nov: Osaka → Singapore 23:20"
       ]
     },
     {
       "title": "Hotels",
       "lines": [
-        "1–3 Dec: Placeholder hotel, Naha",
-        "4–6 Dec: Placeholder hotel, Osaka"
+        "12 Nov: Odysis Suites Osaka Airport Hotel",
+        "13–15 Nov: Mercure Naha (check-in 14:00)",
+        "16–17 Nov: Hilton Okinawa Sesoko Resort (check-in 15:00)",
+        "18 Nov: Chatan hotel (TBC)",
+        "19–23 Nov: Hotel MyStays Dojima",
+        "24–25 Nov: Hinode Hotel Osaka"
+      ]
+    },
+    {
+      "title": "Getting around",
+      "lines": [
+        "15–19 Nov: rental car from YH Rental Car (shuttle from Naha Airport)",
+        "14 Nov: ferry Tomari Port ↔ Tokashiki Island"
       ]
     },
     {
@@ -31,118 +44,450 @@
   "days": [
     {
       "id": "d1",
-      "date": "2026-12-01",
-      "city": "Naha (Okinawa)",
+      "date": "2026-11-12",
+      "city": "Osaka",
       "stay": {
-        "name": "Placeholder hotel, Naha",
-        "address": "Kumoji, Naha, Okinawa",
-        "note": "Check-in 15:00"
+        "name": "Odysis Suites Osaka Airport Hotel",
+        "address": "Rinku Town, Izumisano, Osaka",
+        "note": "1 night"
       },
       "items": [
         {
           "id": "i1",
-          "time": "10:00",
-          "text": "Land at Naha Airport (OKA)",
+          "time": "21:25",
+          "text": "Arrive Kansai Airport T1",
           "done": false,
           "place": {
-            "name": "Naha Airport",
-            "address": "150 Kagamizu, Naha, Okinawa"
-          },
-          "note": "Buy a Yui Rail pass at the station",
-          "price": "¥800 one-day pass"
+            "name": "Kansai International Airport Terminal 1",
+            "address": "Izumisano, Osaka"
+          }
         },
         {
           "id": "i2",
-          "time": "15:00",
-          "text": "Check in to hotel",
-          "done": false
+          "time": "",
+          "text": "Train to Odysis Suites Osaka Airport Hotel",
+          "done": false,
+          "place": {
+            "name": "Odysis Suites Osaka Airport Hotel",
+            "address": "Rinku Town, Izumisano, Osaka"
+          },
+          "note": "10 min by train"
         },
         {
           "id": "i3",
           "time": "",
-          "text": "Walk Kokusai-dori",
+          "text": "Supper @ Joyfull Rinku",
           "done": false,
           "place": {
-            "name": "Kokusai-dori",
-            "address": "Matsuo, Naha, Okinawa"
+            "name": "Joyfull Rinku",
+            "address": "Izumisano, Osaka"
           },
-          "note": "Makishi Public Market is just off the street"
+          "note": "5 min walk"
         }
       ],
-      "spends": [
-        {
-          "id": "s1",
-          "yen": 1200,
-          "label": "Airport soba",
-          "category": "food",
-          "at": "2026-12-01T12:40:00+09:00"
-        },
-        {
-          "id": "s2",
-          "yen": 800,
-          "label": "Yui Rail day pass",
-          "category": "transport",
-          "at": "2026-12-01T11:05:00+09:00"
-        }
-      ],
+      "spends": [],
       "keyInfo": [
         {
-          "icon": "🎫",
-          "label": "Yui Rail 1-day pass",
+          "icon": "✈️",
+          "label": "Land KIX T1 21:25",
           "lines": [
-            "¥800, buy at the airport station"
+            "Train to hotel, about 10 min"
           ]
-        },
-        {
-          "icon": "🍜",
-          "label": "Dinner 19:00",
-          "lines": [
-            "Placeholder booking, ref 0000",
-            "Party of 2"
-          ],
-          "place": {
-            "name": "Yunangi",
-            "address": "3-3-3 Kumoji, Naha, Okinawa"
-          }
         }
       ],
       "notes": ""
     },
     {
       "id": "d2",
-      "date": "2026-12-02",
+      "date": "2026-11-13",
       "city": "Okinawa",
+      "stay": {
+        "name": "Mercure Naha",
+        "address": "Naha, Okinawa",
+        "note": "Check-in 14:00"
+      },
       "items": [
         {
           "id": "i4",
-          "time": "",
-          "text": "Placeholder: replace with your plans",
-          "done": false
-        }
-      ],
-      "spends": [],
-      "keyInfo": [],
-      "notes": ""
-    },
-    {
-      "id": "d3",
-      "date": "2026-12-04",
-      "city": "Osaka",
-      "items": [
+          "time": "05:10",
+          "text": "Shuttle bus to Kansai Airport T2",
+          "done": false,
+          "note": "05:10 or 05:55 · 15 min drive"
+        },
         {
           "id": "i5",
           "time": "",
-          "text": "Fly OKA → KIX",
+          "text": "Breakfast @ airport",
           "done": false
         },
         {
           "id": "i6",
-          "time": "",
-          "text": "Dotonbori in the evening",
+          "time": "07:40",
+          "text": "Flight Kansai → Naha (lands 10:05)",
           "done": false,
           "place": {
-            "name": "Dotonbori",
-            "address": "Chuo Ward, Osaka"
+            "name": "Kansai International Airport Terminal 2",
+            "address": "Izumisano, Osaka"
+          }
+        },
+        {
+          "id": "i7",
+          "time": "",
+          "text": "Train to Mercure Naha",
+          "done": false,
+          "place": {
+            "name": "Mercure Naha",
+            "address": "Naha, Okinawa"
+          },
+          "note": "10 min by train · check-in 14:00"
+        },
+        {
+          "id": "i8",
+          "time": "",
+          "text": "Early lunch near hotel",
+          "done": false
+        },
+        {
+          "id": "i9",
+          "time": "",
+          "text": "Makishi Market",
+          "done": false,
+          "place": {
+            "name": "Makishi Public Market",
+            "address": "Naha, Okinawa"
+          }
+        },
+        {
+          "id": "i10",
+          "time": "",
+          "text": "Kokusai Dori",
+          "done": false,
+          "place": {
+            "name": "Kokusai Dori",
+            "address": "Naha, Okinawa"
+          }
+        },
+        {
+          "id": "i11",
+          "time": "",
+          "text": "Tsuboya Pottery Street",
+          "done": false,
+          "place": {
+            "name": "Tsuboya Yachimun Street",
+            "address": "Naha, Okinawa"
+          }
+        },
+        {
+          "id": "i12",
+          "time": "",
+          "text": "Dinner near Makishi Market",
+          "done": false
+        },
+        {
+          "id": "i13",
+          "time": "",
+          "text": "Fukushuen Garden",
+          "done": false,
+          "place": {
+            "name": "Fukushuen Garden",
+            "address": "Naha, Okinawa"
+          }
+        }
+      ],
+      "spends": [],
+      "keyInfo": [
+        {
+          "icon": "🚌",
+          "label": "Shuttle 05:10 or 05:55",
+          "lines": [
+            "Hotel → Kansai Airport T2, 15 min"
+          ]
+        },
+        {
+          "icon": "✈️",
+          "label": "KIX T2 → Naha 07:40–10:05",
+          "lines": [
+            "Breakfast at the airport"
+          ],
+          "place": {
+            "name": "Kansai International Airport Terminal 2",
+            "address": "Izumisano, Osaka"
+          }
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "d3",
+      "date": "2026-11-14",
+      "city": "Okinawa",
+      "stay": {
+        "name": "Mercure Naha",
+        "address": "Naha, Okinawa",
+        "note": "Check-in 14:00"
+      },
+      "items": [
+        {
+          "id": "i14",
+          "time": "",
+          "text": "Breakfast near hotel",
+          "done": false
+        },
+        {
+          "id": "i15",
+          "time": "",
+          "text": "Pork Tamago Onigiri Honten",
+          "done": false,
+          "place": {
+            "name": "Pork Tamago Onigiri Honten",
+            "address": "Naha, Okinawa"
+          }
+        },
+        {
+          "id": "i16",
+          "time": "10:00",
+          "text": "Ferry to Tokashiki Island from Tomari Port (arrive 11:10)",
+          "done": false,
+          "place": {
+            "name": "Tomari Port",
+            "address": "Naha, Okinawa"
+          }
+        },
+        {
+          "id": "i17",
+          "time": "",
+          "text": "Aharen Beach",
+          "done": false,
+          "place": {
+            "name": "Aharen Beach",
+            "address": "Tokashiki, Okinawa"
+          }
+        },
+        {
+          "id": "i18",
+          "time": "",
+          "text": "Lunch around Aharen Beach",
+          "done": false
+        },
+        {
+          "id": "i19",
+          "time": "",
+          "text": "Teruyama Observatory",
+          "done": false,
+          "place": {
+            "name": "Teruyama Observatory",
+            "address": "Tokashiki, Okinawa"
+          }
+        },
+        {
+          "id": "i20",
+          "time": "17:00",
+          "text": "Ferry back to Naha (arrive 17:40)",
+          "done": false
+        },
+        {
+          "id": "i21",
+          "time": "",
+          "text": "Dinner in Naha: Yunangi",
+          "done": false,
+          "place": {
+            "name": "Yunangi",
+            "address": "Naha, Okinawa"
+          }
+        }
+      ],
+      "spends": [],
+      "keyInfo": [
+        {
+          "icon": "⛴️",
+          "label": "Ferry Tomari → Tokashiki 10:00–11:10",
+          "lines": [
+            "Back: 17:00–17:40",
+            "https://www.aharen.com/en/day-plan-en/transportation-to-tokashiki-island/"
+          ],
+          "place": {
+            "name": "Tomari Port",
+            "address": "Naha, Okinawa"
+          }
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "d4",
+      "date": "2026-11-15",
+      "city": "Okinawa",
+      "stay": {
+        "name": "Mercure Naha",
+        "address": "Naha, Okinawa",
+        "note": "Check-in 14:00"
+      },
+      "items": [
+        {
+          "id": "i22",
+          "time": "",
+          "text": "Breakfast near hotel",
+          "done": false
+        },
+        {
+          "id": "i23",
+          "time": "10:30",
+          "text": "Pick up rental car at YH Rental Car",
+          "done": false,
+          "note": "Go to Naha Airport for the shuttle bus"
+        },
+        {
+          "id": "i24",
+          "time": "",
+          "text": "Okinawa World / Gyokusendo Cave",
+          "done": false,
+          "place": {
+            "name": "Okinawa World",
+            "address": "Nanjo, Okinawa"
+          },
+          "note": "30 min drive"
+        },
+        {
+          "id": "i25",
+          "time": "",
+          "text": "Lunch around Okinawa World",
+          "done": false
+        },
+        {
+          "id": "i26",
+          "time": "",
+          "text": "Sefa Utaki",
+          "done": false,
+          "place": {
+            "name": "Sefa Utaki",
+            "address": "Nanjo, Okinawa"
+          }
+        },
+        {
+          "id": "i27",
+          "time": "",
+          "text": "Cape Chinen",
+          "done": false,
+          "place": {
+            "name": "Chinen Cape Park",
+            "address": "Nanjo, Okinawa"
+          },
+          "note": "30 min drive"
+        },
+        {
+          "id": "i28",
+          "time": "",
+          "text": "Dinner in Naha",
+          "done": false
+        }
+      ],
+      "spends": [],
+      "keyInfo": [
+        {
+          "icon": "🚗",
+          "label": "Rental car 10:30 · YH Rental Car",
+          "lines": [
+            "Shuttle bus from Naha Airport"
+          ],
+          "place": {
+            "name": "Naha Airport",
+            "address": "Naha, Okinawa"
+          }
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "d5",
+      "date": "2026-11-16",
+      "city": "Okinawa",
+      "stay": {
+        "name": "Hilton Okinawa Sesoko Resort",
+        "address": "Sesoko, Motobu, Okinawa",
+        "note": "Check-in 15:00"
+      },
+      "items": [
+        {
+          "id": "i29",
+          "time": "",
+          "text": "Breakfast near hotel",
+          "done": false
+        },
+        {
+          "id": "i30",
+          "time": "",
+          "text": "Check out of Mercure Naha",
+          "done": false
+        },
+        {
+          "id": "i31",
+          "time": "",
+          "text": "Shuri Castle",
+          "done": false,
+          "place": {
+            "name": "Shuri Castle",
+            "address": "Naha, Okinawa"
+          }
+        },
+        {
+          "id": "i32",
+          "time": "",
+          "text": "Lunch @ Shuri Soba",
+          "done": false,
+          "place": {
+            "name": "Shuri Soba",
+            "address": "Naha, Okinawa"
+          }
+        },
+        {
+          "id": "i33",
+          "time": "",
+          "text": "Zakimi Castle Ruins",
+          "done": false,
+          "place": {
+            "name": "Zakimi Castle Ruins",
+            "address": "Yomitan, Okinawa"
+          }
+        },
+        {
+          "id": "i34",
+          "time": "",
+          "text": "Banta Cafe",
+          "done": false,
+          "place": {
+            "name": "Banta Cafe",
+            "address": "Yomitan, Okinawa"
+          }
+        },
+        {
+          "id": "i35",
+          "time": "",
+          "text": "Cape Maeda",
+          "done": false,
+          "place": {
+            "name": "Cape Maeda",
+            "address": "Onna, Okinawa"
+          }
+        },
+        {
+          "id": "i36",
+          "time": "15:00",
+          "text": "Check in to Hilton Sesoko Resort",
+          "done": false,
+          "place": {
+            "name": "Hilton Okinawa Sesoko Resort",
+            "address": "Sesoko, Motobu, Okinawa"
+          },
+          "note": "1.5 h drive"
+        },
+        {
+          "id": "i37",
+          "time": "",
+          "text": "Sesoko Beach",
+          "done": false,
+          "place": {
+            "name": "Sesoko Beach",
+            "address": "Motobu, Okinawa"
           }
         }
       ],
@@ -151,19 +496,657 @@
       "notes": ""
     },
     {
-      "id": "d4",
-      "date": "2026-12-06",
-      "city": "Kyoto",
+      "id": "d6",
+      "date": "2026-11-17",
+      "city": "Okinawa",
+      "stay": {
+        "name": "Hilton Okinawa Sesoko Resort",
+        "address": "Sesoko, Motobu, Okinawa",
+        "note": "Check-in 15:00"
+      },
       "items": [
         {
-          "id": "i7",
+          "id": "i38",
           "time": "",
-          "text": "Day trip from Osaka",
+          "text": "Breakfast at Hilton",
+          "done": false
+        },
+        {
+          "id": "i39",
+          "time": "",
+          "text": "Churaumi Aquarium",
+          "done": false,
+          "place": {
+            "name": "Okinawa Churaumi Aquarium",
+            "address": "Motobu, Okinawa"
+          }
+        },
+        {
+          "id": "i40",
+          "time": "",
+          "text": "Lunch near Churaumi Aquarium",
+          "done": false
+        },
+        {
+          "id": "i41",
+          "time": "",
+          "text": "Kouri Island",
+          "done": false,
+          "place": {
+            "name": "Kouri Island",
+            "address": "Nakijin, Okinawa"
+          }
+        },
+        {
+          "id": "i42",
+          "time": "",
+          "text": "Bise Fukugi Tree Road",
+          "done": false,
+          "place": {
+            "name": "Bise Fukugi Tree Road",
+            "address": "Motobu, Okinawa"
+          }
+        },
+        {
+          "id": "i43",
+          "time": "",
+          "text": "Dinner",
           "done": false
         }
       ],
       "spends": [],
       "keyInfo": [],
+      "notes": ""
+    },
+    {
+      "id": "d7",
+      "date": "2026-11-18",
+      "city": "Okinawa",
+      "stay": {
+        "name": "Chatan hotel (TBC)",
+        "address": "Chatan, Okinawa",
+        "note": "1 night"
+      },
+      "items": [
+        {
+          "id": "i44",
+          "time": "",
+          "text": "Breakfast at Hilton",
+          "done": false
+        },
+        {
+          "id": "i45",
+          "time": "",
+          "text": "Check out of Hilton",
+          "done": false
+        },
+        {
+          "id": "i46",
+          "time": "",
+          "text": "Busena Marine Park",
+          "done": false,
+          "place": {
+            "name": "Busena Marine Park",
+            "address": "Nago, Okinawa"
+          }
+        },
+        {
+          "id": "i47",
+          "time": "",
+          "text": "Cape Manzamo",
+          "done": false,
+          "place": {
+            "name": "Cape Manzamo",
+            "address": "Onna, Okinawa"
+          }
+        },
+        {
+          "id": "i48",
+          "time": "",
+          "text": "Lunch",
+          "done": false
+        },
+        {
+          "id": "i49",
+          "time": "",
+          "text": "Check in to Chatan hotel",
+          "done": false
+        },
+        {
+          "id": "i50",
+          "time": "",
+          "text": "American Village",
+          "done": false,
+          "place": {
+            "name": "American Village",
+            "address": "Chatan, Okinawa"
+          }
+        },
+        {
+          "id": "i51",
+          "time": "",
+          "text": "Dinner",
+          "done": false
+        }
+      ],
+      "spends": [],
+      "keyInfo": [],
+      "notes": ""
+    },
+    {
+      "id": "d8",
+      "date": "2026-11-19",
+      "city": "Okinawa",
+      "stay": {
+        "name": "Hotel MyStays Dojima",
+        "address": "Dojima, Kita Ward, Osaka",
+        "note": "Base for Kyoto days"
+      },
+      "items": [
+        {
+          "id": "i52",
+          "time": "",
+          "text": "Breakfast in Chatan",
+          "done": false
+        },
+        {
+          "id": "i53",
+          "time": "",
+          "text": "Umikaji Terrace",
+          "done": false,
+          "place": {
+            "name": "Umikaji Terrace",
+            "address": "Tomigusuku, Okinawa"
+          }
+        },
+        {
+          "id": "i54",
+          "time": "",
+          "text": "Return rental car",
+          "done": false
+        },
+        {
+          "id": "i55",
+          "time": "",
+          "text": "Outlet Mall Ashibinaa",
+          "done": false,
+          "place": {
+            "name": "Okinawa Outlet Mall Ashibinaa",
+            "address": "Tomigusuku, Okinawa"
+          }
+        },
+        {
+          "id": "i56",
+          "time": "18:55",
+          "text": "Flight Naha → Osaka T2 (lands 20:50)",
+          "done": false,
+          "place": {
+            "name": "Naha Airport",
+            "address": "Naha, Okinawa"
+          }
+        },
+        {
+          "id": "i57",
+          "time": "",
+          "text": "Check in to Hotel MyStays Dojima",
+          "done": false,
+          "place": {
+            "name": "Hotel MyStays Dojima",
+            "address": "Dojima, Kita Ward, Osaka"
+          }
+        }
+      ],
+      "spends": [],
+      "keyInfo": [
+        {
+          "icon": "🚗",
+          "label": "Return rental car",
+          "lines": [
+            "Before the flight"
+          ]
+        },
+        {
+          "icon": "✈️",
+          "label": "Naha → Osaka T2 18:55–20:50",
+          "lines": [],
+          "place": {
+            "name": "Naha Airport",
+            "address": "Naha, Okinawa"
+          }
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "d9",
+      "date": "2026-11-20",
+      "city": "Kyoto",
+      "stay": {
+        "name": "Hotel MyStays Dojima",
+        "address": "Dojima, Kita Ward, Osaka",
+        "note": "Base for Kyoto days"
+      },
+      "items": [
+        {
+          "id": "i58",
+          "time": "",
+          "text": "Breakfast near hotel",
+          "done": false
+        },
+        {
+          "id": "i59",
+          "time": "",
+          "text": "Kinkaku-ji",
+          "done": false,
+          "place": {
+            "name": "Kinkaku-ji",
+            "address": "Kyoto"
+          }
+        },
+        {
+          "id": "i60",
+          "time": "",
+          "text": "Lunch",
+          "done": false
+        },
+        {
+          "id": "i61",
+          "time": "",
+          "text": "Nijo Castle",
+          "done": false,
+          "place": {
+            "name": "Nijo Castle",
+            "address": "Kyoto"
+          }
+        },
+        {
+          "id": "i62",
+          "time": "",
+          "text": "Nishiki Market",
+          "done": false,
+          "place": {
+            "name": "Nishiki Market",
+            "address": "Kyoto"
+          }
+        },
+        {
+          "id": "i63",
+          "time": "",
+          "text": "Dinner at Nishiki Market",
+          "done": false
+        }
+      ],
+      "spends": [],
+      "keyInfo": [],
+      "notes": ""
+    },
+    {
+      "id": "d10",
+      "date": "2026-11-21",
+      "city": "Kyoto",
+      "stay": {
+        "name": "Hotel MyStays Dojima",
+        "address": "Dojima, Kita Ward, Osaka",
+        "note": "Base for Kyoto days"
+      },
+      "items": [
+        {
+          "id": "i64",
+          "time": "",
+          "text": "Breakfast near hotel",
+          "done": false
+        },
+        {
+          "id": "i65",
+          "time": "",
+          "text": "Kiyomizu-dera",
+          "done": false,
+          "place": {
+            "name": "Kiyomizu-dera",
+            "address": "Kyoto"
+          },
+          "note": "Train to Kiyomizu-Gojo station"
+        },
+        {
+          "id": "i66",
+          "time": "",
+          "text": "Lunch at Gion",
+          "done": false,
+          "place": {
+            "name": "Gion",
+            "address": "Kyoto"
+          }
+        },
+        {
+          "id": "i67",
+          "time": "",
+          "text": "Sannenzaka and Ninenzaka",
+          "done": false,
+          "place": {
+            "name": "Sannenzaka",
+            "address": "Kyoto"
+          }
+        },
+        {
+          "id": "i68",
+          "time": "",
+          "text": "Yasaka Shrine",
+          "done": false,
+          "place": {
+            "name": "Yasaka Shrine",
+            "address": "Kyoto"
+          }
+        },
+        {
+          "id": "i69",
+          "time": "",
+          "text": "Dinner in Kyoto",
+          "done": false
+        },
+        {
+          "id": "i70",
+          "time": "",
+          "text": "Kodai-ji Temple (evening illumination)",
+          "done": false,
+          "place": {
+            "name": "Kodai-ji",
+            "address": "Kyoto"
+          }
+        }
+      ],
+      "spends": [],
+      "keyInfo": [],
+      "notes": ""
+    },
+    {
+      "id": "d11",
+      "date": "2026-11-22",
+      "city": "Kyoto",
+      "stay": {
+        "name": "Hotel MyStays Dojima",
+        "address": "Dojima, Kita Ward, Osaka",
+        "note": "Base for Kyoto days"
+      },
+      "items": [
+        {
+          "id": "i71",
+          "time": "",
+          "text": "Breakfast near hotel",
+          "done": false
+        },
+        {
+          "id": "i72",
+          "time": "",
+          "text": "Ginkaku-ji",
+          "done": false,
+          "place": {
+            "name": "Ginkaku-ji",
+            "address": "Kyoto"
+          }
+        },
+        {
+          "id": "i73",
+          "time": "",
+          "text": "Philosopher's Path",
+          "done": false,
+          "place": {
+            "name": "Philosopher's Path",
+            "address": "Kyoto"
+          }
+        },
+        {
+          "id": "i74",
+          "time": "",
+          "text": "Lunch",
+          "done": false
+        },
+        {
+          "id": "i75",
+          "time": "",
+          "text": "Eikando Temple",
+          "done": false,
+          "place": {
+            "name": "Eikando Zenrin-ji",
+            "address": "Kyoto"
+          }
+        },
+        {
+          "id": "i76",
+          "time": "",
+          "text": "Nanzen-ji Temple",
+          "done": false,
+          "place": {
+            "name": "Nanzen-ji",
+            "address": "Kyoto"
+          }
+        },
+        {
+          "id": "i77",
+          "time": "",
+          "text": "Maruyama Park",
+          "done": false,
+          "place": {
+            "name": "Maruyama Park",
+            "address": "Kyoto"
+          }
+        },
+        {
+          "id": "i78",
+          "time": "",
+          "text": "Dinner in Kyoto",
+          "done": false
+        }
+      ],
+      "spends": [],
+      "keyInfo": [],
+      "notes": ""
+    },
+    {
+      "id": "d12",
+      "date": "2026-11-23",
+      "city": "Kyoto",
+      "stay": {
+        "name": "Hotel MyStays Dojima",
+        "address": "Dojima, Kita Ward, Osaka",
+        "note": "Base for Kyoto days"
+      },
+      "items": [
+        {
+          "id": "i79",
+          "time": "",
+          "text": "Breakfast near hotel",
+          "done": false
+        },
+        {
+          "id": "i80",
+          "time": "",
+          "text": "Tofuku-ji Temple",
+          "done": false,
+          "place": {
+            "name": "Tofuku-ji",
+            "address": "Kyoto"
+          }
+        },
+        {
+          "id": "i81",
+          "time": "",
+          "text": "Lunch in Kyoto",
+          "done": false
+        },
+        {
+          "id": "i82",
+          "time": "",
+          "text": "Uji",
+          "done": false,
+          "place": {
+            "name": "Uji",
+            "address": "Kyoto"
+          }
+        },
+        {
+          "id": "i83",
+          "time": "",
+          "text": "Dinner at Uji",
+          "done": false
+        }
+      ],
+      "spends": [],
+      "keyInfo": [],
+      "notes": ""
+    },
+    {
+      "id": "d13",
+      "date": "2026-11-24",
+      "city": "Osaka",
+      "stay": {
+        "name": "Hinode Hotel Osaka",
+        "address": "Osaka",
+        "note": "2 nights"
+      },
+      "items": [
+        {
+          "id": "i84",
+          "time": "",
+          "text": "Check out of Hotel MyStays Dojima",
+          "done": false
+        },
+        {
+          "id": "i85",
+          "time": "",
+          "text": "Osaka Castle Park",
+          "done": false,
+          "place": {
+            "name": "Osaka Castle Park",
+            "address": "Osaka"
+          }
+        },
+        {
+          "id": "i86",
+          "time": "",
+          "text": "Midosuji Avenue",
+          "done": false,
+          "place": {
+            "name": "Midosuji",
+            "address": "Osaka"
+          }
+        },
+        {
+          "id": "i87",
+          "time": "",
+          "text": "Check in to Hinode Hotel Osaka",
+          "done": false,
+          "place": {
+            "name": "Hinode Hotel Osaka",
+            "address": "Osaka"
+          }
+        },
+        {
+          "id": "i88",
+          "time": "",
+          "text": "Dinner @ Kobe",
+          "done": false,
+          "place": {
+            "name": "Kobe",
+            "address": "Hyogo"
+          }
+        }
+      ],
+      "spends": [],
+      "keyInfo": [],
+      "notes": ""
+    },
+    {
+      "id": "d14",
+      "date": "2026-11-25",
+      "city": "Osaka",
+      "stay": {
+        "name": "Hinode Hotel Osaka",
+        "address": "Osaka",
+        "note": "2 nights"
+      },
+      "items": [
+        {
+          "id": "i89",
+          "time": "",
+          "text": "Minoh Park",
+          "done": false,
+          "place": {
+            "name": "Minoh Park",
+            "address": "Minoh, Osaka"
+          }
+        },
+        {
+          "id": "i90",
+          "time": "",
+          "text": "Katsuo-ji Temple",
+          "done": false,
+          "place": {
+            "name": "Katsuo-ji",
+            "address": "Minoh, Osaka"
+          }
+        }
+      ],
+      "spends": [],
+      "keyInfo": [],
+      "notes": ""
+    },
+    {
+      "id": "d15",
+      "date": "2026-11-26",
+      "city": "Osaka",
+      "items": [
+        {
+          "id": "i91",
+          "time": "",
+          "text": "Check out of Hinode Hotel, store luggage",
+          "done": false
+        },
+        {
+          "id": "i92",
+          "time": "",
+          "text": "Kuromon Market",
+          "done": false,
+          "place": {
+            "name": "Kuromon Market",
+            "address": "Osaka"
+          }
+        },
+        {
+          "id": "i93",
+          "time": "",
+          "text": "Namba / Shinsaibashi",
+          "done": false,
+          "place": {
+            "name": "Shinsaibashi-suji",
+            "address": "Osaka"
+          }
+        },
+        {
+          "id": "i94",
+          "time": "23:20",
+          "text": "Flight back to Singapore",
+          "done": false
+        }
+      ],
+      "spends": [],
+      "keyInfo": [
+        {
+          "icon": "🧳",
+          "label": "Luggage stored at Hinode Hotel",
+          "lines": [
+            "Collect before heading to the airport"
+          ],
+          "place": {
+            "name": "Hinode Hotel Osaka",
+            "address": "Osaka"
+          }
+        },
+        {
+          "icon": "✈️",
+          "label": "Flight to Singapore 23:20",
+          "lines": []
+        }
+      ],
       "notes": ""
     }
   ]

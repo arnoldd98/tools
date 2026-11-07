@@ -115,7 +115,8 @@ test('shipped trip.json normalises without change and uses the new fields', () =
   assert.ok(s.info.length >= 1);
   assert.ok(s.days.some((d) => d.stay));
   assert.ok(s.days.some((d) => d.items.some((i) => i.place)));
-  assert.ok(s.days.some((d) => d.spends.length));
+  assert.ok(s.days.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d.date)), 'every day dated');
+  assert.equal(new Set(s.days.map((d) => d.date)).size, s.days.length, 'no duplicate dates');
   assert.ok(s.days.some((d) => d.keyInfo.length >= 2));
   assert.ok(s.days.some((d) => d.keyInfo.some((k) => k.place)));
   assert.ok(s.days.every((d) => d.spends.every((x) => CATEGORIES.includes(x.category))));
