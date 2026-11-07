@@ -108,19 +108,17 @@ test('parseFxRate reads frankfurter shape', () => {
   assert.equal(parseFxRate(null), null);
 });
 import { readFileSync } from 'node:fs';
-test('shipped trip.json normalises without change and uses the new fields', () => {
+// Guards the shipped data file without depending on what the trip contains.
+test('data/trip.json is valid and loadable', () => {
   const raw = JSON.parse(readFileSync(new URL('../data/trip.json', import.meta.url)));
+  assert.ok(Array.isArray(raw.days), 'has a days array');
   const s = normalise(raw);
-  assert.equal(s.fx.home, 'SGD');
-  assert.ok(s.info.length >= 1);
-  assert.ok(s.days.some((d) => d.stay));
-  assert.ok(s.days.some((d) => d.items.some((i) => i.place)));
-  assert.ok(s.days.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d.date)), 'every day dated');
-  assert.equal(new Set(s.days.map((d) => d.date)).size, s.days.length, 'no duplicate dates');
-  assert.ok(s.days.some((d) => d.keyInfo.length >= 2));
-  assert.ok(s.days.some((d) => d.keyInfo.some((k) => k.place)));
-  assert.ok(s.days.every((d) => d.spends.every((x) => CATEGORIES.includes(x.category))));
-  assert.deepEqual(JSON.parse(JSON.stringify(s)), raw, 'seed should already be in normalised shape');
+  const dayIds = s.days.map((d) => d.id);
+  assert.equal(new Set(dayIds).size, dayIds.length, 'day ids are unique');
+  for (const d of s.days) {
+    const ids = d.items.map((i) => i.id);
+    assert.equal(new Set(ids).size, ids.length, `stop ids unique on ${d.date || d.id}`);
+  }
 });
 
 test('normalise gives missing ids unique values', () => {

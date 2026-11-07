@@ -5,8 +5,8 @@
 import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, FX_URL, sortDays,
   toHome, fmtHome,
-} from './lib.js?v=4';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=4';
+} from './lib.js?v=5';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=5';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -191,7 +191,7 @@ function render() {
     if (lastRouteKey !== null) window.scrollTo(0, 0);
   } else {
     if (strip && stripScroll != null) strip.scrollLeft = stripScroll;
-    // keep expanded sections (Spent, Edit day, …) open across re-renders on the same screen
+    // keep expanded sections (Spent, key info, …) open across re-renders on the same screen
     // (by position: several tags share a class name)
     const now = document.querySelectorAll('#view details');
     if (now.length === openDetails.length) now.forEach((d, i) => { d.open = openDetails[i]; });

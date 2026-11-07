@@ -2,7 +2,7 @@
 
 ## Japan trip tracker (`japan-trip/`)
 
-A static GitHub Pages site for tracking the Okinawa / Osaka itinerary. It installs on a
+A static GitHub Pages site for following a Japan trip itinerary day by day. It installs on a
 phone as an app (PWA) and works offline.
 
 - **Data**: `japan-trip/data/trip.json`. All fields beyond `title` and `days[]` are optional;
@@ -13,8 +13,9 @@ phone as an app (PWA) and works offline.
     `{ name, address, maps?, note? }` and shows as the first key info tag.
   - `days[].keyInfo[]` — `{ icon?, label, lines[], place? }`: passes, tickets, reservations
     shown as tags on that day (tap to expand).
-  - `days[].items[]` — `{ id, time, text, done, place?, note?, price? }`; array order is the
-    timeline order. `place` is `{ name, address, maps? }` (maps link built from name + address
+  - `days[].items[]` — `{ id, time, text, done, fixed?, place?, note?, price? }`; array order is the
+    timeline order. `time` is `HH:MM` (shown as 12-hour); `fixed: true` marks a must-make time
+    (flights, ferries) with a countdown on Today. `place` is `{ name, address, maps? }` (maps link built from name + address
     when `maps` is absent). `price` is informational text, not a spend.
   - `days[].spends[]` — `{ id, yen, label, category, at }`; `yen` is an integer, S$ is derived.
     `category` is one of `food`, `shopping`, `transport`, `tickets`, `misc`

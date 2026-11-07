@@ -29,11 +29,6 @@ h1 { font-size: 20px; margin: 0; }
 .btn.danger { color: var(--shu); }
 .icon { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 6px; }
 
-.day-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0 4px; }
-.day-head input { font: inherit; border: 0; background: transparent; color: inherit; padding: 2px 0; }
-.day-head .date { font-weight: 600; width: 9.5em; }
-.day-head .city { flex: 1; min-width: 8em; font-weight: 600; color: var(--accent); }
-.badge { font-size: 11px; background: var(--accent); color: #fff; border-radius: 4px; padding: 1px 6px; }
 
 /* ---------- top row variants ---------- */
 .top-row .back, .top-row .nav { font-size: 22px; line-height: 1; padding: 0 8px; text-decoration: none; color: inherit; }
@@ -86,11 +81,11 @@ h3 .total { float: right; font-weight: 600; color: var(--accent); font-variant-n
   content: ""; position: absolute; left: 8px; top: 14px; bottom: 14px; width: 2px; background: var(--line);
 }
 .timeline li {
-  display: grid; grid-template-columns: 18px 3.2em 1fr auto; column-gap: 10px; align-items: center;
+  display: grid; grid-template-columns: 18px 4.6em 1fr auto; column-gap: 10px; align-items: center;
   padding: 8px 0; position: relative;
 }
 .timeline input[type=checkbox] { width: 18px; height: 18px; margin: 0; accent-color: var(--ok); position: relative; }
-.timeline .time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+.timeline .time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .timeline .text { min-width: 0; overflow-wrap: anywhere; }
 .timeline li.done .text { text-decoration: line-through; color: var(--muted); }
 .timeline li.done .detail { opacity: .6; }
@@ -283,10 +278,7 @@ h1, h3, .hdr b, .when, .countdown .big, section.total .sum, .day-row b { font-fa
 .timeline li.fixed input[type=checkbox] { outline: 2px solid var(--shu); outline-offset: 1px; border-radius: 3px; }
 .timeline li.fixed.done .time { color: var(--muted); font-weight: 400; }
 .timeline li.fixed.done .ontime { display: none; }
-.timeline .time { font-size: 12px; white-space: nowrap; }
-.timeline li { grid-template-columns: 18px 4.6em 1fr auto; }
 .row-btns { display: flex; }
 .fx-toggle { opacity: .35; }
 .fx-toggle.on { opacity: 1; color: var(--shu); }
-.timeline.editing li { grid-template-columns: 6.8em 1fr auto; }
 .timeline li.fixed.next .text { color: var(--shu); }

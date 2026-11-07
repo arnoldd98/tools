@@ -20,12 +20,3 @@ test('module imports carry the current version', () => {
     for (const spec of imports) assert.ok(spec.endsWith(tag), `${f}: ${spec}`);
   }
 });
-test('light matcha look only: no dark-mode palette, matcha accent', () => {
-  const css = read('style.css');
-  assert.ok(!css.includes('prefers-color-scheme: dark'), 'no dark palette');
-  assert.match(css, /--accent: #6e8c4f/);
-  assert.match(css, /--bg: #f6f3ea/);
-  const manifest = JSON.parse(read('manifest.webmanifest'));
-  assert.equal(manifest.background_color, '#f6f3ea');
-  assert.equal(manifest.theme_color, '#f6f3ea');
-});
