@@ -2,7 +2,7 @@
 import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtBoth, toHome, CATEGORIES, CATEGORY_LABEL, CATEGORY_ICON,
-  dayNumber, tripSpan, fmtRange,
+  dayNumber, tripSpan, fmtRange, tripOverview,
 } from './lib.js';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -185,68 +185,90 @@ export function renderSpendSheet(dayId, fx) {
   </form>`;
 }
 
-function renderNow(state, today) {
+const shortDate = (date) => {
+  const d = parseDate(date);
+  return d ? `${WD[d.getDay()]} ${d.getDate()}` : 'Undated';
+};
+
+export function renderToday(state, today) {
   const ph = tripPhase(state.days, today);
-  if (ph.phase === 'before') {
-    return `<section class="now"><p class="eyebrow">Countdown</p>
-      <p class="what">${ph.daysToGo} day${ph.daysToGo === 1 ? '' : 's'} to go · ${esc(ph.first.city)}</p></section>`;
-  }
-  if (ph.phase === 'during' && ph.day) {
-    const day = ph.day;
-    const next = nextUp(day);
-    const summary = next
-      ? `<p class="what">${next.time ? `<span class="time">${esc(next.time)}</span> ` : ''}${esc(next.text)}</p>
-         ${next.place ? `<p class="place">${placeLine(next.place)}</p>` : ''}`
-      : '<p class="what">All done for today</p>';
-    return `<section class="now"><p class="eyebrow">Today · ${esc(day.city)}</p>
-      ${summary}
-      <div class="actions">${next?.place ? mapsBtn(next.place) : ''}<a class="btn" href="${dayHref(day.id)}">Open today</a></div>
-      <p class="eyebrow">Log a spend</p>
-      ${renderSpendForm(day.id)}</section>`;
-  }
+  if (ph.phase === 'during' && ph.day) return renderDayScreen(state, ph.day, today, { page: false });
   if (ph.phase === 'during') {
-    return `<section class="now"><p class="what">No plans today</p>
-      <p class="eyebrow">Log a spend</p>${renderSpendForm(null)}</section>`;
+    return `<section class="day-screen">
+      <p class="what">No plans today</p>
+      <details class="spent"><summary>Spent today <b>${fmtBoth(0, state.fx)}</b></summary>
+        ${renderSpendList([], state.fx)}</details>
+      <button class="fab" data-action="open-spend">＋ ¥ Spend</button>
+    </section>`;
   }
-  if (ph.phase === 'after') return '<section class="now"><p class="what">Trip complete</p></section>';
-  return '<section class="now"><p class="what">Add a day to get started</p></section>';
+  if (ph.phase === 'before') {
+    const ov = tripOverview(state.days);
+    return `<section class="countdown">
+      <p class="big">${ph.daysToGo} day${ph.daysToGo === 1 ? '' : 's'} to go</p>
+      <p>${fmtRange(ov.start, ov.end)} · ${ov.length} day${ov.length === 1 ? '' : 's'}</p>
+      ${ov.cities.length ? `<p class="route">${ov.cities.map(esc).join(' → ')}</p>` : ''}
+      <a class="btn" href="#/days">See the days</a>
+    </section>`;
+  }
+  if (ph.phase === 'after') {
+    return `<section class="countdown">
+      <p class="big">Trip complete</p>
+      <p>${fmtBoth(tripTotal(state), state.fx)}</p>
+      <a class="btn" href="#/trip">Trip summary</a>
+    </section>`;
+  }
+  return `<section class="countdown"><p class="big">Add a day to get started</p>
+    <button class="btn" data-action="add-day">+ Add day</button></section>`;
 }
 
-export function renderHome(state, today) {
-  const info = state.info.length
-    ? `<section class="info"><h3>Trip info</h3>${state.info.map((s) => `
-        <details><summary>${esc(s.title)}</summary>
-          <ul>${s.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></details>`).join('')}</section>`
-    : '';
+export function renderDays(state, today) {
+  const rows = sortDays(state.days).map((d) => {
+    const done = d.items.filter((i) => i.done).length;
+    const sum = d.items.slice(0, 3).map((i) => esc(i.text)).join(', ');
+    const title = [shortDate(d.date), d.city].filter(Boolean).map(esc).join(' · ');
+    return `<li><a class="day-row" href="${dayHref(d.id)}"><b>${title}</b><span class="sum">${sum}</span>`
+      + `<span class="prog">${done}/${d.items.length} ›</span></a></li>`;
+  }).join('');
   return `${renderStrip(state.days, { today })}
-    ${renderNow(state, today)}
-    <a class="tile" href="#/money"><p class="eyebrow">Spent so far</p>
-      <p class="what">${fmtBoth(tripTotal(state), state.fx)}</p></a>
-    ${info}`;
+    <ul class="day-list">${rows}</ul>
+    <button class="btn" data-action="add-day">+ Add day</button>`;
 }
 
-export function renderMoney(state) {
-  const cats = Object.entries(byCategory(state)).filter(([, v]) => v)
-    .map(([c, v]) => `${c} ${fmtYen(v)}`).join(' · ');
+export function renderTrip(state) {
+  const total = tripTotal(state);
+  const cats = byCategory(state);
+  const catRows = CATEGORIES.map((c) => {
+    const pct = total ? Math.round((100 * cats[c]) / total) : 0;
+    return `<div class="cat-row${cats[c] ? '' : ' zero'}"><span>${CATEGORY_ICON[c]} ${CATEGORY_LABEL[c]}</span>`
+      + `<span class="amt">${fmtYen(cats[c])}</span><div class="bar"><i style="width:${pct}%"></i></div></div>`;
+  }).join('');
   const groups = sortDays(state.days).filter((d) => d.spends.length).map((d) => `
     <section class="money-day" data-day="${esc(d.id)}">
       <h3>${esc([longDate(d.date) || 'Undated', d.city].filter(Boolean).join(' · '))} <span class="total">${fmtYen(dayTotal(d))}</span></h3>
       ${renderSpendList(d.spends, state.fx)}
     </section>`).join('');
-  const upd = state.fx.updatedAt ? new Date(state.fx.updatedAt).toLocaleDateString() : 'never';
-  return `<section class="money">
-    <h2>${fmtBoth(tripTotal(state), state.fx)}</h2>
-    ${cats ? `<p class="cats">${cats}</p>` : ''}
-    ${groups || '<p class="muted">No spends yet.</p>'}
-    <p class="muted">Rate: 1 ${esc(state.fx.home)} = ${esc(state.fx.jpyPerHome)} JPY · updated ${esc(upd)}</p>
-  </section>`;
+  const info = state.info.map((s) => `
+    <details class="info-sec"><summary>${esc(s.title)}</summary>
+      <ul>${s.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></details>`).join('');
+  const items = state.days.flatMap((d) => d.items);
+  const done = items.filter((i) => i.done).length;
+  const pctDone = items.length ? Math.round((100 * done) / items.length) : 0;
+  return `<section class="total"><p class="eyebrow">Spent so far</p>
+      <p class="sum">${fmtYen(total)}</p>
+      <p class="muted">≈ ${fmtHome(toHome(total, state.fx), state.fx.home)} · 1 ${esc(state.fx.home)} = ${esc(state.fx.jpyPerHome)} JPY</p></section>
+    <section class="cats"><p class="eyebrow">By category</p>${catRows}</section>
+    <details class="by-day"><summary>Spends by day</summary>${groups || '<p class="muted">No spends yet.</p>'}</details>
+    ${info ? `<section class="info">${info}</section>` : ''}
+    <p class="muted">Plans done: ${done} of ${items.length}</p>
+    <div class="progress"><div style="width:${pctDone}%"></div></div>`;
 }
 
 export function renderView(route, state, today) {
-  if (route.view === 'money') return renderMoney(state);
+  if (route.view === 'trip') return renderTrip(state);
+  if (route.view === 'days') return renderDays(state, today);
   if (route.view === 'day') {
     const day = state.days.find((d) => d.id === route.id);
-    if (day) return renderDay(state, day, today);
+    return day ? renderDayScreen(state, day, today, { page: true }) : renderDays(state, today);
   }
-  return renderHome(state, today);
+  return renderToday(state, today);
 }
