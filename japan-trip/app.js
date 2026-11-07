@@ -5,8 +5,8 @@
 import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, FX_URL, sortDays,
   toHome, fmtHome,
-} from './lib.js?v=1';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=1';
+} from './lib.js?v=2';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=2';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -158,6 +158,7 @@ async function load({ force = false } = {}) {
 
 // ---------- render ----------
 let lastRouteKey = null;
+let editingId = null; // day whose plan is in edit mode (Edit / Done)
 
 function render() {
   const route = parseRoute(location.hash);
@@ -168,11 +169,12 @@ function render() {
   const today = todayISO();
 
   const routeKey = route.view + ':' + (route.id || '');
+  if (routeKey !== lastRouteKey) editingId = null; // leaving a day ends edit mode
   const stripScroll = document.querySelector('.strip')?.scrollLeft;
   const openDetails = [...document.querySelectorAll('#view details')].map((d) => d.open);
 
   $('#top').innerHTML = renderHeader(route, state, dirty, today);
-  $('#view').innerHTML = renderView(route, state, today);
+  $('#view').innerHTML = renderView(route, state, today, { editingId });
   $('#tabs').innerHTML = renderTabs(route);
   $('#tools').hidden = route.view !== 'trip';
 
@@ -272,6 +274,9 @@ document.addEventListener('click', (e) => {
 
   if (action === 'sync') {
     sync();
+  } else if (action === 'toggle-edit') {
+    editingId = editingId === day?.id ? null : day?.id ?? null;
+    render();
   } else if (action === 'open-spend') {
     openSheet(el.dataset.day || null);
   } else if (action === 'close-spend') {
@@ -320,8 +325,19 @@ document.addEventListener('input', (e) => {
   if (e.target.matches('.spend-sheet [name=yen]')) updateSheetPreview(e.target);
 });
 
-// Field edits (date/city/notes) — save on change, no re-render while typing.
+// Field edits (date/city/notes, stop time/text) — save on change, no re-render while typing.
 document.addEventListener('change', (e) => {
+  const itemField = e.target.dataset.itemField;
+  if (itemField) {
+    const day = findDay(e.target.closest('[data-day]')?.dataset.day);
+    const item = day?.items.find((i) => i.id === e.target.closest('[data-item]')?.dataset.item);
+    if (!item) return;
+    const value = itemField === 'text' ? e.target.value.trim() : e.target.value;
+    if (itemField === 'text' && !value) { e.target.value = item.text; return; } // keep a stop's name
+    item[itemField] = value;
+    markDirty();
+    return;
+  }
   const field = e.target.dataset.field;
   const day = findDay(e.target.closest('[data-day]')?.dataset.day);
   if (!field || !day) return;

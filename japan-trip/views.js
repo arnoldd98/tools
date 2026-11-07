@@ -3,7 +3,7 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtBoth, toHome, CATEGORIES, CATEGORY_LABEL, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview,
-} from './lib.js?v=1';
+} from './lib.js?v=2';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -107,7 +107,7 @@ function renderNextUp(day) {
   </div>`;
 }
 
-function renderItem(i, nextId) {
+function renderItem(i, nextId, editing) {
   const detail = [
     i.place ? `${placeLine(i.place)} ${mapsBtn(i.place, 'Map', 'maplink')}` : '',
     i.note ? `<span class="note">${esc(i.note)}</span>` : '',
@@ -115,9 +115,13 @@ function renderItem(i, nextId) {
   ].filter(Boolean);
   return `
     <li class="${i.done ? 'done' : ''}${i.id === nextId ? ' next' : ''}" data-item="${esc(i.id)}">
-      <input type="checkbox" ${i.done ? 'checked' : ''} data-action="toggle" aria-label="Done">
+      ${editing
+    ? `<input type="time" value="${esc(i.time)}" data-item-field="time" aria-label="Time">
+      <input value="${esc(i.text)}" data-item-field="text" aria-label="Stop">
+      <button class="icon" data-action="del-item" title="Delete stop">✕</button>`
+    : `<input type="checkbox" ${i.done ? 'checked' : ''} data-action="toggle" aria-label="Done">
       <span class="time">${esc(i.time)}</span>
-      <span class="text">${esc(i.text)}</span>
+      <span class="text">${esc(i.text)}</span>`}
       ${detail.length ? `<div class="detail">${detail.join(' ')}</div>` : ''}
     </li>`;
 }
@@ -138,36 +142,36 @@ export function renderKeyInfo(day) {
   return `<section class="keyinfo"><p class="eyebrow">Key info</p>${tags.join('')}</section>`;
 }
 
-// Today and the day page share this. `page` adds the compact strip and day-page wording.
-export function renderDayScreen(state, day, today, { page = false } = {}) {
+// Today and the day page share this. `page` adds the compact strip and day-page wording;
+// `editing` turns the plan into in-place fields (Edit / Done button on the plan heading).
+export function renderDayScreen(state, day, today, { page = false, editing = false } = {}) {
   const next = nextUp(day);
   const spentLabel = day.date && day.date === today ? 'Spent today' : 'Spent';
-  return `<section class="day-screen" data-day="${esc(day.id)}">
+  const editBtn = `<button class="btn small" data-action="toggle-edit">${editing ? 'Done' : '✎ Edit'}</button>`;
+  const notes = editing
+    ? `<h3>Notes</h3><textarea placeholder="Notes for the day…" data-field="notes">${esc(day.notes)}</textarea>`
+    : (day.notes ? `<h3>Notes</h3><p class="notes">${esc(day.notes)}</p>` : '');
+  return `<section class="day-screen${editing ? ' is-editing' : ''}" data-day="${esc(day.id)}">
     ${page ? renderStrip(state.days, { today, selectedId: day.id, compact: true }) : ''}
     ${renderNextUp(day)}
-    <h3>${page ? 'Plan' : "Today's plan"}</h3>
+    <div class="plan-head"><h3>${page ? 'Plan' : "Today's plan"}</h3>${editBtn}</div>
+    ${editing ? `<div class="day-fields">
+      <input class="date" type="date" value="${esc(day.date)}" data-field="date" aria-label="Date">
+      <input class="city" value="${esc(day.city)}" placeholder="City" data-field="city" aria-label="City">
+    </div>` : ''}
     ${day.items.length
-    ? `<ol class="timeline">${day.items.map((i) => renderItem(i, next?.id)).join('')}</ol>`
+    ? `<ol class="timeline${editing ? ' editing' : ''}">${day.items.map((i) => renderItem(i, next?.id, editing)).join('')}</ol>`
     : '<p class="muted">No stops yet.</p>'}
+    ${editing ? `<form class="add-item">
+      <input name="time" type="time" aria-label="Time">
+      <input name="text" placeholder="Add a stop…" required>
+      <button class="btn" type="submit">Add</button>
+    </form>` : ''}
+    ${notes}
+    ${editing ? '<button class="btn danger" data-action="del-day">Delete day</button>' : ''}
     ${renderKeyInfo(day)}
     <details class="spent"><summary>${spentLabel} <b>${fmtBoth(dayTotal(day), state.fx)}</b></summary>
       ${renderSpendList(day.spends, state.fx)}</details>
-    <details class="edit-day"><summary>Edit day</summary>
-      <div class="day-head">
-        <input class="date" type="date" value="${esc(day.date)}" data-field="date">
-        <input class="city" value="${esc(day.city)}" placeholder="City" data-field="city">
-      </div>
-      <ul class="edit-items">${day.items.map((i) => `
-        <li data-item="${esc(i.id)}"><span class="time">${esc(i.time)}</span><span class="text">${esc(i.text)}</span>
-          <button class="icon" data-action="del-item" title="Delete stop">✕</button></li>`).join('')}</ul>
-      <form class="add-item">
-        <input name="time" type="time">
-        <input name="text" placeholder="Add a stop…" required>
-        <button class="btn" type="submit">Add</button>
-      </form>
-      <textarea placeholder="Notes for the day…" data-field="notes">${esc(day.notes)}</textarea>
-      <button class="btn danger" data-action="del-day">Delete day</button>
-    </details>
     <button class="fab" data-action="open-spend" data-day="${esc(day.id)}">＋ ¥ Spend</button>
   </section>`;
 }
@@ -190,9 +194,11 @@ const shortDate = (date) => {
   return d ? `${WD[d.getDay()]} ${d.getDate()}` : 'Undated';
 };
 
-export function renderToday(state, today) {
+export function renderToday(state, today, { editingId } = {}) {
   const ph = tripPhase(state.days, today);
-  if (ph.phase === 'during' && ph.day) return renderDayScreen(state, ph.day, today, { page: false });
+  if (ph.phase === 'during' && ph.day) {
+    return renderDayScreen(state, ph.day, today, { page: false, editing: ph.day.id === editingId });
+  }
   if (ph.phase === 'during') {
     return `<section class="day-screen">
       <p class="what">No plans today</p>
@@ -263,12 +269,12 @@ export function renderTrip(state) {
     <div class="progress"><div style="width:${pctDone}%"></div></div>`;
 }
 
-export function renderView(route, state, today) {
+export function renderView(route, state, today, { editingId } = {}) {
   if (route.view === 'trip') return renderTrip(state);
   if (route.view === 'days') return renderDays(state, today);
   if (route.view === 'day') {
     const day = state.days.find((d) => d.id === route.id);
-    return day ? renderDayScreen(state, day, today, { page: true }) : renderDays(state, today);
+    return day ? renderDayScreen(state, day, today, { page: true, editing: day.id === editingId }) : renderDays(state, today);
   }
-  return renderToday(state, today);
+  return renderToday(state, today, { editingId });
 }

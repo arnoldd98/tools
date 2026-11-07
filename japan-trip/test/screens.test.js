@@ -34,18 +34,46 @@ test('key info: hotel first, escaped, maps for places', () => {
   assert.match(html, /<summary>Dinner<\/summary>[\s\S]*query=Yunangi%2C%20Naha/);
   assert.equal(renderKeyInfo(trip.days[1]), '');
 });
-test('day screen: order, spent, edit tucked away, fab', () => {
+test('day screen: order, spent, fab; no separate edit section', () => {
   const html = renderDayScreen(trip, trip.days[0], '2026-12-01', { page: false });
-  const order = ['class="next-up"', "Today's plan", 'class="keyinfo"', 'class="spent"', 'class="edit-day"', 'class="fab"'];
+  const order = ['class="next-up"', "Today's plan", 'class="keyinfo"', 'class="spent"', 'class="fab"'];
   order.reduce((prev, s) => { const i = html.indexOf(s); assert.ok(i > prev, s); return i; }, -1);
+  assert.ok(!html.includes('class="edit-day"'));
   assert.ok(!html.includes('class="strip'));
   assert.match(html, /Spent today <b>¥1,200 ≈ S\$10\.43<\/b>/);
   assert.match(html, /data-action="open-spend" data-day="d1"/);
-  assert.ok(!/<ol class="timeline">[\s\S]*del-item[\s\S]*<\/ol>/.test(html), 'no delete in the plan list');
-  assert.match(html, /class="edit-day"[\s\S]*data-item="i1"[\s\S]*data-action="del-item"/);
   const page = renderDayScreen(trip, trip.days[0], '2026-12-02', { page: true });
   assert.match(page, /class="strip compact"/);
   assert.match(page, /<summary>Spent <b>/);
+});
+test('plan has an Edit button; normal mode has no fields or deletes', () => {
+  const day = { ...trip.days[0], notes: 'Bring <cash>' };
+  const html = renderDayScreen(trip, day, '2026-12-01', { page: false });
+  assert.match(html, /<button class="btn small" data-action="toggle-edit">✎ Edit<\/button>/);
+  assert.ok(!html.includes('data-action="del-item"'));
+  assert.ok(!html.includes('data-item-field'));
+  assert.ok(!html.includes('class="add-item"'));
+  assert.ok(!html.includes('data-action="del-day"'));
+  assert.ok(!html.includes('data-field='));
+  assert.match(html, /<p class="notes">Bring &lt;cash&gt;<\/p>/);
+  assert.ok(!renderDayScreen(trip, trip.days[0], '2026-12-01', {}).includes('class="notes"'), 'no notes block when empty');
+});
+test('edit mode edits stops, date, city and notes in place', () => {
+  const day = { ...trip.days[0], notes: 'n & m' };
+  const html = renderDayScreen(trip, day, '2026-12-01', { page: false, editing: true });
+  assert.match(html, /data-action="toggle-edit">Done<\/button>/);
+  assert.match(html, /<ol class="timeline editing">/);
+  assert.match(html, /data-item="i2"[\s\S]*?<input type="time" value="15:00" data-item-field="time"[\s\S]*?<input value="Check in" data-item-field="text"[\s\S]*?data-action="del-item"/);
+  assert.ok(!/<ol class="timeline editing">[\s\S]*type="checkbox"[\s\S]*<\/ol>/.test(html), 'no tick boxes while editing');
+  assert.match(html, /data-field="date"[\s\S]*data-field="city"[\s\S]*class="timeline editing"/);
+  assert.match(html, /class="timeline editing"[\s\S]*class="add-item"/);
+  assert.match(html, /<textarea[^>]*data-field="notes">n &amp; m<\/textarea>/);
+  assert.match(html, /data-action="del-day"/);
+});
+test('renderView passes the editing day through', () => {
+  assert.match(renderView({ view: 'day', id: 'd1' }, trip, '', { editingId: 'd1' }), /class="timeline editing"/);
+  assert.ok(!renderView({ view: 'day', id: 'd1' }, trip, '', { editingId: 'd3' }).includes('editing'));
+  assert.match(renderView({ view: 'home' }, trip, '2026-12-01', { editingId: 'd1' }), /class="timeline editing"/);
 });
 test('spend sheet', () => {
   const html = renderSpendSheet('d1', trip.fx);
