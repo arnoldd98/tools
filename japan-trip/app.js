@@ -140,7 +140,7 @@ async function load({ force = false } = {}) {
     if (force || !dirty) {
       state = remote; dirty = false; saveDraft();
       render();
-      setStatus(state.updated ? `Last synced ${new Date(state.updated).toLocaleString()}` : '');
+      setStatus(offlineOr(state.updated ? `Last synced ${new Date(state.updated).toLocaleString()}` : ''));
     }
   } catch (e) {
     if (!haveCopy && draft?.data && !force) state = normalise(draft.data);
@@ -363,6 +363,34 @@ $('#import').addEventListener('change', async (e) => {
   } catch (err) { setStatus(`Import failed: ${err.message}`); }
   e.target.value = '';
 });
+
+// ---------- offline app (service worker) ----------
+// A new version installs in the background and waits; the note lets the user switch.
+function watchForUpdates(reg) {
+  const showIfWaiting = () => {
+    if (reg.waiting && navigator.serviceWorker.controller) $('#update').hidden = false;
+  };
+  showIfWaiting();
+  reg.addEventListener('updatefound', () => {
+    const w = reg.installing;
+    w?.addEventListener('statechange', () => { if (w.state === 'installed') showIfWaiting(); });
+  });
+  $('#update').addEventListener('click', () => reg.waiting?.postMessage('skip-waiting'));
+  // Reload only when an existing worker is replaced, not on the very first install.
+  let reloaded = !hadController;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloaded) return;
+    reloaded = true;
+    location.reload();
+  });
+}
+
+const hadController = !!navigator.serviceWorker?.controller;
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+    .then(watchForUpdates)
+    .catch(() => { /* no offline support (e.g. file://); the app still works online */ });
+}
 
 // Fill settings form
 for (const [k, v] of Object.entries(cfg)) {
