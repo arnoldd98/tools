@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalise, sortDays, toHome, fmtYen, fmtHome, fmtBoth, DEFAULT_FX, CATEGORIES } from '../lib.js';
+import { normalise, sortDays, toHome, fmtYen, fmtHome, fmtBoth, DEFAULT_FX, CATEGORIES,
+  CATEGORY_LABEL, CATEGORY_ICON, tripSpan, dayNumber, tripOverview, fmtRange } from '../lib.js';
 
 const legacy = { title: 'T', days: [{ id: 'd1', date: '2026-12-01', city: 'Naha',
   items: [{ id: 'i1', time: '10:00', text: 'Land', done: 0 }], notes: '' }] };
@@ -19,7 +20,7 @@ test('normalise tolerates null and garbage', () => {
   assert.equal(normalise({}).title, 'Japan Trip');
   const s = normalise({ days: [{ id: 'x', spends: [{ id: 's', yen: '1200.9', category: 'nope' }] }] });
   assert.equal(s.days[0].spends[0].yen, 1200);
-  assert.equal(s.days[0].spends[0].category, 'other');
+  assert.equal(s.days[0].spends[0].category, 'misc');
   assert.equal(s.days[0].notes, '');
   assert.equal(s.days[0].city, '');
 });
@@ -67,7 +68,7 @@ test('totals and categories', () => {
     { spends: [{ yen: 5000, category: 'food' }] }, { spends: [] }] };
   assert.equal(dayTotal(state.days[0]), 1500);
   assert.equal(tripTotal(state), 6500);
-  assert.deepEqual(byCategory(state), { food: 6200, transport: 300, shopping: 0, tickets: 0, stay: 0, other: 0 });
+  assert.deepEqual(byCategory(state), { food: 6200, shopping: 0, transport: 300, tickets: 0, misc: 0 });
 });
 test('mapsUrl prefers explicit link, else builds a search', () => {
   assert.equal(mapsUrl({ name: 'X', maps: 'https://maps.app.goo.gl/abc' }), 'https://maps.app.goo.gl/abc');
@@ -85,7 +86,6 @@ test('insertItem keeps array order authoritative', () => {
 test('parseRoute', () => {
   for (const h of ['', '#', '#/', '#/xyz', '#/day/']) assert.deepEqual(parseRoute(h), { view: 'home' }, h);
   assert.deepEqual(parseRoute('#/day/d3'), { view: 'day', id: 'd3' });
-  assert.deepEqual(parseRoute('#/money'), { view: 'money' });
 });
 test('tripPhase', () => {
   const days = [{ id: 'a', date: '2026-12-01' }, { id: 'b', date: '2026-12-03' }, { id: 'z', date: '' }];
@@ -129,4 +129,48 @@ test('normalise gives missing ids unique values', () => {
 test('parseRoute survives malformed escapes', () => {
   assert.deepEqual(parseRoute('#/day/%'), { view: 'home' });
   assert.deepEqual(parseRoute('#/day/50%25'), { view: 'day', id: '50%' });
+});
+test('categories are the five, old ones migrate to misc', () => {
+  assert.deepEqual(CATEGORIES, ['food', 'shopping', 'transport', 'tickets', 'misc']);
+  assert.equal(CATEGORY_LABEL.misc, 'miscellaneous');
+  const s = normalise({ days: [{ id: 'd', spends: [
+    { id: 'a', yen: 1, category: 'stay' }, { id: 'b', yen: 1, category: 'other' }, { id: 'c', yen: 1, category: 'tickets' }] }] });
+  assert.deepEqual(s.days[0].spends.map((x) => x.category), ['misc', 'misc', 'tickets']);
+});
+test('normalise keyInfo', () => {
+  const s = normalise({ days: [{ id: 'd', keyInfo: [
+    { icon: '🎫', label: 'Pass', lines: ['¥800', 3] },
+    { label: '' }, { icon: 'x' }, 'junk',
+    { label: 'Dinner', lines: 'nope', place: { name: 'Yunangi' } }] }, { id: 'e' }] });
+  assert.deepEqual(s.days[0].keyInfo, [
+    { icon: '🎫', label: 'Pass', lines: ['¥800', '3'] },
+    { icon: '', label: 'Dinner', lines: [], place: { name: 'Yunangi', address: '' } }]);
+  assert.deepEqual(s.days[1].keyInfo, []);
+});
+// Regression pin: already passes after Task 1's predecessor; keeps Review Focus 2 covered.
+test('legacy draft with nameless stay still normalises', () => {
+  const s = normalise({ days: [{ id: 'd', stay: {}, items: [{ id: 'i', text: 'x' }] }] });
+  assert.equal(s.days[0].stay.name, '');
+});
+test('trip calendar helpers count calendar days', () => {
+  const days = [{ date: '2026-12-04', city: 'Osaka' }, { date: '2026-12-01', city: 'Naha' },
+    { date: '2026-12-02', city: 'Okinawa' }, { date: '2026-12-06', city: 'Kyoto' },
+    { date: '2026-12-05', city: 'Osaka' }, { date: '', city: 'TBD' }];
+  assert.deepEqual(tripSpan(days), { start: '2026-12-01', end: '2026-12-06', length: 6 });
+  assert.deepEqual(dayNumber(days, '2026-12-03'), { n: 3, of: 6 });
+  assert.equal(dayNumber(days, '2026-11-30'), null);
+  assert.equal(dayNumber([], '2026-12-01'), null);
+  assert.deepEqual(tripOverview(days).cities, ['Naha', 'Okinawa', 'Osaka', 'Kyoto']);
+  assert.equal(tripSpan([{ date: '' }]), null);
+});
+test('fmtRange', () => {
+  assert.equal(fmtRange('2026-12-01', '2026-12-06'), '1–6 Dec 2026');
+  assert.equal(fmtRange('2026-11-28', '2026-12-03'), '28 Nov – 3 Dec 2026');
+  assert.equal(fmtRange('2026-12-28', '2027-01-02'), '28 Dec 2026 – 2 Jan 2027');
+  assert.equal(fmtRange('2026-12-01', '2026-12-01'), '1 Dec 2026');
+});
+test('new routes', () => {
+  assert.deepEqual(parseRoute('#/days'), { view: 'days' });
+  assert.deepEqual(parseRoute('#/trip'), { view: 'trip' });
+  assert.deepEqual(parseRoute('#/money'), { view: 'redirect', to: '#/trip' });
 });

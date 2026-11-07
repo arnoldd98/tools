@@ -1,7 +1,11 @@
 // Pure helpers for the Japan trip tracker. No DOM access; unit-tested with `npm test`.
 
 export const DEFAULT_FX = { home: 'SGD', jpyPerHome: 115, updatedAt: null };
-export const CATEGORIES = ['food', 'transport', 'shopping', 'tickets', 'stay', 'other'];
+export const CATEGORIES = ['food', 'shopping', 'transport', 'tickets', 'misc'];
+export const CATEGORY_LABEL = {
+  food: 'food', shopping: 'shopping', transport: 'transport', tickets: 'tickets', misc: 'miscellaneous',
+};
+export const CATEGORY_ICON = { food: '🍜', shopping: '🛍', transport: '🚃', tickets: '🎫', misc: '•' };
 
 const str = (v) => (v == null ? '' : String(v));
 const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : null);
@@ -30,9 +34,18 @@ function normSpend(s) {
     id: idOf(o.id),
     yen: Math.trunc(Number(o.yen)) || 0,
     label: str(o.label),
-    category: CATEGORIES.includes(o.category) ? o.category : 'other',
+    category: CATEGORIES.includes(o.category) ? o.category : 'misc', // old 'stay'/'other' → misc
     at: str(o.at),
   };
+}
+
+function normKeyInfo(k) {
+  const o = obj(k);
+  if (!o || !str(o.label)) return null;
+  const out = { ...o, icon: str(o.icon), label: str(o.label), lines: arr(o.lines).map(str) };
+  const place = o.place !== undefined ? normPlace(o.place) : undefined;
+  if (place) out.place = place; else delete out.place;
+  return out;
 }
 
 function normDay(d) {
@@ -44,6 +57,7 @@ function normDay(d) {
     city: str(o.city),
     items: arr(o.items).map(normItem),
     spends: arr(o.spends).map(normSpend),
+    keyInfo: arr(o.keyInfo).map(normKeyInfo).filter(Boolean),
     notes: str(o.notes),
   };
   if (o.stay !== undefined) {
@@ -110,7 +124,7 @@ export const tripTotal = (state) => state.days.reduce((sum, d) => sum + dayTotal
 export function byCategory(state) {
   const out = Object.fromEntries(CATEGORIES.map((c) => [c, 0]));
   for (const d of state.days) for (const s of d.spends || []) {
-    const c = CATEGORIES.includes(s.category) ? s.category : 'other';
+    const c = CATEGORIES.includes(s.category) ? s.category : 'misc';
     out[c] += s.yen || 0;
   }
   return out;
@@ -135,7 +149,9 @@ export function parseRoute(hash) {
   if (parts[0] === 'day' && parts[1]) {
     try { return { view: 'day', id: decodeURIComponent(parts[1]) }; } catch { return { view: 'home' }; }
   }
-  if (parts[0] === 'money') return { view: 'money' };
+  if (parts[0] === 'days') return { view: 'days' };
+  if (parts[0] === 'trip') return { view: 'trip' };
+  if (parts[0] === 'money') return { view: 'redirect', to: '#/trip' }; // old link
   return { view: 'home' };
 }
 
@@ -151,6 +167,42 @@ export function tripPhase(days, today) {
   }
   if (today > last.date) return { phase: 'after' };
   return { phase: 'during', day: dated.find((d) => d.date === today) || null };
+}
+
+// Span of the trip in calendar days, over days that have a date.
+export function tripSpan(days) {
+  const dated = sortDays(days.filter((d) => d.date));
+  if (!dated.length) return null;
+  const start = dated[0].date;
+  const end = dated[dated.length - 1].date;
+  return { start, end, length: Math.round((utcDay(end) - utcDay(start)) / 86400000) + 1 };
+}
+
+// "Day n of m" in calendar days; null outside the trip.
+export function dayNumber(days, date) {
+  const span = tripSpan(days);
+  if (!span || !date || date < span.start || date > span.end) return null;
+  return { n: Math.round((utcDay(date) - utcDay(span.start)) / 86400000) + 1, of: span.length };
+}
+
+export function tripOverview(days) {
+  const span = tripSpan(days);
+  if (!span) return null;
+  const cities = [];
+  for (const d of sortDays(days.filter((x) => x.date))) {
+    if (d.city && !cities.includes(d.city)) cities.push(d.city);
+  }
+  return { ...span, cities };
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export function fmtRange(start, end) {
+  const [y1, m1, d1] = start.split('-').map(Number);
+  const [y2, m2, d2] = end.split('-').map(Number);
+  if (start === end) return `${d1} ${MONTHS[m1 - 1]} ${y1}`;
+  if (y1 === y2 && m1 === m2) return `${d1}–${d2} ${MONTHS[m1 - 1]} ${y1}`;
+  if (y1 === y2) return `${d1} ${MONTHS[m1 - 1]} – ${d2} ${MONTHS[m2 - 1]} ${y1}`;
+  return `${d1} ${MONTHS[m1 - 1]} ${y1} – ${d2} ${MONTHS[m2 - 1]} ${y2}`;
 }
 
 export function ensureDay(state, date, uid) {
