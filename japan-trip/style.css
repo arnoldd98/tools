@@ -235,8 +235,7 @@ details > summary { cursor: pointer; }
   background: var(--card); border: 1px solid var(--line); border-radius: 12px;
   padding: 10px 12px; margin: 6px 0; text-decoration: none; color: inherit;
 }
-.day-row .sum { grid-column: 1; grid-row: 2; color: var(--muted); font-size: 13px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.day-row .sum { grid-column: 1; grid-row: 2; color: var(--muted); font-size: 13px; line-height: 1.35; margin-top: 2px; }
 .day-row .prog { grid-column: 2; grid-row: 1 / 3; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 
 /* ---------- trip ---------- */
@@ -282,3 +281,5 @@ h1, h3, .hdr b, .when, .countdown .big, section.total .sum, .day-row b { font-fa
 .fx-toggle { opacity: .35; }
 .fx-toggle.on { opacity: 1; color: var(--shu); }
 .timeline li.fixed.next .text { color: var(--shu); }
+.day-summary { margin: 8px 0 0; font-family: var(--mincho); font-size: 16px; line-height: 1.4; color: var(--ink); }
+.day-fields .summary { flex: 1 1 100%; }

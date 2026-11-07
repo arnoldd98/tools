@@ -39,6 +39,7 @@
       "id": "d1",
       "date": "2026-11-12",
       "city": "Osaka",
+      "summary": "Land at Kansai late, airport hotel for the night",
       "stay": {
         "name": "Odysis Suites Osaka Airport Hotel",
         "address": "Rinku Town, Izumisano, Osaka",
@@ -94,6 +95,7 @@
       "id": "d2",
       "date": "2026-11-13",
       "city": "Okinawa",
+      "summary": "Early flight to Okinawa, then Naha's markets and Kokusai Dori",
       "stay": {
         "name": "Mercure Naha",
         "address": "Naha, Okinawa",
@@ -216,6 +218,7 @@
       "id": "d3",
       "date": "2026-11-14",
       "city": "Okinawa",
+      "summary": "Ferry day trip to Tokashiki: Aharen Beach and the lookout",
       "stay": {
         "name": "Mercure Naha",
         "address": "Naha, Okinawa",
@@ -314,6 +317,7 @@
       "id": "d4",
       "date": "2026-11-15",
       "city": "Okinawa",
+      "summary": "Pick up the car, Okinawa World cave, Sefa Utaki, Cape Chinen",
       "stay": {
         "name": "Mercure Naha",
         "address": "Naha, Okinawa",
@@ -399,6 +403,7 @@
       "id": "d5",
       "date": "2026-11-16",
       "city": "Okinawa",
+      "summary": "Shuri Castle, west-coast capes, check in at Hilton Sesoko",
       "stay": {
         "name": "Hilton Okinawa Sesoko Resort",
         "address": "Sesoko, Motobu, Okinawa",
@@ -497,6 +502,7 @@
       "id": "d6",
       "date": "2026-11-17",
       "city": "Okinawa",
+      "summary": "Churaumi Aquarium, Kouri Island, Bise fukugi tree road",
       "stay": {
         "name": "Hilton Okinawa Sesoko Resort",
         "address": "Sesoko, Motobu, Okinawa",
@@ -560,6 +566,7 @@
       "id": "d7",
       "date": "2026-11-18",
       "city": "Okinawa",
+      "summary": "Busena, Cape Manzamo, American Village in Chatan",
       "stay": {
         "name": "Chatan hotel (TBC)",
         "address": "Chatan, Okinawa",
@@ -635,6 +642,7 @@
       "id": "d8",
       "date": "2026-11-19",
       "city": "Okinawa",
+      "summary": "Umikaji Terrace, outlet shopping, evening flight to Osaka",
       "stay": {
         "name": "Hotel MyStays Dojima",
         "address": "Dojima, Kita Ward, Osaka",
@@ -720,6 +728,7 @@
       "id": "d9",
       "date": "2026-11-20",
       "city": "Kyoto",
+      "summary": "Kyoto: Golden Pavilion, Nijo Castle, Nishiki Market",
       "stay": {
         "name": "Hotel MyStays Dojima",
         "address": "Dojima, Kita Ward, Osaka",
@@ -783,6 +792,7 @@
       "id": "d10",
       "date": "2026-11-21",
       "city": "Kyoto",
+      "summary": "Kiyomizu-dera, Gion's old streets, Kodai-ji lit up at night",
       "stay": {
         "name": "Hotel MyStays Dojima",
         "address": "Dojima, Kita Ward, Osaka",
@@ -861,6 +871,7 @@
       "id": "d11",
       "date": "2026-11-22",
       "city": "Kyoto",
+      "summary": "Silver Pavilion, Philosopher's Path, Eikando, Nanzen-ji",
       "stay": {
         "name": "Hotel MyStays Dojima",
         "address": "Dojima, Kita Ward, Osaka",
@@ -944,6 +955,7 @@
       "id": "d12",
       "date": "2026-11-23",
       "city": "Kyoto",
+      "summary": "Tofuku-ji autumn colours, then tea town Uji",
       "stay": {
         "name": "Hotel MyStays Dojima",
         "address": "Dojima, Kita Ward, Osaka",
@@ -997,6 +1009,7 @@
       "id": "d13",
       "date": "2026-11-24",
       "city": "Osaka",
+      "summary": "Back to Osaka: castle park, Midosuji, dinner in Kobe",
       "stay": {
         "name": "Hinode Hotel Osaka",
         "address": "Osaka",
@@ -1058,6 +1071,7 @@
       "id": "d14",
       "date": "2026-11-25",
       "city": "Osaka",
+      "summary": "Minoh Park waterfall walk and Katsuo-ji's daruma temple",
       "stay": {
         "name": "Hinode Hotel Osaka",
         "address": "Osaka",
@@ -1093,6 +1107,7 @@
       "id": "d15",
       "date": "2026-11-26",
       "city": "Osaka",
+      "summary": "Kuromon Market, Namba and Shinsaibashi, night flight home",
       "items": [
         {
           "id": "i91",

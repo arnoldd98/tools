@@ -3,7 +3,7 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtBoth, toHome, CATEGORIES, CATEGORY_LABEL, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed,
-} from './lib.js?v=6';
+} from './lib.js?v=7';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -166,12 +166,14 @@ export function renderDayScreen(state, day, today, { page = false, editing = fal
     : (day.notes ? `<h3>Notes</h3><p class="notes">${esc(day.notes)}</p>` : '');
   return `<section class="day-screen${editing ? ' is-editing' : ''}" data-day="${esc(day.id)}">
     ${page ? renderStrip(state.days, { today, selectedId: day.id, compact: true }) : ''}
+    ${day.summary && !editing ? `<p class="day-summary">${esc(day.summary)}</p>` : ''}
     ${renderFixedStrip(day, today, now)}
     ${renderNextUp(day)}
     <div class="plan-head"><h3>${page ? 'Plan' : "Today's plan"}</h3>${editBtn}</div>
     ${editing ? `<div class="day-fields">
       <input class="date" type="date" value="${esc(day.date)}" data-field="date" aria-label="Date">
       <input class="city" value="${esc(day.city)}" placeholder="City" data-field="city" aria-label="City">
+      <input class="summary" value="${esc(day.summary)}" placeholder="One-line summary of the day" data-field="summary" aria-label="Summary">
     </div>` : ''}
     ${day.items.length
     ? `<ol class="timeline${editing ? ' editing' : ''}">${day.items.map((i) => renderItem(i, next?.id, editing)).join('')}</ol>`
@@ -244,7 +246,7 @@ export function renderToday(state, today, { editingId, now } = {}) {
 export function renderDays(state, today) {
   const rows = sortDays(state.days).map((d) => {
     const done = d.items.filter((i) => i.done).length;
-    const sum = d.items.slice(0, 3).map((i) => esc(i.text)).join(', ');
+    const sum = d.summary ? esc(d.summary) : d.items.slice(0, 3).map((i) => esc(i.text)).join(', ');
     const title = [shortDate(d.date), d.city].filter(Boolean).map(esc).join(' · ');
     return `<li><a class="day-row" href="${dayHref(d.id)}"><b>${title}</b><span class="sum">${sum}</span>`
       + `<span class="prog">${done}/${d.items.length} ›</span></a></li>`;

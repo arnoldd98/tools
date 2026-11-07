@@ -163,3 +163,15 @@ test('fixed stops: 12-hour times, marked rows, next-fixed strip with countdown',
   const done = { ...day, items: day.items.map((i) => ({ ...i, done: !!i.fixed })) };
   assert.ok(!renderDayScreen(st, done, '2026-11-13', { now: '04:30' }).includes('fixed-strip'));
 });
+
+test('day summary: Days list, day screen, edit field; falls back to stops', () => {
+  const withSum = { ...trip, days: trip.days.map((d) => (d.id === 'd1' ? { ...d, summary: 'Land & <explore>' } : d)) };
+  const days = renderDays(withSum, '2026-12-01');
+  assert.match(days, /<b>Tue 1 · Naha<\/b><span class="sum">Land &amp; &lt;explore&gt;<\/span>/);
+  assert.match(renderDays(trip, '2026-12-01'), /<span class="sum">Land, Check in<\/span>/, 'fallback to first stops');
+  const day = withSum.days[0];
+  assert.match(renderDayScreen(withSum, day, '2026-12-01', {}), /<p class="day-summary">Land &amp; &lt;explore&gt;<\/p>/);
+  assert.ok(!renderDayScreen(trip, trip.days[0], '2026-12-01', {}).includes('day-summary'), 'no empty summary line');
+  assert.match(renderDayScreen(withSum, day, '2026-12-01', { editing: true }),
+    /<input class="summary" value="Land &amp; &lt;explore&gt;" placeholder="One-line summary of the day" data-field="summary"/);
+});

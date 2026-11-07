@@ -10,7 +10,8 @@ phone as an app (PWA) and works offline.
   - `fx` — `{ home: "SGD", jpyPerHome, updatedAt }`, the rate used for S$ figures. Refreshed about
     daily from the free [currency API](https://github.com/fawazahmed0/exchange-api) when online.
   - `info[]` — `{ title, lines[] }` read-only trip info sections on the Trip tab.
-  - `days[]` — `{ id, date, city, items[], spends[], keyInfo[], notes, stay? }`; `stay` is
+  - `days[]` — `{ id, date, city, summary, items[], spends[], keyInfo[], notes, stay? }`; `summary` is a
+    one-line description shown in the Days list and on the day; `stay` is
     `{ name, address, maps?, note? }` and shows as the first key info tag.
   - `days[].keyInfo[]` — `{ icon?, label, lines[], place? }`: passes, tickets, reservations
     shown as tags on that day (tap to expand).

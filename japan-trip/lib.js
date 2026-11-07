@@ -56,6 +56,7 @@ function normDay(d) {
     id: idOf(o.id),
     date: str(o.date),
     city: str(o.city),
+    summary: str(o.summary), // one-line "what's this day about"
     items: arr(o.items).map(normItem),
     spends: arr(o.spends).map(normSpend),
     keyInfo: arr(o.keyInfo).map(normKeyInfo).filter(Boolean),

@@ -229,3 +229,7 @@ test('newerFx keeps the more recently updated rate', () => {
   assert.equal(newerFx({ ...fresh, updatedAt: '2026-11-14T00:00:00Z' }, fresh).updatedAt, '2026-11-14T00:00:00Z');
   assert.equal(newerFx(old, { ...old }).jpyPerHome, 115);
 });
+test('normalise gives every day a summary string', () => {
+  const s = normalise({ days: [{ id: 'a', summary: 'Beach day' }, { id: 'b' }, { id: 'c', summary: 5 }] });
+  assert.deepEqual(s.days.map((d) => d.summary), ['Beach day', '', '5']);
+});
