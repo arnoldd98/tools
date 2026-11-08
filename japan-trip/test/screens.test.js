@@ -102,14 +102,16 @@ test('today by phase', () => {
   assert.match(after, /Trip complete[\s\S]*¥1,200/);
   assert.match(renderToday(trip, '2026-12-09', { cur: 'HOME' }), /Trip complete[\s\S]*S\$10\.43/);
   assert.ok(!after.includes('class="fab"'));
-  assert.match(renderToday(normalise({}), '2026-12-01'), /Add a day to get started/);
+  const empty = renderToday(normalise({}), '2026-12-01');
+  assert.match(empty, /No trip days yet/);
+  assert.ok(!empty.includes('add-day'), 'no Add day button');
 });
 test('days list', () => {
   const html = renderDays(trip, '2026-12-01');
   assert.match(html, /class="strip"/);
   assert.match(html, /<b>Tue 1 · Naha<\/b><span class="sum">Land, Check in<\/span><span class="prog">1\/2 ›<\/span>/);
   assert.ok(html.indexOf('d1') < html.indexOf('d3'));
-  assert.match(html, /data-action="add-day"/);
+  assert.ok(!html.includes('add-day'), 'no Add day button');
 });
 test('trip summary', () => {
   const html = renderTrip(trip);

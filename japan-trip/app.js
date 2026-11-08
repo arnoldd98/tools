@@ -3,11 +3,11 @@
 // Hash routes: #/ Today, #/days, #/day/<id>, #/trip. Bottom tabs switch between them.
 
 import {
-  normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx, sortDays,
+  normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx,
   safeUrl, fmtMoney,
   toHome, fmtHome,
-} from './lib.js?v=12';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=12';
+} from './lib.js?v=13';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=13';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -372,12 +372,6 @@ document.addEventListener('click', (e) => {
       el.dataset.confirm = '1'; el.textContent = 'Tap again to delete';
       setTimeout(() => render(), 3000);
     }
-  } else if (action === 'add-day') {
-    const last = sortDays(state.days).filter((d) => d.date).pop();
-    const d = { id: uid(), date: last?.date || todayISO(), city: last?.city || '', items: [], spends: [], notes: '' };
-    state.days.push(d);
-    commit();
-    location.hash = `#/day/${encodeURIComponent(d.id)}`;
   } else if (action === 'fetch-fx') {
     fetchFx();
   } else if (action === 'export') {

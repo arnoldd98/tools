@@ -3,7 +3,7 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtMoney, homeSymbol, toHome, CATEGORIES, CATEGORY_LABEL, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed,
-} from './lib.js?v=12';
+} from './lib.js?v=13';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -274,8 +274,7 @@ export function renderToday(state, today, { editingId, now, cur = 'JPY', linkFor
       <a class="btn" href="#/trip">Trip summary</a>
     </section>`;
   }
-  return `<section class="countdown"><p class="big">Add a day to get started</p>
-    <button class="btn" data-action="add-day">+ Add day</button></section>`;
+  return '<section class="countdown"><p class="big">No trip days yet</p></section>';
 }
 
 export function renderDays(state, today) {
@@ -287,8 +286,7 @@ export function renderDays(state, today) {
       + `<span class="prog">${done}/${d.items.length} ›</span></a></li>`;
   }).join('');
   return `${renderStrip(state.days, { today })}
-    <ul class="day-list">${rows}</ul>
-    <button class="btn" data-action="add-day">+ Add day</button>`;
+    <ul class="day-list">${rows}</ul>`;
 }
 
 export function renderTrip(state, { cur = 'JPY', sort = 'old', confirmId = null } = {}) {
