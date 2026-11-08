@@ -19,10 +19,23 @@ function normPlace(p) {
   return o ? { ...o, name: str(o.name), address: str(o.address) } : undefined; // maps stays optional
 }
 
+// Only http(s) links are kept, so a pasted 'javascript:' URL can never run.
+export function safeUrl(u) {
+  const s = str(u).trim();
+  return /^https?:\/\/\S+$/i.test(s) ? s : null;
+}
+
+function normLink(l) {
+  const o = obj(l);
+  const url = o && safeUrl(o.url);
+  return url ? { label: str(o.label).trim() || 'Link', url } : null;
+}
+
 function normItem(i) {
   const o = obj(i) || {};
   const out = { ...o, id: idOf(o.id), time: str(o.time), text: str(o.text), done: Boolean(o.done) };
   if (o.fixed !== undefined) out.fixed = Boolean(o.fixed); // must-make time (flight, ferry…)
+  if (o.links !== undefined) out.links = arr(o.links).map(normLink).filter(Boolean); // tickets, bookings
   if (o.place !== undefined) out.place = normPlace(o.place);
   if (out.place === undefined) delete out.place;
   return out;

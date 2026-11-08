@@ -233,3 +233,19 @@ test('fmtMoney shows one currency', () => {
   assert.equal(fmtMoney(1200, fx, 'HOME'), 'S$10.43');
   assert.equal(fmtMoney(1200, fx), '¥1,200');
 });
+import { safeUrl } from '../lib.js';
+test('safeUrl only allows http(s) links', () => {
+  assert.equal(safeUrl(' https://drive.google.com/file/d/x/view '), 'https://drive.google.com/file/d/x/view');
+  assert.equal(safeUrl('http://a.b/c'), 'http://a.b/c');
+  assert.equal(safeUrl('javascript:alert(1)'), null);
+  assert.equal(safeUrl('drive.google.com/x'), null);
+  assert.equal(safeUrl(''), null);
+});
+test('normalise keeps valid stop links, drops bad ones, adds none by default', () => {
+  const s = normalise({ days: [{ id: 'd', items: [
+    { id: 'a', links: [{ label: 'Boarding pass', url: 'https://drive.google.com/x' }, { label: 'bad', url: 'javascript:x' }, { url: 'https://k.lk/y' }, 'junk'] },
+    { id: 'b' }] }] });
+  assert.deepEqual(s.days[0].items[0].links, [
+    { label: 'Boarding pass', url: 'https://drive.google.com/x' }, { label: 'Link', url: 'https://k.lk/y' }]);
+  assert.ok(!('links' in s.days[0].items[1]));
+});

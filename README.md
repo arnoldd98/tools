@@ -14,7 +14,8 @@ phone as an app (PWA) and works offline.
     one-line description shown in the Days list and on the day; `stay` is
     `{ name, address, maps?, note? }` (the hotel for that night).
   - `days[].items[]` — `{ id, time, text, done, fixed?, place?, note?, price? }`; array order is the
-    timeline order. `time` is `HH:MM` (shown as 12-hour); `fixed: true` marks a must-make time
+    timeline order. `time` is `HH:MM` (shown as 12-hour); `links: [{ label, url }]` holds tickets/bookings (http(s) only, e.g. Google
+    Drive files set to Restricted); `fixed: true` marks a must-make time
     (flights, ferries) with a countdown on Today. `place` is `{ name, address, maps? }` (maps link built from name + address
     when `maps` is absent). `price` is informational text, not a spend.
   - `days[].spends[]` — `{ id, yen, label, category, at }`; `yen` is an integer, S$ is derived.

@@ -183,3 +183,18 @@ test('header has a ¥ | S$ switch showing the active currency', () => {
   }
   assert.match(renderHeader({ view: 'trip' }, trip, false, '', { cur: 'HOME' }), /aria-label="Show amounts in ¥"><span>¥<\/span><span class="on">S\$<\/span>/);
 });
+
+test('stop links: buttons in the plan and on Next up; edit mode adds/removes', () => {
+  const day = normalise({ days: [{ id: 'L', date: '2026-11-13', items: [
+    { id: 'f', time: '07:40', text: 'Flight', links: [{ label: 'Boarding <pass>', url: 'https://drive.google.com/a?x=1&y=2' }] },
+    { id: 'g', text: 'Lunch' }] }] }).days[0];
+  const st = { ...trip, days: [day] };
+  const html = renderDayScreen(st, day, '2026-11-13', {});
+  assert.match(html, /data-item="f">[\s\S]*?<a class="link-btn" href="https:\/\/drive\.google\.com\/a\?x=1&amp;y=2" target="_blank" rel="noopener">🔗 Boarding &lt;pass&gt;<\/a>/);
+  assert.match(html, /class="next-up[^"]*"[\s\S]*?class="link-btn"[\s\S]*?Boarding &lt;pass&gt;[\s\S]*?Today's plan/);
+  const edit = renderDayScreen(st, day, '2026-11-13', { editing: true });
+  assert.match(edit, /data-item="f">[\s\S]*?Boarding &lt;pass&gt; <button class="icon" data-action="del-link" data-link="0"/);
+  assert.match(edit, /data-item="g">[\s\S]*?<button class="btn small" data-action="show-link-form">＋ Link<\/button>/);
+  const form = renderDayScreen(st, day, '2026-11-13', { editing: true, linkFormFor: 'g' });
+  assert.match(form, /data-item="g">[\s\S]*?<form class="add-link"><input name="url" type="url" inputmode="url" placeholder="Paste link" required><input name="label" placeholder="Name, e.g\. Boarding pass"><button class="btn small" type="submit">Add<\/button><\/form>/);
+});

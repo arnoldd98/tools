@@ -4,9 +4,10 @@
 
 import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx, sortDays,
+  safeUrl,
   toHome, fmtHome,
-} from './lib.js?v=9';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=9';
+} from './lib.js?v=10';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=10';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -162,6 +163,7 @@ async function load({ force = false } = {}) {
 // ---------- render ----------
 let lastRouteKey = null;
 let editingId = null; // day whose plan is in edit mode (Edit / Done)
+let linkFormFor = null; // stop whose "add link" form is open (edit mode)
 // Which currency amounts show in ('JPY' or 'HOME'); a per-phone preference, not trip data.
 const CUR_KEY = 'jt.cur';
 let cur = readLS(CUR_KEY) === 'HOME' ? 'HOME' : 'JPY';
@@ -175,12 +177,12 @@ function render() {
   const today = todayISO();
 
   const routeKey = route.view + ':' + (route.id || '');
-  if (routeKey !== lastRouteKey) editingId = null; // leaving a day ends edit mode
+  if (routeKey !== lastRouteKey) { editingId = null; linkFormFor = null; } // leaving a day ends edit mode
   const stripScroll = document.querySelector('.strip')?.scrollLeft;
   const openDetails = [...document.querySelectorAll('#view details')].map((d) => d.open);
 
   $('#top').innerHTML = renderHeader(route, state, dirty, today, { cur });
-  $('#view').innerHTML = renderView(route, state, today, { editingId, now: nowHHMM(), cur });
+  $('#view').innerHTML = renderView(route, state, today, { editingId, now: nowHHMM(), cur, linkFormFor });
   $('#tabs').innerHTML = renderTabs(route);
   $('#tools').hidden = route.view !== 'trip';
 
@@ -314,7 +316,18 @@ document.addEventListener('click', (e) => {
     cur = cur === 'HOME' ? 'JPY' : 'HOME';
     writeLS(CUR_KEY, cur);
     render();
+  } else if (action === 'show-link-form') {
+    linkFormFor = itemId;
+    render();
+    document.querySelector(`[data-item="${CSS.escape(itemId)}"] .add-link [name=url]`)?.focus();
+  } else if (action === 'del-link') {
+    const item = day?.items.find((i) => i.id === itemId);
+    if (!item?.links) return;
+    item.links.splice(Number(el.dataset.link), 1);
+    if (!item.links.length) delete item.links;
+    commit();
   } else if (action === 'toggle-edit') {
+    linkFormFor = null;
     editingId = editingId === day?.id ? null : day?.id ?? null;
     render();
   } else if (action === 'open-spend') {
@@ -416,6 +429,15 @@ document.addEventListener('submit', (e) => {
     closeSheet();
     commit();
     setStatus(`Logged ¥${yen.toLocaleString('en-US')}.`);
+  } else if (form.classList.contains('add-link')) {
+    const url = safeUrl(fd.get('url'));
+    if (!url) { setStatus('Paste a link that starts with https://'); return; }
+    const day = findDay(form.closest('[data-day]')?.dataset.day);
+    const item = day?.items.find((i) => i.id === form.closest('[data-item]')?.dataset.item);
+    if (!item) return;
+    item.links = [...(item.links || []), { label: String(fd.get('label') || '').trim() || 'Link', url }];
+    linkFormFor = null;
+    commit();
   } else if (form.classList.contains('add-item')) {
     const day = findDay(form.closest('[data-day]')?.dataset.day);
     if (!day) return;

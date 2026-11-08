@@ -3,7 +3,7 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtMoney, homeSymbol, toHome, CATEGORIES, CATEGORY_LABEL, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed,
-} from './lib.js?v=9';
+} from './lib.js?v=10';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -110,6 +110,10 @@ function renderSpentCard(title, spends, fx, cur) {
   </section>`;
 }
 
+const linkBtns = (links) => (links?.length
+  ? `<div class="links">${links.map((l) => `<a class="link-btn" href="${esc(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.label)}</a>`).join('')}</div>`
+  : '');
+
 const placeLine = (p) => [p?.name, p?.address].filter(Boolean).map(esc).join(' · ');
 
 function renderNextUp(day) {
@@ -122,11 +126,22 @@ function renderNextUp(day) {
     <p class="what">${next.time ? `<span class="time">${esc(fmtTime(next.time))}</span> ` : ''}${esc(next.text)}</p>
     ${next.fixed ? '<p class="ontime">⏱ be on time</p>' : ''}
     ${next.place ? `<p class="place">${placeLine(next.place)}</p>` : ''}
+    ${linkBtns(next.links)}
     <div class="actions">${next.place ? mapsBtn(next.place) : ''}<button class="btn" data-action="toggle" data-item="${esc(next.id)}">Done</button></div>
   </div>`;
 }
 
-function renderItem(i, nextId, editing) {
+function renderLinkEditor(i, formOpen) {
+  const chips = (i.links || []).map((l, n) =>
+    `<span class="link-chip">${esc(l.label)} <button class="icon" data-action="del-link" data-link="${n}" title="Remove link">✕</button></span>`).join('');
+  const add = formOpen
+    ? '<form class="add-link"><input name="url" type="url" inputmode="url" placeholder="Paste link" required>'
+      + '<input name="label" placeholder="Name, e.g. Boarding pass"><button class="btn small" type="submit">Add</button></form>'
+    : '<button class="btn small" data-action="show-link-form">＋ Link</button>';
+  return `<div class="link-edit">${chips}${add}</div>`;
+}
+
+function renderItem(i, nextId, editing, linkFormFor) {
   const detail = [
     i.fixed && !editing ? '<span class="ontime">⏱ be on time</span>' : '',
     i.place ? `${placeLine(i.place)} ${mapsBtn(i.place, 'Map', 'maplink')}` : '',
@@ -143,11 +158,10 @@ function renderItem(i, nextId, editing) {
       <span class="time">${esc(fmtTime(i.time))}</span>
       <span class="text">${esc(i.text)}</span>`}
       ${detail.length ? `<div class="detail">${detail.join(' ')}</div>` : ''}
+      ${editing ? renderLinkEditor(i, i.id === linkFormFor) : linkBtns(i.links)}
     </li>`;
 }
 
-// Today and the day page share this. `page` adds the compact strip and day-page wording;
-// `editing` turns the plan into in-place fields (Edit / Done button on the plan heading).
 // The next must-make stop. On today's screen it counts down from `now` ('HH:MM').
 function renderFixedStrip(day, today, now) {
   const nf = nextFixed(day);
@@ -158,7 +172,9 @@ function renderFixedStrip(day, today, now) {
   return `<div class="fixed-strip">⏱ ${isToday ? 'Next fixed' : 'Fixed'}: <b>${what}</b>${until}</div>`;
 }
 
-export function renderDayScreen(state, day, today, { page = false, editing = false, now = '', cur = 'JPY' } = {}) {
+// Today and the day page share this. `page` adds the compact strip and day-page wording;
+// `editing` turns the plan into in-place fields (Edit / Done button on the plan heading).
+export function renderDayScreen(state, day, today, { page = false, editing = false, now = '', cur = 'JPY', linkFormFor = null } = {}) {
   const next = nextUp(day);
   const spentLabel = day.date && day.date === today ? 'Spent today' : 'Spent';
   const editBtn = `<button class="btn small" data-action="toggle-edit">${editing ? 'Done' : '✎ Edit'}</button>`;
@@ -177,7 +193,7 @@ export function renderDayScreen(state, day, today, { page = false, editing = fal
       <input class="summary" value="${esc(day.summary)}" placeholder="One-line summary of the day" data-field="summary" aria-label="Summary">
     </div>` : ''}
     ${day.items.length
-    ? `<ol class="timeline${editing ? ' editing' : ''}">${day.items.map((i) => renderItem(i, next?.id, editing)).join('')}</ol>`
+    ? `<ol class="timeline${editing ? ' editing' : ''}">${day.items.map((i) => renderItem(i, next?.id, editing, linkFormFor)).join('')}</ol>`
     : '<p class="muted">No stops yet.</p>'}
     ${editing ? `<form class="add-item">
       <input name="time" type="time" aria-label="Time">
@@ -209,10 +225,10 @@ const shortDate = (date) => {
   return d ? `${WD[d.getDay()]} ${d.getDate()}` : 'Undated';
 };
 
-export function renderToday(state, today, { editingId, now, cur = 'JPY' } = {}) {
+export function renderToday(state, today, { editingId, now, cur = 'JPY', linkFormFor } = {}) {
   const ph = tripPhase(state.days, today);
   if (ph.phase === 'during' && ph.day) {
-    return renderDayScreen(state, ph.day, today, { page: false, editing: ph.day.id === editingId, now, cur });
+    return renderDayScreen(state, ph.day, today, { page: false, editing: ph.day.id === editingId, now, cur, linkFormFor });
   }
   if (ph.phase === 'during') {
     return `<section class="day-screen">
@@ -283,12 +299,12 @@ export function renderTrip(state, { cur = 'JPY' } = {}) {
     <div class="progress"><div style="width:${pctDone}%"></div></div>`;
 }
 
-export function renderView(route, state, today, { editingId, now, cur = 'JPY' } = {}) {
+export function renderView(route, state, today, { editingId, now, cur = 'JPY', linkFormFor } = {}) {
   if (route.view === 'trip') return renderTrip(state, { cur });
   if (route.view === 'days') return renderDays(state, today);
   if (route.view === 'day') {
     const day = state.days.find((d) => d.id === route.id);
-    return day ? renderDayScreen(state, day, today, { page: true, editing: day.id === editingId, now, cur }) : renderDays(state, today);
+    return day ? renderDayScreen(state, day, today, { page: true, editing: day.id === editingId, now, cur, linkFormFor }) : renderDays(state, today);
   }
-  return renderToday(state, today, { editingId, now, cur });
+  return renderToday(state, today, { editingId, now, cur, linkFormFor });
 }
