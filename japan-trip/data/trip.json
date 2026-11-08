@@ -73,15 +73,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [
-        {
-          "icon": "✈️",
-          "label": "Land KIX T1 9:25 pm",
-          "lines": [
-            "Train to hotel, about 10 min"
-          ]
-        }
-      ],
       "notes": ""
     },
     {
@@ -185,26 +176,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [
-        {
-          "icon": "🚌",
-          "label": "Shuttle 5:10 am or 5:55 am",
-          "lines": [
-            "Hotel → Kansai Airport T2, 15 min"
-          ]
-        },
-        {
-          "icon": "✈️",
-          "label": "KIX T2 → Naha 7:40 am–10:05 am",
-          "lines": [
-            "Breakfast at the airport"
-          ],
-          "place": {
-            "name": "Kansai International Airport Terminal 2",
-            "address": "Izumisano, Osaka"
-          }
-        }
-      ],
       "notes": ""
     },
     {
@@ -243,7 +214,8 @@
           "place": {
             "name": "Tomari Port",
             "address": "Naha, Okinawa"
-          }
+          },
+          "note": "Timetable: https://www.aharen.com/en/day-plan-en/transportation-to-tokashiki-island/"
         },
         {
           "id": "i17",
@@ -290,20 +262,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [
-        {
-          "icon": "⛴️",
-          "label": "Ferry Tomari → Tokashiki 10:00 am–11:10 am",
-          "lines": [
-            "Back: 5:00 pm–5:40 pm",
-            "https://www.aharen.com/en/day-plan-en/transportation-to-tokashiki-island/"
-          ],
-          "place": {
-            "name": "Tomari Port",
-            "address": "Naha, Okinawa"
-          }
-        }
-      ],
       "notes": ""
     },
     {
@@ -377,19 +335,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [
-        {
-          "icon": "🚗",
-          "label": "Rental car 10:30 am · YH Rental Car",
-          "lines": [
-            "Shuttle bus from Naha Airport"
-          ],
-          "place": {
-            "name": "Naha Airport",
-            "address": "Naha, Okinawa"
-          }
-        }
-      ],
       "notes": ""
     },
     {
@@ -488,7 +433,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [],
       "notes": ""
     },
     {
@@ -552,7 +496,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [],
       "notes": ""
     },
     {
@@ -628,7 +571,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [],
       "notes": ""
     },
     {
@@ -697,24 +639,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [
-        {
-          "icon": "🚗",
-          "label": "Return rental car",
-          "lines": [
-            "Before the flight"
-          ]
-        },
-        {
-          "icon": "✈️",
-          "label": "Naha → Osaka T2 6:55 pm–8:50 pm",
-          "lines": [],
-          "place": {
-            "name": "Naha Airport",
-            "address": "Naha, Okinawa"
-          }
-        }
-      ],
       "notes": ""
     },
     {
@@ -778,7 +702,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [],
       "notes": ""
     },
     {
@@ -857,7 +780,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [],
       "notes": ""
     },
     {
@@ -941,7 +863,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [],
       "notes": ""
     },
     {
@@ -995,7 +916,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [],
       "notes": ""
     },
     {
@@ -1057,7 +977,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [],
       "notes": ""
     },
     {
@@ -1093,7 +1012,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [],
       "notes": ""
     },
     {
@@ -1137,24 +1055,6 @@
         }
       ],
       "spends": [],
-      "keyInfo": [
-        {
-          "icon": "🧳",
-          "label": "Luggage stored at Hinode Hotel",
-          "lines": [
-            "Collect before heading to the airport"
-          ],
-          "place": {
-            "name": "Hinode Hotel Osaka",
-            "address": "Osaka"
-          }
-        },
-        {
-          "icon": "✈️",
-          "label": "Flight to Singapore 11:20 pm",
-          "lines": []
-        }
-      ],
       "notes": ""
     }
   ]

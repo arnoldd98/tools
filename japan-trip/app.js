@@ -5,8 +5,8 @@
 import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx, sortDays,
   toHome, fmtHome,
-} from './lib.js?v=7';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=7';
+} from './lib.js?v=8';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=8';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -193,7 +193,7 @@ function render() {
     if (lastRouteKey !== null) window.scrollTo(0, 0);
   } else {
     if (strip && stripScroll != null) strip.scrollLeft = stripScroll;
-    // keep expanded sections (Spent, key info, …) open across re-renders on the same screen
+    // keep expanded sections (Spent, spends by day, …) open across re-renders on the same screen
     // (by position: several tags share a class name)
     const now = document.querySelectorAll('#view details');
     if (now.length === openDetails.length) now.forEach((d, i) => { d.open = openDetails[i]; });
@@ -336,7 +336,7 @@ document.addEventListener('click', (e) => {
     }
   } else if (action === 'add-day') {
     const last = sortDays(state.days).filter((d) => d.date).pop();
-    const d = { id: uid(), date: last?.date || todayISO(), city: last?.city || '', items: [], spends: [], keyInfo: [], notes: '' };
+    const d = { id: uid(), date: last?.date || todayISO(), city: last?.city || '', items: [], spends: [], notes: '' };
     state.days.push(d);
     commit();
     location.hash = `#/day/${encodeURIComponent(d.id)}`;

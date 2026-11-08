@@ -154,17 +154,10 @@ test('categories are the five, old ones migrate to misc', () => {
     { id: 'a', yen: 1, category: 'stay' }, { id: 'b', yen: 1, category: 'other' }, { id: 'c', yen: 1, category: 'tickets' }] }] });
   assert.deepEqual(s.days[0].spends.map((x) => x.category), ['misc', 'misc', 'tickets']);
 });
-test('normalise keyInfo', () => {
-  const s = normalise({ days: [{ id: 'd', keyInfo: [
-    { icon: '🎫', label: 'Pass', lines: ['¥800', 3] },
-    { label: '' }, { icon: 'x' }, 'junk',
-    { label: 'Dinner', lines: 'nope', place: { name: 'Yunangi' } }] }, { id: 'e' }] });
-  assert.deepEqual(s.days[0].keyInfo, [
-    { icon: '🎫', label: 'Pass', lines: ['¥800', '3'] },
-    { icon: '', label: 'Dinner', lines: [], place: { name: 'Yunangi', address: '' } }]);
-  assert.deepEqual(s.days[1].keyInfo, []);
+test('normalise does not add a keyInfo field', () => {
+  assert.ok(!('keyInfo' in normalise({ days: [{ id: 'd' }] }).days[0]));
 });
-// Regression pin: already passes after Task 1's predecessor; keeps Review Focus 2 covered.
+// Old saved data may have a hotel entry with no name.
 test('legacy draft with nameless stay still normalises', () => {
   const s = normalise({ days: [{ id: 'd', stay: {}, items: [{ id: 'i', text: 'x' }] }] });
   assert.equal(s.days[0].stay.name, '');

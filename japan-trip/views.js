@@ -3,7 +3,7 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtBoth, toHome, CATEGORIES, CATEGORY_LABEL, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed,
-} from './lib.js?v=7';
+} from './lib.js?v=8';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -129,22 +129,6 @@ function renderItem(i, nextId, editing) {
     </li>`;
 }
 
-// Hotel tag first (from day.stay), then the day's keyInfo entries. Tap expands.
-export function renderKeyInfo(day) {
-  const tags = [];
-  if (day.stay) {
-    const summary = ['🏨 ' + esc(day.stay.name || 'Hotel'), esc(day.stay.note)].filter((x) => x).join(' · ');
-    tags.push(`<details class="tag"><summary>${summary}</summary>
-      ${day.stay.address ? `<p>${esc(day.stay.address)}</p>` : ''}${mapsBtn(day.stay, 'Open in Maps', 'btn')}</details>`);
-  }
-  for (const k of day.keyInfo || []) {
-    tags.push(`<details class="tag"><summary>${k.icon ? esc(k.icon) + ' ' : ''}${esc(k.label)}</summary>
-      ${k.lines.map((l) => `<p>${esc(l)}</p>`).join('')}${k.place ? mapsBtn(k.place, 'Open in Maps', 'btn') : ''}</details>`);
-  }
-  if (!tags.length) return '';
-  return `<section class="keyinfo"><p class="eyebrow">Key info</p>${tags.join('')}</section>`;
-}
-
 // Today and the day page share this. `page` adds the compact strip and day-page wording;
 // `editing` turns the plan into in-place fields (Edit / Done button on the plan heading).
 // The next must-make stop. On today's screen it counts down from `now` ('HH:MM').
@@ -185,7 +169,6 @@ export function renderDayScreen(state, day, today, { page = false, editing = fal
     </form>` : ''}
     ${notes}
     ${editing ? '<button class="btn danger" data-action="del-day">Delete day</button>' : ''}
-    ${renderKeyInfo(day)}
     <details class="spent"><summary>${spentLabel} <b>${fmtBoth(dayTotal(day), state.fx)}</b></summary>
       ${renderSpendList(day.spends, state.fx)}</details>
     <button class="fab" data-action="open-spend" data-day="${esc(day.id)}">＋ ¥ Spend</button>

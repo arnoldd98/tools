@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { normalise } from '../lib.js';
-import { renderHeader, renderTabs, renderKeyInfo, renderDayScreen, renderSpendSheet } from '../views.js';
+import { renderHeader, renderTabs, renderDayScreen, renderSpendSheet } from '../views.js';
 
 export const trip = normalise({ title: 'Trip <1>', fx: { jpyPerHome: 115 }, days: [
   { id: 'd1', date: '2026-12-01', city: 'Naha', stay: { name: 'Hotel <X>', address: 'Kumoji', note: 'in 15:00' },
@@ -27,17 +27,10 @@ test('tabs mark the active one; day page marks Days', () => {
   assert.match(renderTabs({ view: 'day', id: 'x' }), /<a class="tab on" href="#\/days">Days<\/a>/);
   assert.match(renderTabs({ view: 'trip' }), /<a class="tab on" href="#\/trip">Trip<\/a>/);
 });
-test('key info: hotel first, escaped, maps for places', () => {
-  const html = renderKeyInfo(trip.days[0]);
-  assert.ok(html.indexOf('Hotel &lt;X&gt;') < html.indexOf('Pass &amp; go'));
-  assert.match(html, /<summary>🏨 Hotel &lt;X&gt; · in 15:00<\/summary>/);
-  assert.match(html, /<summary>🎫 Pass &amp; go<\/summary>[\s\S]*<p>¥800<\/p>/);
-  assert.match(html, /<summary>Dinner<\/summary>[\s\S]*query=Yunangi%2C%20Naha/);
-  assert.equal(renderKeyInfo(trip.days[1]), '');
-});
 test('day screen: order, spent, fab; no separate edit section', () => {
   const html = renderDayScreen(trip, trip.days[0], '2026-12-01', { page: false });
-  const order = ['class="next-up"', "Today's plan", 'class="keyinfo"', 'class="spent"', 'class="fab"'];
+  const order = ['class="next-up"', "Today's plan", 'class="spent"', 'class="fab"'];
+  assert.ok(!html.includes('Key info') && !html.includes('class="tag"'), 'no key info section');
   order.reduce((prev, s) => { const i = html.indexOf(s); assert.ok(i > prev, s); return i; }, -1);
   assert.ok(!html.includes('class="edit-day"'));
   assert.ok(!html.includes('class="strip'));

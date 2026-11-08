@@ -15,7 +15,7 @@ body {
   max-width: 720px; margin-inline: auto;
 }
 .muted { color: var(--muted); font-size: 13px; margin: 4px 0; }
-.top { position: sticky; top: 0; background: var(--bg); padding-block: 12px 8px; z-index: 1; }
+.top { position: sticky; top: 0; background: var(--bg); padding-block: 12px 8px; margin-inline: -16px; padding-inline: 16px; z-index: 1; }
 .top-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 h1 { font-size: 20px; margin: 0; }
 .progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 8px; }
@@ -187,18 +187,6 @@ textarea { width: 100%; margin-top: 8px; min-height: 3em; resize: vertical; }
 
 /* ---------- day screen ---------- */
 .timeline li.next .text { font-weight: 700; color: var(--accent); }
-.keyinfo { margin: 12px 0; }
-.tag {
-  background: var(--card); border: 1px solid var(--line); border-radius: 12px; margin: 6px 0;
-}
-.tag summary {
-  padding: 8px 12px; cursor: pointer; list-style: none;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.tag summary::-webkit-details-marker { display: none; }
-.tag[open] summary { white-space: normal; font-weight: 600; }
-.tag p { margin: 0 12px 6px; font-size: 14px; }
-.tag .btn { margin: 0 12px 10px; }
 details > summary { cursor: pointer; }
 .spent summary b { float: right; color: var(--accent); font-variant-numeric: tabular-nums; }
 .by-day summary, .tools > summary { font-weight: 600; }

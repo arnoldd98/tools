@@ -10,11 +10,9 @@ phone as an app (PWA) and works offline.
   - `fx` — `{ home: "SGD", jpyPerHome, updatedAt }`, the rate used for S$ figures. Refreshed about
     daily from the free [currency API](https://github.com/fawazahmed0/exchange-api) when online.
   - `info[]` — `{ title, lines[] }` read-only trip info sections on the Trip tab.
-  - `days[]` — `{ id, date, city, summary, items[], spends[], keyInfo[], notes, stay? }`; `summary` is a
+  - `days[]` — `{ id, date, city, summary, items[], spends[], notes, stay? }`; `summary` is a
     one-line description shown in the Days list and on the day; `stay` is
-    `{ name, address, maps?, note? }` and shows as the first key info tag.
-  - `days[].keyInfo[]` — `{ icon?, label, lines[], place? }`: passes, tickets, reservations
-    shown as tags on that day (tap to expand).
+    `{ name, address, maps?, note? }` (the hotel for that night).
   - `days[].items[]` — `{ id, time, text, done, fixed?, place?, note?, price? }`; array order is the
     timeline order. `time` is `HH:MM` (shown as 12-hour); `fixed: true` marks a must-make time
     (flights, ferries) with a countdown on Today. `place` is `{ name, address, maps? }` (maps link built from name + address
@@ -22,7 +20,7 @@ phone as an app (PWA) and works offline.
   - `days[].spends[]` — `{ id, yen, label, category, at }`; `yen` is an integer, S$ is derived.
     `category` is one of `food`, `shopping`, `transport`, `tickets`, `misc`
     (older `stay`/`other` load as `misc`).
-- **Screens** (bottom tabs): `#/` Today (next up, today's plan, key info, spent today,
+- **Screens** (bottom tabs): `#/` Today (next up, today's plan, spent today,
   ＋ ¥ Spend; a countdown before the trip), `#/days` (all days) → `#/day/<id>`,
   `#/trip` (spending totals, categories, spends by day, trip info, settings).
 - **Editing**: changes save instantly to the browser (localStorage).

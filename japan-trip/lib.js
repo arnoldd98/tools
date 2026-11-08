@@ -40,15 +40,6 @@ function normSpend(s) {
   };
 }
 
-function normKeyInfo(k) {
-  const o = obj(k);
-  if (!o || !str(o.label)) return null;
-  const out = { ...o, icon: str(o.icon), label: str(o.label), lines: arr(o.lines).map(str) };
-  const place = o.place !== undefined ? normPlace(o.place) : undefined;
-  if (place) out.place = place; else delete out.place;
-  return out;
-}
-
 function normDay(d) {
   const o = obj(d) || {};
   const out = {
@@ -59,7 +50,6 @@ function normDay(d) {
     summary: str(o.summary), // one-line "what's this day about"
     items: arr(o.items).map(normItem),
     spends: arr(o.spends).map(normSpend),
-    keyInfo: arr(o.keyInfo).map(normKeyInfo).filter(Boolean),
     notes: str(o.notes),
   };
   if (o.stay !== undefined) {
