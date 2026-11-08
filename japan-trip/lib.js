@@ -75,15 +75,11 @@ function normDay(d) {
 
 // Fill defaults so old trip.json files render. Returns a new object; input untouched.
 export function normalise(data) {
-  const o = obj(data) || {};
+  const { info, ...o } = obj(data) || {}; // old files' trip-info sections are dropped
   return {
     ...o,
     title: str(o.title) || 'Japan Trip',
     fx: { ...DEFAULT_FX, ...(obj(o.fx) || {}) },
-    info: arr(o.info).map((s) => {
-      const sec = obj(s) || {};
-      return { ...sec, title: str(sec.title), lines: arr(sec.lines).map(str) };
-    }),
     days: arr(o.days).map(normDay),
   };
 }

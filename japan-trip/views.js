@@ -3,7 +3,7 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtMoney, homeSymbol, toHome, CATEGORIES, CATEGORY_LABEL, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed,
-} from './lib.js?v=10';
+} from './lib.js?v=11';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -283,9 +283,6 @@ export function renderTrip(state, { cur = 'JPY' } = {}) {
       <h3>${esc([longDate(d.date) || 'Undated', d.city].filter(Boolean).join(' · '))} <span class="total">${fmtMoney(dayTotal(d), state.fx, cur)}</span></h3>
       ${renderSpendList(d.spends, state.fx, cur)}
     </section>`).join('');
-  const info = state.info.map((s) => `
-    <details class="info-sec"><summary>${esc(s.title)}</summary>
-      <ul>${s.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></details>`).join('');
   const items = state.days.flatMap((d) => d.items);
   const done = items.filter((i) => i.done).length;
   const pctDone = items.length ? Math.round((100 * done) / items.length) : 0;
@@ -294,7 +291,6 @@ export function renderTrip(state, { cur = 'JPY' } = {}) {
       <p class="muted">1 ${esc(state.fx.home)} = ${esc(state.fx.jpyPerHome)} JPY</p></section>
     <section class="cats"><p class="eyebrow">By category</p>${catRows}</section>
     <details class="by-day"><summary>Spends by day</summary>${groups || '<p class="muted">No spends yet.</p>'}</details>
-    ${info ? `<section class="info">${info}</section>` : ''}
     <p class="muted">Plans done: ${done} of ${items.length}</p>
     <div class="progress"><div style="width:${pctDone}%"></div></div>`;
 }

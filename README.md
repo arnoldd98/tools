@@ -9,7 +9,6 @@ phone as an app (PWA) and works offline.
   older files are normalised on load.
   - `fx` — `{ home: "SGD", jpyPerHome, updatedAt }`, the rate used for S$ figures. Refreshed about
     daily from the free [currency API](https://github.com/fawazahmed0/exchange-api) when online.
-  - `info[]` — `{ title, lines[] }` read-only trip info sections on the Trip tab.
   - `days[]` — `{ id, date, city, summary, items[], spends[], notes, stay? }`; `summary` is a
     one-line description shown in the Days list and on the day; `stay` is
     `{ name, address, maps?, note? }` (the hotel for that night).
@@ -23,7 +22,7 @@ phone as an app (PWA) and works offline.
     (older `stay`/`other` load as `misc`).
 - **Screens** (bottom tabs): `#/` Today (next up, today's plan, spent today,
   ＋ ¥ Spend; a countdown before the trip), `#/days` (all days) → `#/day/<id>`,
-  `#/trip` (spending totals, categories, spends by day, trip info, settings).
+  `#/trip` (spending totals, categories, spends by day, settings).
 - **Money**: spends are logged in yen; the **¥ | S$** switch in the header shows every amount in
   one currency (remembered per phone).
 - **Editing**: changes save instantly to the browser (localStorage).

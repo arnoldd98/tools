@@ -198,3 +198,7 @@ test('stop links: buttons in the plan and on Next up; edit mode adds/removes', (
   const form = renderDayScreen(st, day, '2026-11-13', { editing: true, linkFormFor: 'g' });
   assert.match(form, /data-item="g">[\s\S]*?<form class="add-link"><input name="url" type="url" inputmode="url" placeholder="Paste link" required><input name="label" placeholder="Name, e.g\. Boarding pass"><button class="btn small" type="submit">Add<\/button><\/form>/);
 });
+test('Trip has no info sections, even for old data that still has them', () => {
+  const old = { ...trip, info: [{ title: 'Flights', lines: ['x'] }] };
+  assert.ok(!renderTrip(old).includes('info-sec'));
+});

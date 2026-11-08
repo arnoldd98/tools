@@ -8,7 +8,7 @@
 //
 // BUMP VERSION whenever any file in SHELL changes, or phones keep the old version.
 // Also update the matching ?v= tags in index.html, app.js and views.js (npm test checks).
-const VERSION = '10';
+const VERSION = '11';
 const SHELL_CACHE = `jt-shell-${VERSION}`;
 const DATA_CACHE = 'jt-data';
 const SHELL = [

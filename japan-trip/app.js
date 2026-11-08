@@ -6,8 +6,8 @@ import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx, sortDays,
   safeUrl,
   toHome, fmtHome,
-} from './lib.js?v=10';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=10';
+} from './lib.js?v=11';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=11';
 
 const LOAD_TIMEOUT_MS = 8000;
 

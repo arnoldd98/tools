@@ -5,28 +5,6 @@
     "jpyPerHome": 115,
     "updatedAt": null
   },
-  "info": [
-    {
-      "title": "Flights",
-      "lines": [
-        "12 Nov: arrive Kansai Airport T1 9:25 pm",
-        "13 Nov: Kansai T2 → Naha 7:40 am–10:05 am",
-        "19 Nov: Naha → Osaka T2 6:55 pm–8:50 pm",
-        "26 Nov: Osaka → Singapore 11:20 pm"
-      ]
-    },
-    {
-      "title": "Hotels",
-      "lines": [
-        "12 Nov: Odysis Suites Osaka Airport Hotel",
-        "13–15 Nov: Mercure Naha (check-in 2:00 pm)",
-        "16–17 Nov: Hilton Okinawa Sesoko Resort (check-in 3:00 pm)",
-        "18 Nov: Chatan hotel (TBC)",
-        "19–23 Nov: Hotel MyStays Dojima",
-        "24–25 Nov: Hinode Hotel Osaka"
-      ]
-    }
-  ],
   "days": [
     {
       "id": "d1",

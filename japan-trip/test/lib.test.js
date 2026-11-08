@@ -11,7 +11,7 @@ test('normalise fills defaults on a legacy file without mutating it', () => {
   const s = normalise(legacy);
   assert.deepEqual(legacy, copy);
   assert.deepEqual(s.fx, DEFAULT_FX);
-  assert.deepEqual(s.info, []);
+  assert.ok(!('info' in s), 'no trip info field');
   assert.deepEqual(s.days[0].spends, []);
   assert.equal(s.days[0].items[0].done, false);
 });
