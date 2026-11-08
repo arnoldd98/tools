@@ -31,7 +31,7 @@ const spends = [
 ];
 test('spend list', () => {
   const list = renderSpendList(spends, fx);
-  assert.ok(list.indexOf('data-spend="s2"') < list.indexOf('data-spend="s1"'));
+  assert.ok(list.indexOf('data-spend="s1"') < list.indexOf('data-spend="s2"'), 'oldest first (order entered)');
   assert.match(list, /bus &lt;x&gt;/);
   assert.match(list, /<span class="amt">¥1,200<\/span>/);
   assert.ok(!list.includes('S$'), 'one currency at a time');
@@ -50,4 +50,17 @@ test('day links URL-encode ids', () => {
 test('unlabelled spend names the category once', () => {
   const html = renderSpendList([{ id: 'x', yen: 66, label: '', category: 'food', at: '2026-11-13T12:10:00+09:00' }], fx);
   assert.match(html, /<span class="label">food<\/span><span class="sub">12:10 pm<\/span>/);
+});
+test('deleting a spend asks first, naming the amount', () => {
+  const html = renderSpendList(spends, fx, 'JPY', { confirmId: 's1' });
+  assert.match(html, /<li class="confirm" data-spend="s1">[\s\S]*?Delete ¥1,200 · lunch\?[\s\S]*?<button class="btn danger" data-action="confirm-del-spend">Delete<\/button><button class="btn" data-action="cancel-del-spend">Keep<\/button>/);
+  assert.match(html, /data-spend="s2">[\s\S]*?data-action="del-spend"/, 'other rows unchanged');
+  assert.match(renderSpendList(spends, fx, 'HOME', { confirmId: 's1' }), /Delete S\$10\.43 · lunch\?/);
+});
+test('spend list sorts: oldest (default), newest, amount', () => {
+  const three = [...spends, { id: 's3', yen: 5000, label: 'dinner', category: 'food', at: '2026-12-01T19:00:00+09:00' }];
+  const order = (o) => [...renderSpendList(three, fx, 'JPY', o).matchAll(/data-spend="(s\d)"/g)].map((m) => m[1]).join(',');
+  assert.equal(order({}), 's1,s2,s3');
+  assert.equal(order({ sort: 'new' }), 's3,s2,s1');
+  assert.equal(order({ sort: 'amount' }), 's3,s1,s2');
 });

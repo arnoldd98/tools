@@ -3,7 +3,7 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtMoney, homeSymbol, toHome, CATEGORIES, CATEGORY_LABEL, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed,
-} from './lib.js?v=11';
+} from './lib.js?v=12';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -88,25 +88,46 @@ const mapsBtn = (place, label = 'Open in Maps', cls = 'btn primary') =>
 const timeOf = (at) => (/T(\d{2}:\d{2})/.exec(at || '') || [])[1] || '';
 
 
-export function renderSpendList(spends, fx, cur = 'JPY') {
+const SPEND_SORTS = {
+  old: (a, b) => (a.at || '').localeCompare(b.at || ''), // order entered
+  new: (a, b) => (b.at || '').localeCompare(a.at || ''),
+  amount: (a, b) => (b.yen - a.yen) || (a.at || '').localeCompare(b.at || ''),
+};
+
+const sortSwitch = (sort) => `<div class="sort" role="group" aria-label="Sort spends">${
+  [['old', 'Oldest'], ['new', 'Newest'], ['amount', 'Amount']].map(([k, label]) =>
+    `<button${k === sort ? ' class="on"' : ''} data-action="sort-spends" data-sort="${k}">${label}</button>`).join('')}</div>`;
+
+export function renderSpendList(spends, fx, cur = 'JPY', { sort = 'old', confirmId = null } = {}) {
   if (!spends.length) return '<p class="muted empty">Nothing spent yet.</p>';
-  const rows = [...spends].sort((a, b) => (b.at || '').localeCompare(a.at || '')).map((s) => `
-    <li data-spend="${esc(s.id)}">
-      <span class="sp-ico" aria-hidden="true">${CATEGORY_ICON[s.category] || CATEGORY_ICON.misc}</span>
-      <span class="sp-main"><span class="label">${esc(s.label || CATEGORY_LABEL[s.category] || 'Spend')}</span>`
+  const rows = [...spends].sort(SPEND_SORTS[sort] || SPEND_SORTS.old).map((s) => {
+    const name = esc(s.label || CATEGORY_LABEL[s.category] || 'Spend');
+    const icon = `<span class="sp-ico" aria-hidden="true">${CATEGORY_ICON[s.category] || CATEGORY_ICON.misc}</span>`;
+    if (s.id === confirmId) {
+      return `
+    <li class="confirm" data-spend="${esc(s.id)}">${icon}
+      <span class="sp-main"><span class="label">Delete ${fmtMoney(s.yen, fx, cur)} · ${name}?</span></span>
+      <span class="confirm-btns"><button class="btn danger" data-action="confirm-del-spend">Delete</button><button class="btn" data-action="cancel-del-spend">Keep</button></span>
+    </li>`;
+    }
+    return `
+    <li data-spend="${esc(s.id)}">${icon}
+      <span class="sp-main"><span class="label">${name}</span>`
     + `<span class="sub">${[s.label ? esc(CATEGORY_LABEL[s.category] || s.category) : '', fmtTime(timeOf(s.at))].filter(Boolean).join(' · ')}</span></span>
       <span class="amt">${fmtMoney(s.yen, fx, cur)}</span>
       <button class="icon" data-action="del-spend" title="Delete spend">✕</button>
-    </li>`).join('');
+    </li>`;
+  }).join('');
   return `<ul class="spends">${rows}</ul>`;
 }
 
 // Always-open card: title + total, then the day's spends (newest first).
-function renderSpentCard(title, spends, fx, cur) {
+function renderSpentCard(title, spends, fx, cur, opts = {}) {
   const total = spends.reduce((sum, x) => sum + (x.yen || 0), 0);
   return `<section class="spent-card">
     <div class="spent-head"><h3>${title}</h3><span class="spent-total">${fmtMoney(total, fx, cur)}</span></div>
-    ${renderSpendList(spends, fx, cur)}
+    ${spends.length >= 2 ? sortSwitch(opts.sort || 'old') : ''}
+    ${renderSpendList(spends, fx, cur, opts)}
   </section>`;
 }
 
@@ -174,7 +195,7 @@ function renderFixedStrip(day, today, now) {
 
 // Today and the day page share this. `page` adds the compact strip and day-page wording;
 // `editing` turns the plan into in-place fields (Edit / Done button on the plan heading).
-export function renderDayScreen(state, day, today, { page = false, editing = false, now = '', cur = 'JPY', linkFormFor = null } = {}) {
+export function renderDayScreen(state, day, today, { page = false, editing = false, now = '', cur = 'JPY', linkFormFor = null, sort = 'old', confirmId = null } = {}) {
   const next = nextUp(day);
   const spentLabel = day.date && day.date === today ? 'Spent today' : 'Spent';
   const editBtn = `<button class="btn small" data-action="toggle-edit">${editing ? 'Done' : '✎ Edit'}</button>`;
@@ -202,7 +223,7 @@ export function renderDayScreen(state, day, today, { page = false, editing = fal
     </form>` : ''}
     ${notes}
     ${editing ? '<button class="btn danger" data-action="del-day">Delete day</button>' : ''}
-    ${renderSpentCard(spentLabel, day.spends, state.fx, cur)}
+    ${renderSpentCard(spentLabel, day.spends, state.fx, cur, { sort, confirmId })}
     <button class="fab" data-action="open-spend" data-day="${esc(day.id)}">＋ ¥ Spend</button>
   </section>`;
 }
@@ -225,10 +246,10 @@ const shortDate = (date) => {
   return d ? `${WD[d.getDay()]} ${d.getDate()}` : 'Undated';
 };
 
-export function renderToday(state, today, { editingId, now, cur = 'JPY', linkFormFor } = {}) {
+export function renderToday(state, today, { editingId, now, cur = 'JPY', linkFormFor, sort, confirmId } = {}) {
   const ph = tripPhase(state.days, today);
   if (ph.phase === 'during' && ph.day) {
-    return renderDayScreen(state, ph.day, today, { page: false, editing: ph.day.id === editingId, now, cur, linkFormFor });
+    return renderDayScreen(state, ph.day, today, { page: false, editing: ph.day.id === editingId, now, cur, linkFormFor, sort, confirmId });
   }
   if (ph.phase === 'during') {
     return `<section class="day-screen">
@@ -270,7 +291,7 @@ export function renderDays(state, today) {
     <button class="btn" data-action="add-day">+ Add day</button>`;
 }
 
-export function renderTrip(state, { cur = 'JPY' } = {}) {
+export function renderTrip(state, { cur = 'JPY', sort = 'old', confirmId = null } = {}) {
   const total = tripTotal(state);
   const cats = byCategory(state);
   const catRows = CATEGORIES.map((c) => {
@@ -281,7 +302,7 @@ export function renderTrip(state, { cur = 'JPY' } = {}) {
   const groups = sortDays(state.days).filter((d) => d.spends.length).map((d) => `
     <section class="money-day" data-day="${esc(d.id)}">
       <h3>${esc([longDate(d.date) || 'Undated', d.city].filter(Boolean).join(' · '))} <span class="total">${fmtMoney(dayTotal(d), state.fx, cur)}</span></h3>
-      ${renderSpendList(d.spends, state.fx, cur)}
+      ${renderSpendList(d.spends, state.fx, cur, { sort, confirmId })}
     </section>`).join('');
   const items = state.days.flatMap((d) => d.items);
   const done = items.filter((i) => i.done).length;
@@ -290,17 +311,17 @@ export function renderTrip(state, { cur = 'JPY' } = {}) {
       <p class="sum">${fmtMoney(total, state.fx, cur)}</p>
       <p class="muted">1 ${esc(state.fx.home)} = ${esc(state.fx.jpyPerHome)} JPY</p></section>
     <section class="cats"><p class="eyebrow">By category</p>${catRows}</section>
-    <details class="by-day"><summary>Spends by day</summary>${groups || '<p class="muted">No spends yet.</p>'}</details>
+    <details class="by-day"><summary>Spends by day</summary>${state.days.reduce((n, d) => n + d.spends.length, 0) >= 2 ? sortSwitch(sort) : ''}${groups || '<p class="muted">No spends yet.</p>'}</details>
     <p class="muted">Plans done: ${done} of ${items.length}</p>
     <div class="progress"><div style="width:${pctDone}%"></div></div>`;
 }
 
-export function renderView(route, state, today, { editingId, now, cur = 'JPY', linkFormFor } = {}) {
-  if (route.view === 'trip') return renderTrip(state, { cur });
+export function renderView(route, state, today, { editingId, now, cur = 'JPY', linkFormFor, sort, confirmId } = {}) {
+  if (route.view === 'trip') return renderTrip(state, { cur, sort, confirmId });
   if (route.view === 'days') return renderDays(state, today);
   if (route.view === 'day') {
     const day = state.days.find((d) => d.id === route.id);
-    return day ? renderDayScreen(state, day, today, { page: true, editing: day.id === editingId, now, cur, linkFormFor }) : renderDays(state, today);
+    return day ? renderDayScreen(state, day, today, { page: true, editing: day.id === editingId, now, cur, linkFormFor, sort, confirmId }) : renderDays(state, today);
   }
-  return renderToday(state, today, { editingId, now, cur, linkFormFor });
+  return renderToday(state, today, { editingId, now, cur, linkFormFor, sort, confirmId });
 }

@@ -202,3 +202,10 @@ test('Trip has no info sections, even for old data that still has them', () => {
   const old = { ...trip, info: [{ title: 'Flights', lines: ['x'] }] };
   assert.ok(!renderTrip(old).includes('info-sec'));
 });
+test('Spent card has a sort switch once there are 2+ spends', () => {
+  const two = { ...trip.days[0], spends: [...trip.days[0].spends, { id: 's9', yen: 300, label: 'bus', category: 'transport', at: '2026-12-01T13:00:00+09:00' }] };
+  const html = renderDayScreen(trip, two, '2026-12-01', { sort: 'amount' });
+  assert.match(html, /<div class="sort" role="group" aria-label="Sort spends"><button data-action="sort-spends" data-sort="old">Oldest<\/button><button data-action="sort-spends" data-sort="new">Newest<\/button><button class="on" data-action="sort-spends" data-sort="amount">Amount<\/button><\/div>/);
+  assert.ok(!renderDayScreen(trip, trip.days[0], '2026-12-01', {}).includes('class="sort"'), 'hidden with one spend');
+  assert.match(renderTrip({ ...trip, days: [two] }, { sort: 'amount' }), /class="sort"[\s\S]*?class="on" data-action="sort-spends" data-sort="amount"/);
+});

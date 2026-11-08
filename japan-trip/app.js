@@ -4,10 +4,10 @@
 
 import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx, sortDays,
-  safeUrl,
+  safeUrl, fmtMoney,
   toHome, fmtHome,
-} from './lib.js?v=11';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=11';
+} from './lib.js?v=12';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=12';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -167,6 +167,10 @@ let linkFormFor = null; // stop whose "add link" form is open (edit mode)
 // Which currency amounts show in ('JPY' or 'HOME'); a per-phone preference, not trip data.
 const CUR_KEY = 'jt.cur';
 let cur = readLS(CUR_KEY) === 'HOME' ? 'HOME' : 'JPY';
+// How spend lists are ordered: 'old' (order entered), 'new' or 'amount'; per phone.
+const SORT_KEY = 'jt.sort';
+let sort = ['new', 'amount'].includes(readLS(SORT_KEY)) ? readLS(SORT_KEY) : 'old';
+let confirmSpendId = null; // spend whose delete is waiting for "Delete" / "Keep"
 
 function render() {
   const route = parseRoute(location.hash);
@@ -177,12 +181,12 @@ function render() {
   const today = todayISO();
 
   const routeKey = route.view + ':' + (route.id || '');
-  if (routeKey !== lastRouteKey) { editingId = null; linkFormFor = null; } // leaving a day ends edit mode
+  if (routeKey !== lastRouteKey) { editingId = null; linkFormFor = null; confirmSpendId = null; } // reset per-screen modes
   const stripScroll = document.querySelector('.strip')?.scrollLeft;
   const openDetails = [...document.querySelectorAll('#view details')].map((d) => d.open);
 
   $('#top').innerHTML = renderHeader(route, state, dirty, today, { cur });
-  $('#view').innerHTML = renderView(route, state, today, { editingId, now: nowHHMM(), cur, linkFormFor });
+  $('#view').innerHTML = renderView(route, state, today, { editingId, now: nowHHMM(), cur, linkFormFor, sort, confirmId: confirmSpendId });
   $('#tabs').innerHTML = renderTabs(route);
   $('#tools').hidden = route.view !== 'trip';
 
@@ -342,10 +346,23 @@ document.addEventListener('click', (e) => {
     if (!day) return;
     day.items = day.items.filter((i) => i.id !== itemId); commit();
   } else if (action === 'del-spend') {
+    confirmSpendId = e.target.closest('[data-spend]')?.dataset.spend ?? null;
+    render();
+  } else if (action === 'cancel-del-spend') {
+    confirmSpendId = null;
+    render();
+  } else if (action === 'confirm-del-spend') {
     const spendId = e.target.closest('[data-spend]')?.dataset.spend;
-    if (!day) return;
+    const gone = day?.spends.find((s) => s.id === spendId);
+    confirmSpendId = null;
+    if (!gone) { render(); return; }
     day.spends = day.spends.filter((s) => s.id !== spendId);
     commit();
+    setStatus(`Deleted ${fmtMoney(gone.yen, state.fx, cur)} (${gone.label || gone.category}).`);
+  } else if (action === 'sort-spends') {
+    sort = el.dataset.sort;
+    writeLS(SORT_KEY, sort);
+    render();
   } else if (action === 'del-day') {
     if (el.dataset.confirm) {
       state.days = state.days.filter((d) => d !== day);

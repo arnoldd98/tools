@@ -60,7 +60,8 @@ h1 { font-size: 20px; margin: 0; }
 .strip.compact .dom { font-size: 18px; }
 
 /* ---------- cards ---------- */
-.next-up,   background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 12px 0;
+.next-up, .countdown, section.total, .cats, .spent-card, .by-day, .tools {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 12px 0;
 }
 .next-up { border-left: 4px solid var(--accent); }
 .next-up.done-all { border-left-color: var(--ok); }
@@ -304,3 +305,13 @@ ul.spends .amt { font-weight: 600; font-variant-numeric: tabular-nums; white-spa
 .link-chip .icon { min-width: 28px; min-height: 28px; }
 .add-link { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
 .add-link input { flex: 1 1 10em; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-width: 0; }
+
+/* ---------- spend sort + delete confirm ---------- */
+.sort { display: inline-flex; gap: 2px; margin: 8px 0 2px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.sort button { font: inherit; font-size: 12px; border: 0; background: none; color: var(--muted); padding: 3px 10px; border-radius: 6px; cursor: pointer; }
+.sort button.on { background: var(--card); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px #0001; }
+ul.spends li.confirm { background: var(--shu-bg); border-radius: 10px; padding: 8px; border-top-color: transparent; }
+li.confirm .label { color: var(--shu); font-weight: 600; }
+.confirm-btns { display: flex; gap: 6px; flex: none; }
+.btn.danger { border-color: var(--shu); }
+li.confirm .btn.danger { background: var(--shu); color: #fff; }
