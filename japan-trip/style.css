@@ -60,7 +60,7 @@ h1 { font-size: 20px; margin: 0; }
 .strip.compact .dom { font-size: 18px; }
 
 /* ---------- cards ---------- */
-.next-up, .info-sec, .countdown, section.total, .cats, .spent, .by-day, .tools {
+.next-up, .info-sec, .countdown, section.total, .cats, .spent-card, .by-day, .tools {
   background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 12px 0;
 }
 .next-up { border-left: 4px solid var(--accent); }
@@ -99,13 +99,6 @@ h3 .total { float: right; font-weight: 600; color: var(--accent); font-variant-n
   font: inherit; color: inherit; background: var(--bg); min-width: 0;
   border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px;
 }
-ul.spends { list-style: none; padding: 0; margin: 8px 0; }
-ul.spends li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); }
-ul.spends li:first-child { border-top: 0; }
-ul.spends .label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-ul.spends .cat { font-size: 11px; background: var(--line); border-radius: 10px; padding: 1px 8px; color: var(--muted); }
-ul.spends .amt { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
-ul.spends .at { margin: 0; font-size: 12px; font-variant-numeric: tabular-nums; }
 
 /* ---------- exchange rate ---------- */
 .fx { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; }
@@ -188,7 +181,6 @@ textarea { width: 100%; margin-top: 8px; min-height: 3em; resize: vertical; }
 /* ---------- day screen ---------- */
 .timeline li.next .text { font-weight: 700; color: var(--accent); }
 details > summary { cursor: pointer; }
-.spent summary b { float: right; color: var(--accent); font-variant-numeric: tabular-nums; }
 .by-day summary, .tools > summary { font-weight: 600; }
 .plan-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0 4px; }
 .plan-head h3 { margin: 0; }
@@ -271,3 +263,32 @@ h1, h3, .hdr b, .when, .countdown .big, section.total .sum, .day-row b { font-fa
 .timeline li.fixed.next .text { color: var(--shu); }
 .day-summary { margin: 8px 0 0; font-family: var(--mincho); font-size: 16px; line-height: 1.4; color: var(--ink); }
 .day-fields .summary { flex: 1 1 100%; }
+
+/* ---------- spends ---------- */
+.spent-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.spent-head h3 { margin: 0; }
+.spent-total { font-family: var(--mincho); font-size: 22px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.spent-card .empty { margin: 8px 0 0; }
+ul.spends { list-style: none; padding: 0; margin: 8px 0 0; }
+ul.spends li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+ul.spends li:first-child { border-top: 0; }
+.sp-ico {
+  flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--today);
+  display: grid; place-items: center; font-size: 16px;
+}
+.sp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.sp-main .label { overflow-wrap: anywhere; }
+.sp-main .sub { color: var(--muted); font-size: 12px; }
+ul.spends .amt { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------- header actions: ¥ | S$ switch + Sync ---------- */
+.hdr-actions { display: flex; align-items: center; gap: 6px; flex: none; }
+.cur-toggle {
+  display: inline-flex; padding: 2px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--card); font: inherit; font-size: 13px; cursor: pointer;
+}
+.cur-toggle span { padding: 3px 8px; border-radius: 6px; color: var(--muted); font-weight: 600; }
+.cur-toggle span.on { background: var(--accent); color: #fff; }
+.hanko { flex: none; white-space: nowrap; }
+.hdr { min-width: 0; }
+.hdr b { font-size: 17px; }

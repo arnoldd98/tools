@@ -226,3 +226,10 @@ test('normalise gives every day a summary string', () => {
   const s = normalise({ days: [{ id: 'a', summary: 'Beach day' }, { id: 'b' }, { id: 'c', summary: 5 }] });
   assert.deepEqual(s.days.map((d) => d.summary), ['Beach day', '', '5']);
 });
+import { fmtMoney } from '../lib.js';
+test('fmtMoney shows one currency', () => {
+  const fx = { home: 'SGD', jpyPerHome: 115 };
+  assert.equal(fmtMoney(1200, fx, 'JPY'), '¥1,200');
+  assert.equal(fmtMoney(1200, fx, 'HOME'), 'S$10.43');
+  assert.equal(fmtMoney(1200, fx), '¥1,200');
+});

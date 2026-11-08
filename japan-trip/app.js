@@ -5,8 +5,8 @@
 import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx, sortDays,
   toHome, fmtHome,
-} from './lib.js?v=8';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=8';
+} from './lib.js?v=9';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=9';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -162,6 +162,9 @@ async function load({ force = false } = {}) {
 // ---------- render ----------
 let lastRouteKey = null;
 let editingId = null; // day whose plan is in edit mode (Edit / Done)
+// Which currency amounts show in ('JPY' or 'HOME'); a per-phone preference, not trip data.
+const CUR_KEY = 'jt.cur';
+let cur = readLS(CUR_KEY) === 'HOME' ? 'HOME' : 'JPY';
 
 function render() {
   const route = parseRoute(location.hash);
@@ -176,8 +179,8 @@ function render() {
   const stripScroll = document.querySelector('.strip')?.scrollLeft;
   const openDetails = [...document.querySelectorAll('#view details')].map((d) => d.open);
 
-  $('#top').innerHTML = renderHeader(route, state, dirty, today);
-  $('#view').innerHTML = renderView(route, state, today, { editingId, now: nowHHMM() });
+  $('#top').innerHTML = renderHeader(route, state, dirty, today, { cur });
+  $('#view').innerHTML = renderView(route, state, today, { editingId, now: nowHHMM(), cur });
   $('#tabs').innerHTML = renderTabs(route);
   $('#tools').hidden = route.view !== 'trip';
 
@@ -248,7 +251,7 @@ async function refreshRateIfStale() {
 let sheetOpen = false;
 
 function openSheet(dayId) {
-  $('#sheet-body').innerHTML = renderSpendSheet(dayId, state.fx);
+  $('#sheet-body').innerHTML = renderSpendSheet(dayId, state.fx, cur);
   $('#sheet').hidden = false;
   sheetOpen = true;
   $('#sheet [name=yen]').focus(); // must stay inside the tap handler for the iPhone keyboard
@@ -279,7 +282,8 @@ window.addEventListener('popstate', () => { if (sheetOpen) closeSheet({ fromPop:
 function updateSheetPreview(input) {
   const yen = parseYen(input.value);
   const form = input.form;
-  form.querySelector('.live').textContent = '≈ ' + fmtHome(toHome(yen || 0, state.fx), state.fx.home);
+  const live = form.querySelector('.live'); // only shown when amounts are in the home currency
+  if (live) live.textContent = '≈ ' + fmtHome(toHome(yen || 0, state.fx), state.fx.home);
   form.querySelector('.save').textContent = yen ? `Save ¥${yen.toLocaleString('en-US')}` : 'Save';
 }
 
@@ -306,6 +310,10 @@ document.addEventListener('click', (e) => {
     if (!item) return;
     if (item.fixed) delete item.fixed; else item.fixed = true;
     commit();
+  } else if (action === 'toggle-cur') {
+    cur = cur === 'HOME' ? 'JPY' : 'HOME';
+    writeLS(CUR_KEY, cur);
+    render();
   } else if (action === 'toggle-edit') {
     editingId = editingId === day?.id ? null : day?.id ?? null;
     render();

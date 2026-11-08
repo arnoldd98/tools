@@ -29,16 +29,18 @@ test('tabs mark the active one; day page marks Days', () => {
 });
 test('day screen: order, spent, fab; no separate edit section', () => {
   const html = renderDayScreen(trip, trip.days[0], '2026-12-01', { page: false });
-  const order = ['class="next-up"', "Today's plan", 'class="spent"', 'class="fab"'];
+  const order = ['class="next-up"', "Today's plan", 'class="spent-card"', 'class="fab"'];
   assert.ok(!html.includes('Key info') && !html.includes('class="tag"'), 'no key info section');
   order.reduce((prev, s) => { const i = html.indexOf(s); assert.ok(i > prev, s); return i; }, -1);
   assert.ok(!html.includes('class="edit-day"'));
   assert.ok(!html.includes('class="strip'));
-  assert.match(html, /Spent today <b>¥1,200 ≈ S\$10\.43<\/b>/);
+  assert.match(html, /<section class="spent-card">\s*<div class="spent-head"><h3>Spent today<\/h3><span class="spent-total">¥1,200<\/span>/);
+  assert.ok(!html.includes('<details class="spent"'), 'not collapsible');
+  assert.match(renderDayScreen(trip, trip.days[0], '2026-12-01', { cur: 'HOME' }), /<span class="spent-total">S\$10\.43<\/span>/);
   assert.match(html, /data-action="open-spend" data-day="d1"/);
   const page = renderDayScreen(trip, trip.days[0], '2026-12-02', { page: true });
   assert.match(page, /class="strip compact"/);
-  assert.match(page, /<summary>Spent <b>/);
+  assert.match(page, /<h3>Spent<\/h3>/);
 });
 test('plan has an Edit button; normal mode has no fields or deletes', () => {
   const day = { ...trip.days[0], notes: 'Bring <cash>' };
@@ -74,7 +76,8 @@ test('spend sheet', () => {
   assert.match(html, /<form class="spend-sheet" data-day="d1">/);
   assert.ok(!renderSpendSheet(null, trip.fx).includes('data-day'));
   assert.match(html, /name="yen" inputmode="numeric"/);
-  assert.match(html, /≈ S\$0\.00/);
+  assert.ok(!html.includes('≈ S$'), 'no S$ preview when showing yen');
+  assert.match(renderSpendSheet('d1', trip.fx, 'HOME'), /≈ S\$0\.00/);
   assert.match(html, /value="food" checked/);
   const cats = [...html.matchAll(/name="category" value="(\w+)"/g)].map((m) => m[1]);
   assert.deepEqual(cats, ['food', 'shopping', 'transport', 'tickets', 'misc']);
@@ -96,7 +99,8 @@ test('today by phase', () => {
   assert.ok(!before.includes('class="fab"'));
   assert.match(renderToday(trip, '2026-11-30'), /1 day to go/);
   const after = renderToday(trip, '2026-12-09');
-  assert.match(after, /Trip complete[\s\S]*¥1,200 ≈ S\$10\.43/);
+  assert.match(after, /Trip complete[\s\S]*¥1,200/);
+  assert.match(renderToday(trip, '2026-12-09', { cur: 'HOME' }), /Trip complete[\s\S]*S\$10\.43/);
   assert.ok(!after.includes('class="fab"'));
   assert.match(renderToday(normalise({}), '2026-12-01'), /Add a day to get started/);
 });
@@ -109,7 +113,11 @@ test('days list', () => {
 });
 test('trip summary', () => {
   const html = renderTrip(trip);
-  assert.match(html, /¥1,200[\s\S]*≈ S\$10\.43 · 1 SGD = 115 JPY/);
+  assert.match(html, /<p class="sum">¥1,200<\/p>[\s\S]*1 SGD = 115 JPY/);
+  const home = renderTrip(trip, { cur: 'HOME' });
+  assert.match(home, /<p class="sum">S\$10\.43<\/p>/);
+  assert.match(home, /food<\/span><span class="amt">S\$10\.43<\/span>/);
+  assert.ok(!home.includes('¥1,200'));
   const cats = [...html.matchAll(/class="cat-row( zero)?"/g)].map((m) => !m[1]);
   assert.deepEqual(cats, [true, false, false, false, false]);
   assert.match(html, /style="width:100%"/);
@@ -167,4 +175,11 @@ test('day summary: Days list, day screen, edit field; falls back to stops', () =
   assert.ok(!renderDayScreen(trip, trip.days[0], '2026-12-01', {}).includes('day-summary'), 'no empty summary line');
   assert.match(renderDayScreen(withSum, day, '2026-12-01', { editing: true }),
     /<input class="summary" value="Land &amp; &lt;explore&gt;" placeholder="One-line summary of the day" data-field="summary"/);
+});
+test('header has a ¥ | S$ switch showing the active currency', () => {
+  for (const r of [{ view: 'home' }, { view: 'days' }, { view: 'day', id: 'd1' }, { view: 'trip' }]) {
+    assert.match(renderHeader(r, trip, false, '2026-12-01', { cur: 'JPY' }),
+      /<button class="cur-toggle" data-action="toggle-cur" aria-label="Show amounts in S\$"><span class="on">¥<\/span><span>S\$<\/span><\/button>/, r.view);
+  }
+  assert.match(renderHeader({ view: 'trip' }, trip, false, '', { cur: 'HOME' }), /aria-label="Show amounts in ¥"><span>¥<\/span><span class="on">S\$<\/span>/);
 });

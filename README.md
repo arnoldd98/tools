@@ -23,6 +23,8 @@ phone as an app (PWA) and works offline.
 - **Screens** (bottom tabs): `#/` Today (next up, today's plan, spent today,
   ＋ ¥ Spend; a countdown before the trip), `#/days` (all days) → `#/day/<id>`,
   `#/trip` (spending totals, categories, spends by day, trip info, settings).
+- **Money**: spends are logged in yen; the **¥ | S$** switch in the header shows every amount in
+  one currency (remembered per phone).
 - **Editing**: changes save instantly to the browser (localStorage).
 - **Sync**: the *Sync* button commits `trip.json` back to this repo via the GitHub API.
   Needs a fine-grained token (Contents: read & write, this repo only) entered under

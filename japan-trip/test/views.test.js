@@ -33,11 +33,21 @@ test('spend list', () => {
   const list = renderSpendList(spends, fx);
   assert.ok(list.indexOf('data-spend="s2"') < list.indexOf('data-spend="s1"'));
   assert.match(list, /bus &lt;x&gt;/);
-  assert.match(list, /¥1,200 · S\$10\.43/);
-  assert.match(renderSpendList([], fx), /No spends yet/);
+  assert.match(list, /<span class="amt">¥1,200<\/span>/);
+  assert.ok(!list.includes('S$'), 'one currency at a time');
+  assert.match(list, /<span class="sp-ico" aria-hidden="true">🚃<\/span>/);
+  assert.match(list, /<span class="sub">transport · 2:00 pm<\/span>/);
+  const sgd = renderSpendList(spends, fx, 'HOME');
+  assert.match(sgd, /<span class="amt">S\$10\.43<\/span>/);
+  assert.ok(!sgd.includes('¥1,200'));
+  assert.match(renderSpendList([], fx), /Nothing spent yet/);
 });
 
 test('day links URL-encode ids', () => {
   const ds = [{ id: '50%', date: '2026-12-01', city: 'A', items: [], spends: [], notes: '' }];
   assert.match(renderStrip(ds, { today: '' }), /href="#\/day\/50%25"/);
+});
+test('unlabelled spend names the category once', () => {
+  const html = renderSpendList([{ id: 'x', yen: 66, label: '', category: 'food', at: '2026-11-13T12:10:00+09:00' }], fx);
+  assert.match(html, /<span class="label">food<\/span><span class="sub">12:10 pm<\/span>/);
 });

@@ -1,9 +1,9 @@
 // Pure renderers: (state, …) → HTML string. No DOM access; unit-tested with `npm test`.
 import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
-  fmtYen, fmtHome, fmtBoth, toHome, CATEGORIES, CATEGORY_LABEL, CATEGORY_ICON,
+  fmtYen, fmtHome, fmtMoney, homeSymbol, toHome, CATEGORIES, CATEGORY_LABEL, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed,
-} from './lib.js?v=8';
+} from './lib.js?v=9';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -22,6 +22,13 @@ const longDate = (date) => {
 
 const dayHref = (id) => `#/day/${esc(encodeURIComponent(id))}`;
 
+const curToggle = (cur, fx) => {
+  const home = esc(homeSymbol(fx?.home || 'SGD'));
+  const other = cur === 'HOME' ? '¥' : home;
+  return `<button class="cur-toggle" data-action="toggle-cur" aria-label="Show amounts in ${other}">`
+    + `<span${cur === 'HOME' ? '' : ' class="on"'}>¥</span><span${cur === 'HOME' ? ' class="on"' : ''}>${home}</span></button>`;
+};
+
 const syncBtn = (dirty) =>
   `<button class="btn${dirty ? ' dirty' : ''}" data-action="sync">Sync${dirty ? ' •' : ''}</button>`;
 
@@ -39,7 +46,8 @@ export function renderStrip(days, { today, selectedId, compact } = {}) {
 }
 
 // Top row of the sticky header, per route. Always ends with the Sync button.
-export function renderHeader(route, state, dirty, today) {
+export function renderHeader(route, state, dirty, today, { cur = 'JPY' } = {}) {
+  const right = `<span class="hdr-actions">${curToggle(cur, state.fx)}${syncBtn(dirty)}</span>`;
   if (route.view === 'day') {
     const days = sortDays(state.days);
     const idx = days.findIndex((d) => d.id === route.id);
@@ -50,21 +58,21 @@ export function renderHeader(route, state, dirty, today) {
     return '<a class="back" href="#/days">‹</a>'
       + `<span class="when">${esc(longDate(day?.date) || 'Undated')}</span>`
       + `<span class="navs">${nav(days[idx - 1], '←')}${nav(days[idx + 1], '→')}</span>`
-      + syncBtn(dirty);
+      + right;
   }
   if (route.view === 'days') {
     const span = tripSpan(state.days);
-    return `<h1>Days</h1>${span ? `<span class="muted">${fmtRange(span.start, span.end)}</span>` : ''}${syncBtn(dirty)}`;
+    return `<h1>Days</h1>${span ? `<span class="muted">${fmtRange(span.start, span.end)}</span>` : ''}${right}`;
   }
-  if (route.view === 'trip') return `<h1>Trip</h1>${syncBtn(dirty)}`;
+  if (route.view === 'trip') return `<h1>Trip</h1>${right}`;
   const num = dayNumber(state.days, today);
   if (num) {
     const day = state.days.find((d) => d.date === today);
     const title = [longDate(today), day?.city].filter(Boolean).map(esc).join(' · ');
     return `<div class="hdr"><div class="hdr-title"><b>${title}</b><span class="hanko" aria-label="Today">今日</span></div>`
-      + `<span class="muted">Day ${num.n} of ${num.of}</span></div>${syncBtn(dirty)}`;
+      + `<span class="muted">Day ${num.n} of ${num.of}</span></div>${right}`;
   }
-  return `<h1>${esc(state.title)}</h1>${syncBtn(dirty)}`;
+  return `<h1>${esc(state.title)}</h1>${right}`;
 }
 
 export function renderTabs(route) {
@@ -80,17 +88,26 @@ const mapsBtn = (place, label = 'Open in Maps', cls = 'btn primary') =>
 const timeOf = (at) => (/T(\d{2}:\d{2})/.exec(at || '') || [])[1] || '';
 
 
-export function renderSpendList(spends, fx) {
-  if (!spends.length) return '<p class="muted">No spends yet.</p>';
+export function renderSpendList(spends, fx, cur = 'JPY') {
+  if (!spends.length) return '<p class="muted empty">Nothing spent yet.</p>';
   const rows = [...spends].sort((a, b) => (b.at || '').localeCompare(a.at || '')).map((s) => `
     <li data-spend="${esc(s.id)}">
-      <span class="label">${esc(s.label) || '<span class="muted">—</span>'}</span>
-      <span class="cat">${esc(s.category)}</span>
-      <span class="amt">${fmtYen(s.yen)} · ${fmtHome(toHome(s.yen, fx), fx.home)}</span>
-      <span class="at muted">${timeOf(s.at)}</span>
+      <span class="sp-ico" aria-hidden="true">${CATEGORY_ICON[s.category] || CATEGORY_ICON.misc}</span>
+      <span class="sp-main"><span class="label">${esc(s.label || CATEGORY_LABEL[s.category] || 'Spend')}</span>`
+    + `<span class="sub">${[s.label ? esc(CATEGORY_LABEL[s.category] || s.category) : '', fmtTime(timeOf(s.at))].filter(Boolean).join(' · ')}</span></span>
+      <span class="amt">${fmtMoney(s.yen, fx, cur)}</span>
       <button class="icon" data-action="del-spend" title="Delete spend">✕</button>
     </li>`).join('');
   return `<ul class="spends">${rows}</ul>`;
+}
+
+// Always-open card: title + total, then the day's spends (newest first).
+function renderSpentCard(title, spends, fx, cur) {
+  const total = spends.reduce((sum, x) => sum + (x.yen || 0), 0);
+  return `<section class="spent-card">
+    <div class="spent-head"><h3>${title}</h3><span class="spent-total">${fmtMoney(total, fx, cur)}</span></div>
+    ${renderSpendList(spends, fx, cur)}
+  </section>`;
 }
 
 const placeLine = (p) => [p?.name, p?.address].filter(Boolean).map(esc).join(' · ');
@@ -141,7 +158,7 @@ function renderFixedStrip(day, today, now) {
   return `<div class="fixed-strip">⏱ ${isToday ? 'Next fixed' : 'Fixed'}: <b>${what}</b>${until}</div>`;
 }
 
-export function renderDayScreen(state, day, today, { page = false, editing = false, now = '' } = {}) {
+export function renderDayScreen(state, day, today, { page = false, editing = false, now = '', cur = 'JPY' } = {}) {
   const next = nextUp(day);
   const spentLabel = day.date && day.date === today ? 'Spent today' : 'Spent';
   const editBtn = `<button class="btn small" data-action="toggle-edit">${editing ? 'Done' : '✎ Edit'}</button>`;
@@ -169,19 +186,18 @@ export function renderDayScreen(state, day, today, { page = false, editing = fal
     </form>` : ''}
     ${notes}
     ${editing ? '<button class="btn danger" data-action="del-day">Delete day</button>' : ''}
-    <details class="spent"><summary>${spentLabel} <b>${fmtBoth(dayTotal(day), state.fx)}</b></summary>
-      ${renderSpendList(day.spends, state.fx)}</details>
+    ${renderSpentCard(spentLabel, day.spends, state.fx, cur)}
     <button class="fab" data-action="open-spend" data-day="${esc(day.id)}">＋ ¥ Spend</button>
   </section>`;
 }
 
-export function renderSpendSheet(dayId, fx) {
+export function renderSpendSheet(dayId, fx, cur = 'JPY') {
   const chips = CATEGORIES.map((c) => `<label class="chip"><input type="radio" name="category" value="${c}"${c === 'food' ? ' checked' : ''}> ${CATEGORY_ICON[c]} ${c === 'misc' ? 'misc' : CATEGORY_LABEL[c]}</label>`).join('');
   return `<form class="spend-sheet"${dayId ? ` data-day="${esc(dayId)}"` : ''}>
     <button type="button" class="icon close" data-action="close-spend" title="Close">✕</button>
     <p class="eyebrow">Log a spend</p>
     <input name="yen" inputmode="numeric" autocomplete="off" placeholder="¥0" enterkeyhint="done" aria-label="Amount in yen">
-    <p class="live muted">≈ ${fmtHome(0, fx.home)}</p>
+    ${cur === 'HOME' ? `<p class="live muted">≈ ${fmtHome(0, fx.home)}</p>` : ''}
     <button class="btn primary save" type="submit">Save</button>
     <div class="chips">${chips}</div>
     <input name="label" placeholder="What for? (optional)" autocomplete="off">
@@ -193,16 +209,15 @@ const shortDate = (date) => {
   return d ? `${WD[d.getDay()]} ${d.getDate()}` : 'Undated';
 };
 
-export function renderToday(state, today, { editingId, now } = {}) {
+export function renderToday(state, today, { editingId, now, cur = 'JPY' } = {}) {
   const ph = tripPhase(state.days, today);
   if (ph.phase === 'during' && ph.day) {
-    return renderDayScreen(state, ph.day, today, { page: false, editing: ph.day.id === editingId, now });
+    return renderDayScreen(state, ph.day, today, { page: false, editing: ph.day.id === editingId, now, cur });
   }
   if (ph.phase === 'during') {
     return `<section class="day-screen">
       <p class="what">No plans today</p>
-      <details class="spent"><summary>Spent today <b>${fmtBoth(0, state.fx)}</b></summary>
-        ${renderSpendList([], state.fx)}</details>
+      ${renderSpentCard('Spent today', [], state.fx, cur)}
       <button class="fab" data-action="open-spend">＋ ¥ Spend</button>
     </section>`;
   }
@@ -218,7 +233,7 @@ export function renderToday(state, today, { editingId, now } = {}) {
   if (ph.phase === 'after') {
     return `<section class="countdown">
       <p class="big">Trip complete</p>
-      <p>${fmtBoth(tripTotal(state), state.fx)}</p>
+      <p>${fmtMoney(tripTotal(state), state.fx, cur)} spent</p>
       <a class="btn" href="#/trip">Trip summary</a>
     </section>`;
   }
@@ -239,18 +254,18 @@ export function renderDays(state, today) {
     <button class="btn" data-action="add-day">+ Add day</button>`;
 }
 
-export function renderTrip(state) {
+export function renderTrip(state, { cur = 'JPY' } = {}) {
   const total = tripTotal(state);
   const cats = byCategory(state);
   const catRows = CATEGORIES.map((c) => {
     const pct = total ? Math.round((100 * cats[c]) / total) : 0;
     return `<div class="cat-row${cats[c] ? '' : ' zero'}"><span>${CATEGORY_ICON[c]} ${CATEGORY_LABEL[c]}</span>`
-      + `<span class="amt">${fmtYen(cats[c])}</span><div class="bar"><i style="width:${pct}%"></i></div></div>`;
+      + `<span class="amt">${fmtMoney(cats[c], state.fx, cur)}</span><div class="bar"><i style="width:${pct}%"></i></div></div>`;
   }).join('');
   const groups = sortDays(state.days).filter((d) => d.spends.length).map((d) => `
     <section class="money-day" data-day="${esc(d.id)}">
-      <h3>${esc([longDate(d.date) || 'Undated', d.city].filter(Boolean).join(' · '))} <span class="total">${fmtYen(dayTotal(d))}</span></h3>
-      ${renderSpendList(d.spends, state.fx)}
+      <h3>${esc([longDate(d.date) || 'Undated', d.city].filter(Boolean).join(' · '))} <span class="total">${fmtMoney(dayTotal(d), state.fx, cur)}</span></h3>
+      ${renderSpendList(d.spends, state.fx, cur)}
     </section>`).join('');
   const info = state.info.map((s) => `
     <details class="info-sec"><summary>${esc(s.title)}</summary>
@@ -259,8 +274,8 @@ export function renderTrip(state) {
   const done = items.filter((i) => i.done).length;
   const pctDone = items.length ? Math.round((100 * done) / items.length) : 0;
   return `<section class="total"><p class="eyebrow">Spent so far</p>
-      <p class="sum">${fmtYen(total)}</p>
-      <p class="muted">≈ ${fmtHome(toHome(total, state.fx), state.fx.home)} · 1 ${esc(state.fx.home)} = ${esc(state.fx.jpyPerHome)} JPY</p></section>
+      <p class="sum">${fmtMoney(total, state.fx, cur)}</p>
+      <p class="muted">1 ${esc(state.fx.home)} = ${esc(state.fx.jpyPerHome)} JPY</p></section>
     <section class="cats"><p class="eyebrow">By category</p>${catRows}</section>
     <details class="by-day"><summary>Spends by day</summary>${groups || '<p class="muted">No spends yet.</p>'}</details>
     ${info ? `<section class="info">${info}</section>` : ''}
@@ -268,12 +283,12 @@ export function renderTrip(state) {
     <div class="progress"><div style="width:${pctDone}%"></div></div>`;
 }
 
-export function renderView(route, state, today, { editingId, now } = {}) {
-  if (route.view === 'trip') return renderTrip(state);
+export function renderView(route, state, today, { editingId, now, cur = 'JPY' } = {}) {
+  if (route.view === 'trip') return renderTrip(state, { cur });
   if (route.view === 'days') return renderDays(state, today);
   if (route.view === 'day') {
     const day = state.days.find((d) => d.id === route.id);
-    return day ? renderDayScreen(state, day, today, { page: true, editing: day.id === editingId, now }) : renderDays(state, today);
+    return day ? renderDayScreen(state, day, today, { page: true, editing: day.id === editingId, now, cur }) : renderDays(state, today);
   }
-  return renderToday(state, today, { editingId, now });
+  return renderToday(state, today, { editingId, now, cur });
 }

@@ -93,6 +93,11 @@ export function fmtHome(amount, home) {
   return prefix + num;
 }
 
+// One currency at a time: cur 'JPY' (default) or 'HOME' (e.g. SGD).
+export const fmtMoney = (yen, fx, cur = 'JPY') =>
+  (cur === 'HOME' ? fmtHome(toHome(yen, fx), fx.home) : fmtYen(yen));
+export const homeSymbol = (home) => (home === 'SGD' ? 'S$' : home);
+
 export const fmtBoth = (yen, fx) => `${fmtYen(yen)} ≈ ${fmtHome(toHome(yen, fx), fx.home)}`;
 
 // "1,200", "¥1200", "1200.5" → 1200. Negative, zero, blank → null.
