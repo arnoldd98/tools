@@ -14,7 +14,7 @@ test('index.html links app.js and style.css with the current version', () => {
   assert.ok(html.includes(`<link rel="stylesheet" href="style.css${tag}">`), 'style.css tag');
 });
 test('module imports carry the current version', () => {
-  for (const f of ['app.js', 'views.js']) {
+  for (const f of ['app.js', 'views.js', 'lib.js']) {
     const imports = [...read(f).matchAll(/from '(\.\/[^']+)'/g)].map((m) => m[1]);
     assert.ok(imports.length, f);
     for (const spec of imports) assert.ok(spec.endsWith(tag), `${f}: ${spec}`);
@@ -26,4 +26,8 @@ test('style.css is well-formed (balanced braces, no rule without a selector bloc
   for (const chunk of css.split('}').slice(0, -1)) {
     assert.ok(chunk.includes('{'), `rule without "{": ${chunk.trim().slice(0, 60)}`);
   }
+});
+test('every app module is in the service worker shell', () => {
+  const sw = read('sw.js');
+  for (const f of ['app.js', 'lib.js', 'views.js', 'i18n.js']) assert.ok(sw.includes(`'${f}'`), f);
 });

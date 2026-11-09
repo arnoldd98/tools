@@ -8,11 +8,11 @@
 //
 // BUMP VERSION whenever any file in SHELL changes, or phones keep the old version.
 // Also update the matching ?v= tags in index.html, app.js and views.js (npm test checks).
-const VERSION = '13';
+const VERSION = '14';
 const SHELL_CACHE = `jt-shell-${VERSION}`;
 const DATA_CACHE = 'jt-data';
 const SHELL = [
-  './', 'index.html', 'app.js', 'lib.js', 'views.js', 'style.css', 'manifest.webmanifest',
+  './', 'index.html', 'app.js', 'lib.js', 'views.js', 'i18n.js', 'style.css', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png',
 ];
 

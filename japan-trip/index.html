@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@700&display=swap">
-  <link rel="stylesheet" href="style.css?v=13">
+  <link rel="stylesheet" href="style.css?v=14">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="theme-color" content="#f6f3ea">
@@ -21,35 +21,35 @@
   <header class="top">
     <div id="top" class="top-row"></div>
     <p id="status" class="muted" role="status"></p>
-    <button id="update" class="btn update" hidden>Updated, tap to reload</button>
+    <button id="update" class="btn update" data-i18n="update" hidden>Updated, tap to reload</button>
   </header>
 
   <main id="view"></main>
 
   <details id="tools" class="tools" hidden>
-    <summary>Settings</summary>
+    <summary data-i18n="settings">Settings</summary>
     <form id="fx" class="fx">
       <label>1 SGD = <input name="rate" inputmode="decimal" size="6"> JPY</label>
-      <button class="btn" type="submit">Save rate</button>
-      <button class="btn" type="button" data-action="fetch-fx">Fetch latest</button>
+      <button class="btn" type="submit" data-i18n="saveRate">Save rate</button>
+      <button class="btn" type="button" data-action="fetch-fx" data-i18n="fetchLatest">Fetch latest</button>
       <span id="fx-updated" class="muted"></span>
     </form>
     <div class="tool-buttons">
-      <button class="btn" data-action="export">Export JSON</button>
-      <label class="btn">Import JSON<input id="import" type="file" accept="application/json" hidden></label>
-      <button class="btn" data-action="reload">Reload from GitHub</button>
+      <button class="btn" data-action="export" data-i18n="export">Export JSON</button>
+      <label class="btn"><span data-i18n="import">Import JSON</span><input id="import" type="file" accept="application/json" hidden></label>
+      <button class="btn" data-action="reload" data-i18n="reload">Reload from GitHub</button>
     </div>
     <details class="settings">
-      <summary>Sync settings</summary>
+      <summary data-i18n="syncSettings">Sync settings</summary>
       <form id="settings">
-        <label>Repo owner <input name="owner"></label>
-        <label>Repo name <input name="repo"></label>
-        <label>Branch <input name="branch"></label>
-        <label>Data file path <input name="path"></label>
-        <label>GitHub token (fine-grained, Contents: read &amp; write, this repo only)
+        <label><span data-i18n="owner">Repo owner</span> <input name="owner"></label>
+        <label><span data-i18n="repo">Repo name</span> <input name="repo"></label>
+        <label><span data-i18n="branch">Branch</span> <input name="branch"></label>
+        <label><span data-i18n="path">Data file path</span> <input name="path"></label>
+        <label><span data-i18n="token">GitHub token (fine-grained, Contents: read &amp; write, this repo only)</span>
           <input name="token" type="password" autocomplete="off"></label>
-        <button class="btn" type="submit">Save settings</button>
-        <p class="muted">The token is stored only in this browser (localStorage).</p>
+        <button class="btn" type="submit" data-i18n="saveSettings">Save settings</button>
+        <p class="muted" data-i18n="tokenNote">The token is stored only in this browser (localStorage).</p>
       </form>
     </details>
   </details>
@@ -61,6 +61,6 @@
     <div id="sheet-body"></div>
   </div>
 
-  <script type="module" src="app.js?v=13"></script>
+  <script type="module" src="app.js?v=14"></script>
 </body>
 </html>

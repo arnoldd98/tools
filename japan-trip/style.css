@@ -31,9 +31,9 @@ h1 { font-size: 20px; margin: 0; }
 
 
 /* ---------- top row variants ---------- */
-.top-row .back, .top-row .nav { font-size: 22px; line-height: 1; padding: 0 8px; text-decoration: none; color: inherit; }
+.top-row .back, .top-row .nav { font-size: 22px; line-height: 1; padding: 0 5px; text-decoration: none; color: inherit; }
 .top-row .back { padding-left: 0; }
-.top-row .when { flex: 1; font-weight: 600; }
+.top-row .when { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .top-row h1 { flex: 1; }
 .top-row .navs { display: flex; }
 .top-row .nav.disabled { opacity: .3; }
@@ -315,3 +315,15 @@ li.confirm .label { color: var(--shu); font-weight: 600; }
 .confirm-btns { display: flex; gap: 6px; flex: none; }
 .btn.danger { border-color: var(--shu); }
 li.confirm .btn.danger { background: var(--shu); color: #fff; }
+
+/* ---------- language switch + day bookings ---------- */
+.lang-toggle {
+  min-width: 34px; padding: 4px 6px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--card); color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.day-links h3 { margin-bottom: 2px; }
+.day-links .link-edit { margin-top: 4px; }
+/* header: language + currency switches + Sync must fit beside the date on a 375px phone */
+.hdr-actions { gap: 4px; }
+.cur-toggle span { padding: 3px 6px; }
+.hdr-actions .btn { padding: 6px 9px; }

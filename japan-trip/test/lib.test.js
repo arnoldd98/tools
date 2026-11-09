@@ -246,6 +246,60 @@ test('normalise keeps valid stop links, drops bad ones, adds none by default', (
     { id: 'a', links: [{ label: 'Boarding pass', url: 'https://drive.google.com/x' }, { label: 'bad', url: 'javascript:x' }, { url: 'https://k.lk/y' }, 'junk'] },
     { id: 'b' }] }] });
   assert.deepEqual(s.days[0].items[0].links, [
-    { label: 'Boarding pass', url: 'https://drive.google.com/x' }, { label: 'Link', url: 'https://k.lk/y' }]);
+    { label: 'Boarding pass', url: 'https://drive.google.com/x' }, { label: 'k.lk', url: 'https://k.lk/y' }]);
   assert.ok(!('links' in s.days[0].items[1]));
+});
+
+import { extractUrl, linkKind } from '../lib.js';
+test('extractUrl takes a bare link, one without https://, or share text', () => {
+  assert.equal(extractUrl(' https://drive.google.com/file/d/abc/view?usp=sharing '), 'https://drive.google.com/file/d/abc/view?usp=sharing');
+  assert.equal(extractUrl('drive.google.com/file/d/abc/view'), 'https://drive.google.com/file/d/abc/view');
+  assert.equal(extractUrl('www.trip.com/hotels/x'), 'https://www.trip.com/hotels/x');
+  assert.equal(extractUrl('Check out this hotel on Trip.com! https://us.trip.com/w/AbC12.'), 'https://us.trip.com/w/AbC12');
+  assert.equal(extractUrl('我在携程发现了好酒店：https://m.trip.com/x/1，快来看！'), 'https://m.trip.com/x/1');
+  assert.equal(extractUrl('javascript:alert(1)'), null);
+  assert.equal(extractUrl('just words'), null);
+  assert.equal(extractUrl(''), null);
+});
+test('linkKind names known sites (Drive, Trip.com, …) and falls back to the host', () => {
+  const k = (u) => linkKind(u).name;
+  assert.deepEqual(linkKind('https://drive.google.com/file/d/x/view'), { icon: '📁', name: 'Google Drive' });
+  assert.equal(k('https://docs.google.com/document/d/x'), 'Google Docs');
+  assert.equal(k('https://docs.google.com/spreadsheets/d/x'), 'Google Sheets');
+  assert.deepEqual(linkKind('https://us.trip.com/w/abc'), { icon: '🧳', name: 'Trip.com' });
+  assert.equal(k('https://www.trip.com/hotels/detail'), 'Trip.com');
+  assert.equal(k('https://www.klook.com/activity/1'), 'Klook');
+  assert.equal(k('https://www.booking.com/hotel/jp/x.html'), 'Booking.com');
+  assert.equal(k('https://www.agoda.com/x'), 'Agoda');
+  assert.equal(k('https://www.airbnb.com.sg/rooms/1'), 'Airbnb');
+  assert.equal(k('https://maps.app.goo.gl/abc'), 'Google Maps');
+  assert.equal(k('https://example.com/ticket.pdf'), 'PDF');
+  assert.deepEqual(linkKind('https://www.jreast.co.jp/x'), { icon: '🔗', name: 'jreast.co.jp' });
+  assert.equal(k('https://nottrip.com/x'), 'nottrip.com', 'only trip.com itself');
+});
+test('day links (bookings & files) are normalised like stop links', () => {
+  const s = normalise({ days: [{ id: 'd', links: [{ url: 'https://us.trip.com/w/1' }, { url: 'ftp://x' }] }, { id: 'e' }] });
+  assert.deepEqual(s.days[0].links, [{ label: 'Trip.com', url: 'https://us.trip.com/w/1' }]);
+  assert.ok(!('links' in s.days[1]));
+});
+test('times, countdowns and date ranges in Chinese', () => {
+  assert.equal(fmtTime('05:10', 'zh'), '上午5:10');
+  assert.equal(fmtTime('14:00', 'zh'), '下午2:00');
+  assert.equal(fmtTime('14:00'), '2:00 pm');
+  assert.equal(fmtUntil(40, 'zh'), '40 分钟后');
+  assert.equal(fmtUntil(100, 'zh'), '1 小时 40 分钟后');
+  assert.equal(fmtUntil(120, 'zh'), '2 小时后');
+  assert.equal(fmtUntil(0, 'zh'), '现在');
+  assert.equal(fmtRange('2026-12-01', '2026-12-06', 'zh'), '2026年12月1日–6日');
+  assert.equal(fmtRange('2026-11-12', '2026-12-06', 'zh'), '2026年11月12日–12月6日');
+  assert.equal(fmtRange('2026-12-30', '2027-01-02', 'zh'), '2026年12月30日–2027年1月2日');
+  assert.equal(fmtRange('2026-12-01', '2026-12-01', 'zh'), '2026年12月1日');
+});
+test('extractUrl keeps brackets the link opened, drops sentence punctuation, rejects non-links', () => {
+  assert.equal(extractUrl('https://en.wikipedia.org/wiki/Kinkaku-ji_(temple)'), 'https://en.wikipedia.org/wiki/Kinkaku-ji_(temple)');
+  assert.equal(extractUrl('(see https://www.klook.com/activity/1)'), 'https://www.klook.com/activity/1');
+  assert.equal(extractUrl('Book here: https://us.trip.com/w/x!'), 'https://us.trip.com/w/x');
+  assert.equal(extractUrl('“https://us.trip.com/w/y”'), 'https://us.trip.com/w/y');
+  for (const junk of ['e.g', '1.5', 'v1.2', 'hello world']) assert.equal(extractUrl(junk), null, junk);
+  assert.equal(extractUrl('trip.com'), 'https://trip.com');
 });

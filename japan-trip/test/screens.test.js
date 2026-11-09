@@ -192,13 +192,13 @@ test('stop links: buttons in the plan and on Next up; edit mode adds/removes', (
     { id: 'g', text: 'Lunch' }] }] }).days[0];
   const st = { ...trip, days: [day] };
   const html = renderDayScreen(st, day, '2026-11-13', {});
-  assert.match(html, /data-item="f">[\s\S]*?<a class="link-btn" href="https:\/\/drive\.google\.com\/a\?x=1&amp;y=2" target="_blank" rel="noopener">🔗 Boarding &lt;pass&gt;<\/a>/);
+  assert.match(html, /data-item="f">[\s\S]*?<a class="link-btn" href="https:\/\/drive\.google\.com\/a\?x=1&amp;y=2" target="_blank" rel="noopener">📁 Boarding &lt;pass&gt;<\/a>/);
   assert.match(html, /class="next-up[^"]*"[\s\S]*?class="link-btn"[\s\S]*?Boarding &lt;pass&gt;[\s\S]*?Today's plan/);
   const edit = renderDayScreen(st, day, '2026-11-13', { editing: true });
-  assert.match(edit, /data-item="f">[\s\S]*?Boarding &lt;pass&gt; <button class="icon" data-action="del-link" data-link="0"/);
+  assert.match(edit, /data-item="f">[\s\S]*?📁 Boarding &lt;pass&gt; <button class="icon" data-action="del-link" data-link="0"/);
   assert.match(edit, /data-item="g">[\s\S]*?<button class="btn small" data-action="show-link-form">＋ Link<\/button>/);
   const form = renderDayScreen(st, day, '2026-11-13', { editing: true, linkFormFor: 'g' });
-  assert.match(form, /data-item="g">[\s\S]*?<form class="add-link"><input name="url" type="url" inputmode="url" placeholder="Paste link" required><input name="label" placeholder="Name, e.g\. Boarding pass"><button class="btn small" type="submit">Add<\/button><\/form>/);
+  assert.match(form, /data-item="g">[\s\S]*?<form class="add-link"><input name="url" inputmode="url" [^>]*placeholder="Paste a link \(Google Drive, Trip\.com…\)" required><input name="label" placeholder="Name, e.g\. Boarding pass"><button class="btn small" type="submit">Add<\/button><\/form>/);
 });
 test('Trip has no info sections, even for old data that still has them', () => {
   const old = { ...trip, info: [{ title: 'Flights', lines: ['x'] }] };
@@ -210,4 +210,40 @@ test('Spent card has a sort switch once there are 2+ spends', () => {
   assert.match(html, /<div class="sort" role="group" aria-label="Sort spends"><button data-action="sort-spends" data-sort="old">Oldest<\/button><button data-action="sort-spends" data-sort="new">Newest<\/button><button class="on" data-action="sort-spends" data-sort="amount">Amount<\/button><\/div>/);
   assert.ok(!renderDayScreen(trip, trip.days[0], '2026-12-01', {}).includes('class="sort"'), 'hidden with one spend');
   assert.match(renderTrip({ ...trip, days: [two] }, { sort: 'amount' }), /class="sort"[\s\S]*?class="on" data-action="sort-spends" data-sort="amount"/);
+});
+
+test('day Bookings & files: shown when there are links; edit mode adds/removes', () => {
+  const day = normalise({ days: [{ id: 'B', date: '2026-11-13', items: [{ id: 'x', text: 'Walk' }],
+    links: [{ url: 'https://us.trip.com/w/abc' }, { label: 'Hotel <PDF>', url: 'https://drive.google.com/file/d/1/view' }] }] }).days[0];
+  const st = { ...trip, days: [day] };
+  const html = renderDayScreen(st, day, '2026-11-13', {});
+  assert.match(html, /<section class="day-links"><h3>Bookings &amp; files<\/h3><div class="links"><a class="link-btn" href="https:\/\/us\.trip\.com\/w\/abc"[^>]*>🧳 Trip\.com<\/a><a class="link-btn"[^>]*>📁 Hotel &lt;PDF&gt;<\/a>/);
+  assert.ok(html.indexOf('class="timeline') < html.indexOf('day-links'), 'after the plan');
+  assert.ok(!renderDayScreen(trip, trip.days[0], '2026-12-01', {}).includes('day-links'), 'hidden when empty');
+  const edit = renderDayScreen(trip, trip.days[0], '2026-12-01', { editing: true });
+  assert.match(edit, /<section class="day-links"><h3>Bookings &amp; files<\/h3><div class="link-edit"><button class="btn small" data-action="show-link-form">＋ Link<\/button>/);
+  const form = renderDayScreen(st, day, '2026-11-13', { editing: true, linkFormFor: 'day:B' });
+  assert.match(form, /class="day-links">[\s\S]*?🧳 Trip\.com <button class="icon" data-action="del-link" data-link="0"[\s\S]*?<form class="add-link">/);
+  assert.equal((form.match(/<form class="add-link">/g) || []).length, 1, 'only the day form opens');
+});
+test('Chinese: header, tabs, day screen, spend sheet', () => {
+  const zh = { lang: 'zh' };
+  const home = renderHeader({ view: 'home' }, trip, true, '2026-12-01', zh);
+  assert.match(home, /<b>12月1日 周二 · Naha<\/b>[\s\S]*第 1 天 \/ 共 6 天/);
+  assert.match(home, /<button class="lang-toggle" data-action="toggle-lang" lang="en" aria-label="English">EN<\/button>/);
+  assert.match(home, /同步 •/);
+  assert.match(renderHeader({ view: 'home' }, trip, false, '2026-12-01'), /<button class="lang-toggle" data-action="toggle-lang" lang="zh-Hans" aria-label="中文">中<\/button>/);
+  assert.match(renderHeader({ view: 'days' }, trip, false, '', zh), /<h1>日程<\/h1><span class="muted">2026年12月1日–6日<\/span>/);
+  assert.match(renderTabs({ view: 'home' }, 'zh'), /今天<\/a>.*日程<\/a>.*旅程<\/a>/);
+  const day = renderDayScreen(trip, trip.days[0], '2026-12-01', zh);
+  assert.match(day, /下一项[\s\S]*下午3:00[\s\S]*今日安排[\s\S]*✎ 编辑[\s\S]*今日支出[\s\S]*＋ ¥ 记账/);
+  assert.ok(!/Next up|Today's plan|Spent today|Nothing spent/.test(day), 'no English left');
+  assert.match(day, /<span class="sub">餐饮 · 下午12:40<\/span>/);
+  const sheet = renderSpendSheet('d1', trip.fx, 'JPY', 'zh');
+  assert.match(sheet, /记一笔支出[\s\S]*保存[\s\S]*🍜 餐饮[\s\S]*• 其他[\s\S]*用途（可选）/);
+});
+test('Chinese: today countdown, days list, trip summary', () => {
+  assert.match(renderToday(trip, '2026-11-07', { lang: 'zh' }), /还有 24 天[\s\S]*2026年12月1日–6日 · 6 天[\s\S]*查看日程/);
+  assert.match(renderDays(trip, '2026-12-01', 'zh'), /<b>1日 周二 · Naha<\/b>/);
+  assert.match(renderTrip(trip, { lang: 'zh' }), /目前总支出[\s\S]*按类别[\s\S]*🍜 餐饮[\s\S]*按天查看支出[\s\S]*12月1日 周二 · Naha[\s\S]*已完成安排：1 \/ 2/);
 });

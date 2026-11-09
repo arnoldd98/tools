@@ -4,10 +4,11 @@
 
 import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx,
-  safeUrl, fmtMoney,
+  extractUrl, linkKind, fmtMoney,
   toHome, fmtHome,
-} from './lib.js?v=13';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=13';
+} from './lib.js?v=14';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=14';
+import { strings, normLang } from './i18n.js?v=14';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -78,10 +79,10 @@ async function sync() {
     location.hash = '#/trip';
     $('#tools').open = true;
     $('.settings').open = true;
-    setStatus('Add a GitHub token in Sync settings (Trip → Settings) to sync.');
+    setStatus(T().st.needToken);
     return;
   }
-  setStatus('Syncing…');
+  setStatus(T().st.syncing);
   try {
     const { sha } = await apiGet();
     state.updated = new Date().toISOString();
@@ -99,9 +100,9 @@ async function sync() {
     edits++;
     saveDraft();
     render();
-    setStatus(`Synced ${new Date().toLocaleTimeString()}`);
+    setStatus(T().st.synced(new Date().toLocaleTimeString(T().htmlLang)));
   } catch (e) {
-    setStatus(`Sync failed: ${e.message}. Changes are still saved on this device.`);
+    setStatus(T().st.syncFailed(e.message));
   }
 }
 
@@ -128,7 +129,7 @@ async function fetchRemoteWithTimeout() {
 }
 
 function offlineOr(msg) {
-  return navigator.onLine === false ? 'Offline. Showing the copy on this phone.' : msg;
+  return navigator.onLine === false ? T().st.offline : msg;
 }
 
 // Device first: draw the phone's copy immediately, then refresh from remote in the
@@ -140,7 +141,7 @@ async function load({ force = false } = {}) {
   if (haveCopy) {
     state = normalise(draft.data); dirty = !!draft.dirty;
     render();
-    if (dirty) setStatus('Unsynced changes on this device. Tap Sync to save to GitHub.');
+    if (dirty) setStatus(T().st.unsynced);
   }
   try {
     const remote = normalise(await fetchRemoteWithTimeout());
@@ -150,12 +151,12 @@ async function load({ force = false } = {}) {
       remote.fx = newerFx(remote.fx, state.fx); // keep a fresher rate fetched on this phone
       state = remote; dirty = false; saveDraft();
       render();
-      setStatus(offlineOr(state.updated ? `Last synced ${new Date(state.updated).toLocaleString()}` : ''));
+      setStatus(offlineOr(state.updated ? T().st.lastSynced(new Date(state.updated).toLocaleString(T().htmlLang)) : ''));
     }
   } catch (e) {
     if (!haveCopy && draft?.data && !force) state = normalise(draft.data);
     if (!haveCopy) render();
-    setStatus(offlineOr(`Couldn't reach GitHub (${e.message}). Showing this phone's copy.`));
+    setStatus(offlineOr(T().st.cantReach(e.message)));
   }
   refreshRateIfStale();
 }
@@ -171,6 +172,16 @@ let cur = readLS(CUR_KEY) === 'HOME' ? 'HOME' : 'JPY';
 const SORT_KEY = 'jt.sort';
 let sort = ['new', 'amount'].includes(readLS(SORT_KEY)) ? readLS(SORT_KEY) : 'old';
 let confirmSpendId = null; // spend whose delete is waiting for "Delete" / "Keep"
+// UI language, 'en' or 'zh' (Simplified Chinese); per phone. First visit follows the phone's language.
+const LANG_KEY = 'jt.lang';
+let lang = normLang(readLS(LANG_KEY) || (/^zh/i.test(navigator.language || '') ? 'zh' : 'en'));
+function T() { return strings(lang); }
+
+// Static text in index.html (Settings panel, update note) carries data-i18n="<key>".
+function translatePage() {
+  document.documentElement.lang = T().htmlLang;
+  for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = T().page[el.dataset.i18n] ?? el.textContent;
+}
 
 function render() {
   const route = parseRoute(location.hash);
@@ -185,15 +196,15 @@ function render() {
   const stripScroll = document.querySelector('.strip')?.scrollLeft;
   const openDetails = [...document.querySelectorAll('#view details')].map((d) => d.open);
 
-  $('#top').innerHTML = renderHeader(route, state, dirty, today, { cur });
-  $('#view').innerHTML = renderView(route, state, today, { editingId, now: nowHHMM(), cur, linkFormFor, sort, confirmId: confirmSpendId });
-  $('#tabs').innerHTML = renderTabs(route);
+  $('#top').innerHTML = renderHeader(route, state, dirty, today, { cur, lang });
+  $('#view').innerHTML = renderView(route, state, today, { editingId, now: nowHHMM(), cur, linkFormFor, sort, confirmId: confirmSpendId, lang });
+  $('#tabs').innerHTML = renderTabs(route, lang);
   $('#tools').hidden = route.view !== 'trip';
 
   const rate = $('#fx [name=rate]');
   if (document.activeElement !== rate) rate.value = state.fx.jpyPerHome;
   $('#fx-updated').textContent = state.fx.updatedAt
-    ? `updated ${new Date(state.fx.updatedAt).toLocaleString()}` : '';
+    ? T().st.updatedAt(new Date(state.fx.updatedAt).toLocaleString(T().htmlLang)) : '';
 
   const strip = document.querySelector('.strip');
   if (routeKey !== lastRouteKey) {
@@ -213,7 +224,7 @@ function render() {
 function markDirty() {
   edits++; dirty = true; saveDraft();
   const btn = document.querySelector('#top [data-action=sync]');
-  if (btn) { btn.classList.add('dirty'); btn.textContent = 'Sync •'; }
+  if (btn) { btn.classList.add('dirty'); btn.textContent = `${T().sync} •`; }
 }
 
 function setRate(r) {
@@ -234,11 +245,11 @@ async function getLatestRate() {
 
 // Tapped "Fetch latest": counts as an edit (Sync •).
 async function fetchFx() {
-  setStatus('Fetching rate…');
+  setStatus(T().st.fetchingRate);
   const r = await getLatestRate();
-  if (r === null) { setStatus('Rate fetch failed; kept the saved rate.'); return; }
+  if (r === null) { setStatus(T().st.rateFailed); return; }
   setRate(r);
-  setStatus(`Rate updated: 1 ${state.fx.home} = ${r} JPY`);
+  setStatus(T().st.rateUpdated(state.fx.home, r));
 }
 
 // Background refresh about once a day when online. Not an edit: no Sync •.
@@ -257,7 +268,7 @@ async function refreshRateIfStale() {
 let sheetOpen = false;
 
 function openSheet(dayId) {
-  $('#sheet-body').innerHTML = renderSpendSheet(dayId, state.fx, cur);
+  $('#sheet-body').innerHTML = renderSpendSheet(dayId, state.fx, cur, lang);
   $('#sheet').hidden = false;
   sheetOpen = true;
   $('#sheet [name=yen]').focus(); // must stay inside the tap handler for the iPhone keyboard
@@ -290,7 +301,7 @@ function updateSheetPreview(input) {
   const form = input.form;
   const live = form.querySelector('.live'); // only shown when amounts are in the home currency
   if (live) live.textContent = '≈ ' + fmtHome(toHome(yen || 0, state.fx), state.fx.home);
-  form.querySelector('.save').textContent = yen ? `Save ¥${yen.toLocaleString('en-US')}` : 'Save';
+  form.querySelector('.save').textContent = yen ? T().saveYen(`¥${yen.toLocaleString('en-US')}`) : T().save;
 }
 
 // ---------- events ----------
@@ -320,15 +331,24 @@ document.addEventListener('click', (e) => {
     cur = cur === 'HOME' ? 'JPY' : 'HOME';
     writeLS(CUR_KEY, cur);
     render();
-  } else if (action === 'show-link-form') {
-    linkFormFor = itemId;
+  } else if (action === 'toggle-lang') {
+    lang = lang === 'zh' ? 'en' : 'zh';
+    writeLS(LANG_KEY, lang);
+    translatePage();
+    // the old message is in the other language; keep the one that matters (unsynced edits)
+    setStatus(dirty ? T().st.unsynced : '');
     render();
-    document.querySelector(`[data-item="${CSS.escape(itemId)}"] .add-link [name=url]`)?.focus();
+  } else if (action === 'show-link-form') {
+    // a stop's links, or (no data-item) the day's Bookings & files
+    linkFormFor = itemId || (day && `day:${day.id}`);
+    render();
+    const scope = itemId ? `[data-item="${CSS.escape(itemId)}"]` : '.day-links';
+    document.querySelector(`${scope} .add-link [name=url]`)?.focus();
   } else if (action === 'del-link') {
-    const item = day?.items.find((i) => i.id === itemId);
-    if (!item?.links) return;
-    item.links.splice(Number(el.dataset.link), 1);
-    if (!item.links.length) delete item.links;
+    const target = itemId ? day?.items.find((i) => i.id === itemId) : day;
+    if (!target?.links) return;
+    target.links.splice(Number(el.dataset.link), 1);
+    if (!target.links.length) delete target.links;
     commit();
   } else if (action === 'toggle-edit') {
     linkFormFor = null;
@@ -358,7 +378,7 @@ document.addEventListener('click', (e) => {
     if (!gone) { render(); return; }
     day.spends = day.spends.filter((s) => s.id !== spendId);
     commit();
-    setStatus(`Deleted ${fmtMoney(gone.yen, state.fx, cur)} (${gone.label || gone.category}).`);
+    setStatus(T().st.deleted(fmtMoney(gone.yen, state.fx, cur), gone.label || T().cat[gone.category] || gone.category));
   } else if (action === 'sort-spends') {
     sort = el.dataset.sort;
     writeLS(SORT_KEY, sort);
@@ -369,7 +389,7 @@ document.addEventListener('click', (e) => {
       location.replace('#/days'); // the deleted day's page leaves history
       commit();
     } else {
-      el.dataset.confirm = '1'; el.textContent = 'Tap again to delete';
+      el.dataset.confirm = '1'; el.textContent = T().tapAgain;
       setTimeout(() => render(), 3000);
     }
   } else if (action === 'fetch-fx') {
@@ -417,17 +437,17 @@ document.addEventListener('submit', (e) => {
   if (form.id === 'settings') {
     cfg = Object.fromEntries(fd);
     writeLS(CFG_KEY, cfg);
-    setStatus('Settings saved.');
+    setStatus(T().st.settingsSaved);
   } else if (form.id === 'fx') {
     const r = validRate(fd.get('rate'));
-    if (r === null) { setStatus('Enter a rate above 0.'); return; }
+    if (r === null) { setStatus(T().st.rateInvalid); return; }
     form.querySelector('[name=rate]').blur();
     setRate(r);
-    setStatus(`Rate saved: 1 ${state.fx.home} = ${r} JPY`);
+    setStatus(T().st.rateSaved(state.fx.home, r));
   } else if (form.classList.contains('spend-sheet')) {
     const yen = parseYen(fd.get('yen'));
     if (yen === null) {
-      setStatus('Enter an amount in yen above 0.');
+      setStatus(T().st.yenInvalid);
       form.querySelector('[name=yen]').focus();
       return;
     }
@@ -439,14 +459,17 @@ document.addEventListener('submit', (e) => {
     });
     closeSheet();
     commit();
-    setStatus(`Logged ¥${yen.toLocaleString('en-US')}.`);
+    setStatus(T().st.logged(`¥${yen.toLocaleString('en-US')}`));
   } else if (form.classList.contains('add-link')) {
-    const url = safeUrl(fd.get('url'));
-    if (!url) { setStatus('Paste a link that starts with https://'); return; }
+    // accepts a bare link, one without https://, or an app's share text containing one
+    const url = extractUrl(fd.get('url'));
+    if (!url) { setStatus(T().st.badLink); return; }
     const day = findDay(form.closest('[data-day]')?.dataset.day);
-    const item = day?.items.find((i) => i.id === form.closest('[data-item]')?.dataset.item);
-    if (!item) return;
-    item.links = [...(item.links || []), { label: String(fd.get('label') || '').trim() || 'Link', url }];
+    const itemId = form.closest('[data-item]')?.dataset.item;
+    const target = itemId ? day?.items.find((i) => i.id === itemId) : day;
+    if (!target) return;
+    const label = String(fd.get('label') || '').trim() || linkKind(url).name; // e.g. 'Trip.com', 'Google Drive'
+    target.links = [...(target.links || []), { label, url }];
     linkFormFor = null;
     commit();
   } else if (form.classList.contains('add-item')) {
@@ -465,8 +488,8 @@ $('#import').addEventListener('change', async (e) => {
   try {
     const data = JSON.parse(await file.text());
     if (!Array.isArray(data.days)) throw new Error('missing "days" array');
-    state = normalise(data); commit(); setStatus('Imported. Tap Sync to save to GitHub.');
-  } catch (err) { setStatus(`Import failed: ${err.message}`); }
+    state = normalise(data); commit(); setStatus(T().st.imported);
+  } catch (err) { setStatus(T().st.importFailed(err.message)); }
   e.target.value = '';
 });
 
@@ -510,4 +533,5 @@ for (const [k, v] of Object.entries(cfg)) {
   if (input) input.value = v;
 }
 
+translatePage();
 load();

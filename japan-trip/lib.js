@@ -1,4 +1,5 @@
 // Pure helpers for the Japan trip tracker. No DOM access; unit-tested with `npm test`.
+import { strings } from './i18n.js?v=14';
 
 export const DEFAULT_FX = { home: 'SGD', jpyPerHome: 115, updatedAt: null };
 export const CATEGORIES = ['food', 'shopping', 'transport', 'tickets', 'misc'];
@@ -25,17 +26,68 @@ export function safeUrl(u) {
   return /^https?:\/\/\S+$/i.test(s) ? s : null;
 }
 
+// Pull the link out of whatever was pasted: a bare URL, a URL without https://, or an
+// app's share text ("Check out this hotel on Trip.com! https://…"). null if none.
+export function extractUrl(text) {
+  const s = str(text).trim();
+  const m = /https?:\/\/[^\s<>"'\u2018-\u201f\u3000-\u303f\uff00-\uffef]+/i.exec(s); // stops at full-width punctuation (，。！)
+  if (m) return safeUrl(trimUrlEnd(m[0]));
+  // no scheme: only something that ends in a real top-level domain (not 'e.g' or '1.5')
+  if (/^(www\.)?([a-z0-9-]+\.)+[a-z]{2,}(\/\S*)?$/i.test(s)) return safeUrl(trimUrlEnd('https://' + s));
+  return null;
+}
+// Sentence punctuation after a link isn't part of it; a closing bracket is kept when the link
+// opened it (…/Kinkaku-ji_(temple)).
+const CLOSERS = { ')': '(', ']': '[', '}': '{' };
+function trimUrlEnd(u) {
+  for (;;) {
+    const last = u.slice(-1);
+    const open = CLOSERS[last];
+    const unbalanced = open && u.split(open).length < u.split(last).length;
+    if (!(/[.,;:!?'"]/.test(last) || unbalanced)) return u;
+    u = u.slice(0, -1);
+  }
+}
+
+// Known sites get an icon and a default name (used when a link is added without one).
+const LINK_SITES = [
+  [/(^|\.)drive\.google\.com$/, '📁', 'Google Drive'],
+  [/(^|\.)docs\.google\.com$/, '📄', (path) => (path.startsWith('/spreadsheets') ? 'Google Sheets'
+    : path.startsWith('/presentation') ? 'Google Slides' : 'Google Docs')],
+  [/(^|\.)photos\.(google\.com|app\.goo\.gl)$/, '🖼', 'Google Photos'],
+  [/^(maps\.app\.goo\.gl|maps\.google\.[a-z.]+)$/, '📍', 'Google Maps'],
+  [/(^|\.)trip\.com$/, '🧳', 'Trip.com'],
+  [/(^|\.)klook\.com$/, '🎟', 'Klook'],
+  [/(^|\.)kkday\.com$/, '🎟', 'KKday'],
+  [/(^|\.)booking\.com$/, '🏨', 'Booking.com'],
+  [/(^|\.)agoda\.com$/, '🏨', 'Agoda'],
+  [/(^|\.)airbnb\.[a-z.]+$/, '🏠', 'Airbnb'],
+];
+export function linkKind(url) {
+  let u;
+  try { u = new URL(url); } catch { return { icon: '🔗', name: 'Link' }; }
+  const host = u.hostname.toLowerCase();
+  const path = u.pathname;
+  if (host === 'www.google.com' && path.startsWith('/maps')) return { icon: '📍', name: 'Google Maps' };
+  for (const [re, icon, name] of LINK_SITES) {
+    if (re.test(host)) return { icon, name: typeof name === 'function' ? name(path) : name };
+  }
+  if (/\.pdf$/i.test(path)) return { icon: '📄', name: 'PDF' };
+  return { icon: '🔗', name: host.replace(/^www\./, '') };
+}
+
 function normLink(l) {
   const o = obj(l);
   const url = o && safeUrl(o.url);
-  return url ? { label: str(o.label).trim() || 'Link', url } : null;
+  return url ? { label: str(o.label).trim() || linkKind(url).name, url } : null;
 }
+const normLinks = (v) => arr(v).map(normLink).filter(Boolean);
 
 function normItem(i) {
   const o = obj(i) || {};
   const out = { ...o, id: idOf(o.id), time: str(o.time), text: str(o.text), done: Boolean(o.done) };
   if (o.fixed !== undefined) out.fixed = Boolean(o.fixed); // must-make time (flight, ferry…)
-  if (o.links !== undefined) out.links = arr(o.links).map(normLink).filter(Boolean); // tickets, bookings
+  if (o.links !== undefined) out.links = normLinks(o.links); // tickets, bookings
   if (o.place !== undefined) out.place = normPlace(o.place);
   if (out.place === undefined) delete out.place;
   return out;
@@ -65,6 +117,7 @@ function normDay(d) {
     spends: arr(o.spends).map(normSpend),
     notes: str(o.notes),
   };
+  if (o.links !== undefined) out.links = normLinks(o.links); // bookings & files for the day
   if (o.stay !== undefined) {
     const stay = normPlace(o.stay);
     if (stay) out.stay = stay;
@@ -123,22 +176,19 @@ export function validRate(input) {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-// '05:10' → '5:10 am'; anything that isn't HH:MM is shown as-is.
-export function fmtTime(t) {
+// '05:10' → '5:10 am' (中文: '上午5:10'); anything that isn't HH:MM is shown as-is.
+export function fmtTime(t, lang) {
   const m = /^(\d{1,2}):(\d{2})$/.exec(str(t));
   if (!m) return str(t);
-  const h = Number(m[1]);
-  return `${h % 12 || 12}:${m[2]} ${h < 12 ? 'am' : 'pm'}`;
+  return strings(lang).time12(Number(m[1]), m[2]);
 }
 
 const toMin = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
 export const minutesUntil = (time, now) => toMin(time) - toMin(now);
-export function fmtUntil(min) {
-  if (min <= 0) return 'now';
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  if (!h) return `in ${m} min`;
-  return m ? `in ${h} h ${m} min` : `in ${h} h`;
+export function fmtUntil(min, lang) {
+  const T = strings(lang);
+  if (min <= 0) return T.now;
+  return T.inMin(Math.floor(min / 60), min % 60);
 }
 
 export const nextFixed = (day) => (day?.items || []).find((i) => i.fixed && !i.done) || null;
@@ -221,14 +271,9 @@ export function tripOverview(days) {
   return { ...span, cities };
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-export function fmtRange(start, end) {
-  const [y1, m1, d1] = start.split('-').map(Number);
-  const [y2, m2, d2] = end.split('-').map(Number);
-  if (start === end) return `${d1} ${MONTHS[m1 - 1]} ${y1}`;
-  if (y1 === y2 && m1 === m2) return `${d1}–${d2} ${MONTHS[m1 - 1]} ${y1}`;
-  if (y1 === y2) return `${d1} ${MONTHS[m1 - 1]} – ${d2} ${MONTHS[m2 - 1]} ${y1}`;
-  return `${d1} ${MONTHS[m1 - 1]} ${y1} – ${d2} ${MONTHS[m2 - 1]} ${y2}`;
+export function fmtRange(start, end, lang) {
+  const part = (iso) => { const [y, m, d] = iso.split('-').map(Number); return { iso, y, m, d }; };
+  return strings(lang).range(part(start), part(end));
 }
 
 export function ensureDay(state, date, uid) {
