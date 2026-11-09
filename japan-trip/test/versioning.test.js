@@ -20,12 +20,15 @@ test('module imports carry the current version', () => {
     for (const spec of imports) assert.ok(spec.endsWith(tag), `${f}: ${spec}`);
   }
 });
-test('style.css is well-formed (balanced braces, no rule without a selector block)', () => {
+test('style.css is well-formed (braces nest and balance)', () => {
   const css = read('style.css').replace(/\/\*[\s\S]*?\*\//g, '');
-  assert.equal((css.match(/{/g) || []).length, (css.match(/}/g) || []).length, 'braces balance');
-  for (const chunk of css.split('}').slice(0, -1)) {
-    assert.ok(chunk.includes('{'), `rule without "{": ${chunk.trim().slice(0, 60)}`);
+  let depth = 0;
+  for (const [i, c] of [...css].entries()) {
+    if (c === '{') depth++;
+    if (c === '}') depth--;
+    assert.ok(depth >= 0, `unexpected "}" near: ${css.slice(Math.max(0, i - 60), i + 1).trim()}`);
   }
+  assert.equal(depth, 0, 'every "{" is closed');
 });
 test('every app module is in the service worker shell', () => {
   const sw = read('sw.js');

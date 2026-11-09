@@ -30,6 +30,9 @@ phone as an app (PWA) and works offline.
   phone's language). Trip data shows as typed. Strings live in `japan-trip/i18n.js`.
 - **Money**: spends are logged in yen; the **¥ | S$** switch in the header shows every amount in
   one currency (remembered per phone).
+- **Motion**: screens slide/morph with the View Transitions API (Chrome, iOS 18+; off with
+  Reduce Motion). Swipe left/right on a day page for the next/previous day. Logging or
+  deleting a spend and deleting a stop show a toast with **Undo**.
 - **Editing**: changes save instantly to the browser (localStorage).
 - **Sync**: the *Sync* button commits `trip.json` back to this repo via the GitHub API.
   Needs a fine-grained token (Contents: read & write, this repo only) entered under

@@ -3,8 +3,8 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtMoney, homeSymbol, toHome, CATEGORIES, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed, linkKind,
-} from './lib.js?v=14';
-import { strings, normLang } from './i18n.js?v=14';
+} from './lib.js?v=15';
+import { strings, normLang } from './i18n.js?v=15';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

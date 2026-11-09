@@ -327,3 +327,63 @@ li.confirm .btn.danger { background: var(--shu); color: #fff; }
 .hdr-actions { gap: 4px; }
 .cur-toggle span { padding: 3px 6px; }
 .hdr-actions .btn { padding: 6px 9px; }
+
+/* ---------- screen transitions (View Transitions API) ---------- */
+.top { view-transition-name: header; }
+.tabs { view-transition-name: tabs; }
+#top .when { view-transition-name: day-title; }
+::view-transition-group(*) { animation-duration: .28s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+html[data-nav=forward]::view-transition-old(root) { animation: .28s cubic-bezier(.2, .8, .2, 1) both vt-out-left; }
+html[data-nav=forward]::view-transition-new(root) { animation: .28s cubic-bezier(.2, .8, .2, 1) both vt-in-right; }
+html[data-nav=back]::view-transition-old(root) { animation: .28s cubic-bezier(.2, .8, .2, 1) both vt-out-right; }
+html[data-nav=back]::view-transition-new(root) { animation: .28s cubic-bezier(.2, .8, .2, 1) both vt-in-left; }
+html[data-nav=deeper]::view-transition-old(root) { animation: .25s ease both vt-fade-out; }
+html[data-nav=deeper]::view-transition-new(root) { animation: .3s cubic-bezier(.2, .8, .2, 1) both vt-rise; }
+html[data-nav=shallower]::view-transition-old(root) { animation: .22s ease both vt-sink; }
+html[data-nav=shallower]::view-transition-new(root) { animation: .28s ease both vt-fade-in; }
+html[data-nav=swap]::view-transition-old(root), html[data-nav=swap]::view-transition-new(root) { animation-duration: .2s; }
+@keyframes vt-out-left { to { transform: translateX(-30%); opacity: 0; } }
+@keyframes vt-in-right { from { transform: translateX(30%); opacity: 0; } }
+@keyframes vt-out-right { to { transform: translateX(30%); opacity: 0; } }
+@keyframes vt-in-left { from { transform: translateX(-30%); opacity: 0; } }
+@keyframes vt-fade-out { to { opacity: 0; } }
+@keyframes vt-fade-in { from { opacity: 0; } }
+@keyframes vt-rise { from { transform: translateY(24px); opacity: 0; } }
+@keyframes vt-sink { to { transform: translateY(24px); opacity: 0; } }
+
+/* ---------- feedback ---------- */
+.btn, .tab, .fab, .chip, .link-btn, .day-row, .strip .card, .cur-toggle, .sort button, .icon {
+  transition: transform .12s ease, background-color .2s ease, opacity .2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active, .tab:active, .fab:active, .chip:active, .link-btn:active, .cur-toggle:active, .sort button:active, .icon:active { transform: scale(.94); }
+.day-row:active, .strip .card:active { transform: scale(.98); }
+.timeline input[type=checkbox]:checked { animation: tick-pop .25s ease; }
+@keyframes tick-pop { 50% { transform: scale(1.25); } }
+.timeline li .text { transition: color .25s ease; }
+ul.spends li.enter { animation: row-in .35s cubic-bezier(.2, .8, .2, 1); }
+@keyframes row-in { from { opacity: 0; transform: translateY(-8px); background: var(--today); } }
+ul.spends li.confirm { animation: row-in .2s ease; }
+
+/* spend pad slides up; the backdrop fades */
+.sheet:not([hidden]) .spend-sheet { animation: sheet-up .28s cubic-bezier(.2, .8, .2, 1); }
+.sheet:not([hidden]) .backdrop { animation: fade-in .2s ease; }
+.sheet.closing .backdrop { opacity: 0; transition: opacity .18s ease; }
+@keyframes sheet-up { from { transform: translateY(100%); } }
+@keyframes fade-in { from { opacity: 0; } }
+
+/* toast */
+.toast {
+  position: fixed; left: 50%; bottom: calc(124px + env(safe-area-inset-bottom, 0)); z-index: 4;
+  transform: translateX(-50%); max-width: min(92vw, 520px); width: max-content;
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 16px;
+  background: var(--ink); color: var(--bg); border-radius: 12px; box-shadow: 0 6px 20px #0003; font-size: 14px;
+}
+.toast[hidden] { display: none; }
+.toast.show { animation: toast-in .25s cubic-bezier(.2, .8, .2, 1); }
+.toast-undo { font: inherit; font-weight: 700; color: #b9d39c; background: none; border: 0; padding: 4px 6px; cursor: pointer; }
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, 12px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

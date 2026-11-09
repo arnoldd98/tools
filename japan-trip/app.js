@@ -5,10 +5,10 @@
 import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx,
   extractUrl, linkKind, fmtMoney,
-  toHome, fmtHome,
-} from './lib.js?v=14';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=14';
-import { strings, normLang } from './i18n.js?v=14';
+  toHome, fmtHome, navDirection, swipeDir, sortDays,
+} from './lib.js?v=15';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=15';
+import { strings, normLang } from './i18n.js?v=15';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -100,7 +100,8 @@ async function sync() {
     edits++;
     saveDraft();
     render();
-    setStatus(T().st.synced(new Date().toLocaleTimeString(T().htmlLang)));
+    setStatus('');
+    toast(T().st.synced(new Date().toLocaleTimeString(T().htmlLang)));
   } catch (e) {
     setStatus(T().st.syncFailed(e.message));
   }
@@ -161,8 +162,38 @@ async function load({ force = false } = {}) {
   refreshRateIfStale();
 }
 
+// ---------- motion ----------
+// Screen changes use the View Transitions API (Chrome, iOS 18+); elsewhere, and with
+// Reduce Motion on, screens just swap. html[data-nav] picks the slide direction in CSS.
+const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+function transition(dir, update) {
+  if (!document.startViewTransition || reduceMotion() || dir === 'none') { update(); return; }
+  document.documentElement.dataset.nav = dir;
+  const t = document.startViewTransition(update);
+  t.finished.finally(() => { delete document.documentElement.dataset.nav; });
+}
+
+// ---------- toasts (with optional Undo) ----------
+let toastTimer = null;
+let undoFn = null;
+function toast(msg, undo = null) {
+  const el = $('#toast');
+  undoFn = undo;
+  el.innerHTML = `<span>${msg.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))}</span>`
+    + (undo ? `<button class="toast-undo" data-action="undo">${T().undo}</button>` : '');
+  el.hidden = false;
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); // restart the pop-in
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, undo ? 6000 : 3000);
+}
+function hideToast() { $('#toast').hidden = true; undoFn = null; }
+// Undo restores the whole trip as it was just before the action.
+const snapshot = () => JSON.stringify(state);
+const restoreFrom = (snap) => () => { state = normalise(JSON.parse(snap)); commit(); };
+
 // ---------- render ----------
 let lastRouteKey = null;
+let lastRoute = null;
 let editingId = null; // day whose plan is in edit mode (Edit / Done)
 let linkFormFor = null; // stop whose "add link" form is open (edit mode)
 // Which currency amounts show in ('JPY' or 'HOME'); a per-phone preference, not trip data.
@@ -219,6 +250,7 @@ function render() {
     if (now.length === openDetails.length) now.forEach((d, i) => { d.open = openDetails[i]; });
   }
   lastRouteKey = routeKey;
+  lastRoute = route;
 }
 
 function markDirty() {
@@ -249,7 +281,7 @@ async function fetchFx() {
   const r = await getLatestRate();
   if (r === null) { setStatus(T().st.rateFailed); return; }
   setRate(r);
-  setStatus(T().st.rateUpdated(state.fx.home, r));
+  toast(T().st.rateUpdated(state.fx.home, r));
 }
 
 // Background refresh about once a day when online. Not an edit: no Sync •.
@@ -289,8 +321,13 @@ function closeSheet({ fromPop = false } = {}) {
   if (!sheetOpen) return;
   sheetOpen = false;
   window.visualViewport?.removeEventListener('resize', liftSheet);
-  $('#sheet').hidden = true;
-  $('#sheet-body').innerHTML = '';
+  const hide = () => { if (!sheetOpen) { $('#sheet').hidden = true; $('#sheet-body').innerHTML = ''; } };
+  const form = $('#sheet .spend-sheet');
+  if (form?.animate && !reduceMotion()) { // slide back down, then hide
+    $('#sheet').classList.add('closing');
+    form.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(100%)' }], { duration: 180, easing: 'ease-in' })
+      .finished.then(() => { $('#sheet').classList.remove('closing'); hide(); }, hide);
+  } else hide();
   if (!fromPop) history.back();
 }
 
@@ -305,7 +342,44 @@ function updateSheetPreview(input) {
 }
 
 // ---------- events ----------
-window.addEventListener('hashchange', render);
+window.addEventListener('hashchange', () => {
+  const from = lastRoute;
+  const to = parseRoute(location.hash);
+  const dir = navDirection(from, to, state.days);
+  transition(dir, () => {
+    render();
+    // coming back to Days: the day's title shrinks back into its card
+    if (dir === 'shallower' && from?.id) {
+      document.querySelector(`.day-row[href="#/day/${CSS.escape(encodeURIComponent(from.id))}"] b`)
+        ?.style.setProperty('view-transition-name', 'day-title');
+    }
+  });
+});
+
+// Opening a day from its card: the card's title grows into the day page's title.
+document.addEventListener('click', (e) => {
+  const row = e.target.closest?.('a.day-row');
+  row?.querySelector('b')?.style.setProperty('view-transition-name', 'day-title');
+}, true);
+
+// Swipe left/right on a day page for the next/previous day (not on the strip or fields).
+let touchStart = null;
+document.addEventListener('touchstart', (e) => {
+  const t = e.touches[0];
+  const skip = e.target.closest?.('.strip, input, textarea, select, .sheet, #tabs');
+  touchStart = !skip && parseRoute(location.hash).view === 'day' && t ? { x: t.clientX, y: t.clientY, at: Date.now() } : null;
+}, { passive: true });
+document.addEventListener('touchend', (e) => {
+  if (!touchStart) return;
+  const t = e.changedTouches[0];
+  const dir = swipeDir(t.clientX - touchStart.x, t.clientY - touchStart.y, Date.now() - touchStart.at);
+  touchStart = null;
+  if (!dir) return;
+  const days = sortDays(state.days);
+  const i = days.findIndex((d) => d.id === parseRoute(location.hash).id);
+  const next = days[dir === 'left' ? i + 1 : i - 1];
+  if (next) location.hash = `#/day/${encodeURIComponent(next.id)}`;
+});
 
 // Keep the "Next fixed … in 40 min" countdown current, without disturbing typing.
 setInterval(() => {
@@ -358,13 +432,21 @@ document.addEventListener('click', (e) => {
     openSheet(el.dataset.day || null);
   } else if (action === 'close-spend') {
     closeSheet();
+  } else if (action === 'undo') {
+    const fn = undoFn;
+    hideToast();
+    fn?.();
   } else if (action === 'toggle') {
     const item = day?.items.find((i) => i.id === itemId);
     if (!item) return;
-    item.done = !item.done; commit();
+    item.done = !item.done;
+    transition('swap', commit); // Next up crossfades to the following stop
   } else if (action === 'del-item') {
-    if (!day) return;
+    const gone = day?.items.find((i) => i.id === itemId);
+    if (!gone) return;
+    const snap = snapshot();
     day.items = day.items.filter((i) => i.id !== itemId); commit();
+    toast(T().st.stopDeleted(gone.text), restoreFrom(snap));
   } else if (action === 'del-spend') {
     confirmSpendId = e.target.closest('[data-spend]')?.dataset.spend ?? null;
     render();
@@ -376,9 +458,17 @@ document.addEventListener('click', (e) => {
     const gone = day?.spends.find((s) => s.id === spendId);
     confirmSpendId = null;
     if (!gone) { render(); return; }
-    day.spends = day.spends.filter((s) => s.id !== spendId);
-    commit();
-    setStatus(T().st.deleted(fmtMoney(gone.yen, state.fx, cur), gone.label || T().cat[gone.category] || gone.category));
+    const snap = snapshot();
+    const finish = () => {
+      day.spends = day.spends.filter((s) => s.id !== spendId);
+      commit();
+      toast(T().st.deleted(fmtMoney(gone.yen, state.fx, cur), gone.label || T().cat[gone.category] || gone.category), restoreFrom(snap));
+    };
+    const row = el.closest('li');
+    if (row && row.animate && !reduceMotion()) { // fold the row away, then remove it
+      row.animate([{ opacity: 1, height: `${row.offsetHeight}px` }, { opacity: 0, height: '0px', paddingBlock: '0px' }],
+        { duration: 220, easing: 'ease-in' }).finished.then(finish, finish);
+    } else finish();
   } else if (action === 'sort-spends') {
     sort = el.dataset.sort;
     writeLS(SORT_KEY, sort);
@@ -437,29 +527,32 @@ document.addEventListener('submit', (e) => {
   if (form.id === 'settings') {
     cfg = Object.fromEntries(fd);
     writeLS(CFG_KEY, cfg);
-    setStatus(T().st.settingsSaved);
+    toast(T().st.settingsSaved);
   } else if (form.id === 'fx') {
     const r = validRate(fd.get('rate'));
     if (r === null) { setStatus(T().st.rateInvalid); return; }
     form.querySelector('[name=rate]').blur();
     setRate(r);
-    setStatus(T().st.rateSaved(state.fx.home, r));
+    toast(T().st.rateSaved(state.fx.home, r));
   } else if (form.classList.contains('spend-sheet')) {
     const yen = parseYen(fd.get('yen'));
     if (yen === null) {
-      setStatus(T().st.yenInvalid);
+      toast(T().st.yenInvalid);
       form.querySelector('[name=yen]').focus();
       return;
     }
     const day = form.dataset.day ? findDay(form.dataset.day) : ensureDay(state, todayISO(), uid);
     if (!day) return;
+    const snap = snapshot();
+    const id = uid();
     day.spends.push({
-      id: uid(), yen, label: String(fd.get('label') || '').trim(),
+      id, yen, label: String(fd.get('label') || '').trim(),
       category: fd.get('category') || 'food', at: localISO(),
     });
     closeSheet();
     commit();
-    setStatus(T().st.logged(`¥${yen.toLocaleString('en-US')}`));
+    document.querySelector(`[data-spend="${CSS.escape(id)}"]`)?.classList.add('enter');
+    toast(T().st.logged(`¥${yen.toLocaleString('en-US')}`), restoreFrom(snap));
   } else if (form.classList.contains('add-link')) {
     // accepts a bare link, one without https://, or an app's share text containing one
     const url = extractUrl(fd.get('url'));
