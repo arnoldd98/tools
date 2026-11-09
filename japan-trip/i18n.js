@@ -79,7 +79,8 @@ const en = {
   },
   // index.html (elements with data-i18n="key")
   page: {
-    update: 'Updated, tap to reload', settings: 'Settings', saveRate: 'Save rate', fetchLatest: 'Fetch latest',
+    update: 'Updated, tap to reload', settings: 'Settings',
+    rateHeading: 'Exchange rate', backupHeading: 'Backup', syncHeading: 'Sync', saveRate: 'Save rate', fetchLatest: 'Fetch latest',
     export: 'Export JSON', import: 'Import JSON', reload: 'Reload from GitHub', syncSettings: 'Sync settings',
     owner: 'Repo owner', repo: 'Repo name', branch: 'Branch', path: 'Data file path',
     token: 'GitHub token (fine-grained, Contents: read & write, this repo only)',
@@ -157,7 +158,8 @@ const zh = {
     updatedAt: (t) => `更新于 ${t}`,
   },
   page: {
-    update: '有新版本，点此刷新', settings: '设置', saveRate: '保存汇率', fetchLatest: '获取最新',
+    update: '有新版本，点此刷新', settings: '设置',
+    rateHeading: '汇率', backupHeading: '备份', syncHeading: '同步', saveRate: '保存汇率', fetchLatest: '获取最新',
     export: '导出 JSON', import: '导入 JSON', reload: '从 GitHub 重新加载', syncSettings: '同步设置',
     owner: '仓库所有者', repo: '仓库名称', branch: '分支', path: '数据文件路径',
     token: 'GitHub 令牌（细粒度，Contents：读写，仅限此仓库）',

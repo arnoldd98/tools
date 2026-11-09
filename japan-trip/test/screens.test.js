@@ -34,9 +34,9 @@ test('day screen: order, spent, fab; no separate edit section', () => {
   order.reduce((prev, s) => { const i = html.indexOf(s); assert.ok(i > prev, s); return i; }, -1);
   assert.ok(!html.includes('class="edit-day"'));
   assert.ok(!html.includes('class="strip'));
-  assert.match(html, /<section class="spent-card">\s*<div class="spent-head"><h3>Spent today<\/h3><span class="spent-total">¥1,200<\/span>/);
+  assert.match(html, /<section class="spent-card">\s*<div class="spent-head"><h3>Spent today<\/h3><button class="cur-toggle"[\s\S]*?<\/button><\/div>\s*<p class="spent-total">¥1,200<\/p>/);
   assert.ok(!html.includes('<details class="spent"'), 'not collapsible');
-  assert.match(renderDayScreen(trip, trip.days[0], '2026-12-01', { cur: 'HOME' }), /<span class="spent-total">S\$10\.43<\/span>/);
+  assert.match(renderDayScreen(trip, trip.days[0], '2026-12-01', { cur: 'HOME' }), /<p class="spent-total">S\$10\.43<\/p>/);
   assert.match(html, /data-action="open-spend" data-day="d1"/);
   const page = renderDayScreen(trip, trip.days[0], '2026-12-02', { page: true });
   assert.match(page, /class="strip compact"/);
@@ -178,12 +178,29 @@ test('day summary: Days list, day screen, edit field; falls back to stops', () =
   assert.match(renderDayScreen(withSum, day, '2026-12-01', { editing: true }),
     /<input class="summary" value="Land &amp; &lt;explore&gt;" placeholder="One-line summary of the day" data-field="summary"/);
 });
-test('header has a ¥ | S$ switch showing the active currency', () => {
+test('¥ | S$ switch sits where money is shown, not in the header', () => {
+  const sw = /<button class="cur-toggle" data-action="toggle-cur" aria-label="Show amounts in S\$"><span class="on">¥<\/span><span>S\$<\/span><\/button>/;
   for (const r of [{ view: 'home' }, { view: 'days' }, { view: 'day', id: 'd1' }, { view: 'trip' }]) {
-    assert.match(renderHeader(r, trip, false, '2026-12-01', { cur: 'JPY' }),
-      /<button class="cur-toggle" data-action="toggle-cur" aria-label="Show amounts in S\$"><span class="on">¥<\/span><span>S\$<\/span><\/button>/, r.view);
+    assert.ok(!renderHeader(r, trip, false, '2026-12-01', { cur: 'JPY' }).includes('cur-toggle'), r.view);
   }
-  assert.match(renderHeader({ view: 'trip' }, trip, false, '', { cur: 'HOME' }), /aria-label="Show amounts in ¥"><span>¥<\/span><span class="on">S\$<\/span>/);
+  assert.match(renderDayScreen(trip, trip.days[0], '2026-12-01', { cur: 'JPY' }), new RegExp('class="spent-card"[\\s\\S]*' + sw.source));
+  assert.match(renderTrip(trip, { cur: 'JPY' }), new RegExp('<section class="total">[\\s\\S]*?' + sw.source));
+  assert.match(renderTrip(trip, { cur: 'HOME' }), /aria-label="Show amounts in ¥"><span>¥<\/span><span class="on">S\$<\/span>/);
+  assert.ok(!renderDays(trip, '2026-12-01').includes('cur-toggle'), 'no money on Days, no switch');
+});
+test('spends by day: always open, a card per day with subtotal and a bar vs the biggest day', () => {
+  const st = normalise({ fx: { jpyPerHome: 100 }, days: [
+    { id: 'a', date: '2026-11-12', city: 'Osaka', spends: [{ id: 's1', yen: 1000, label: 'x', category: 'food', at: '2026-11-12T10:00:00+09:00' }] },
+    { id: 'b', date: '2026-11-13', city: 'Naha', spends: [{ id: 's2', yen: 4000, label: 'y', category: 'food', at: '2026-11-13T10:00:00+09:00' },
+      { id: 's3', yen: 0, label: 'z', category: 'misc', at: '2026-11-13T11:00:00+09:00' }] },
+    { id: 'c', date: '2026-11-14', city: 'Kyoto' }] });
+  const html = renderTrip(st);
+  assert.ok(!html.includes('<details class="by-day"'), 'not collapsible');
+  assert.match(html, /<section class="by-day"><div class="by-day-head"><h3>Spends by day<\/h3>/);
+  assert.match(html, /<article class="day-spend" data-day="a">[\s\S]*?<span class="day-sub">¥1,000<\/span>[\s\S]*?<div class="day-bar"><i style="width:25%"><\/i><\/div>/);
+  assert.match(html, /<article class="day-spend" data-day="b">[\s\S]*?<span class="day-sub">¥4,000<\/span>[\s\S]*?style="width:100%"/);
+  assert.ok(!html.includes('data-day="c"'), 'days without spends are left out');
+  assert.ok(html.indexOf('data-day="a"') < html.indexOf('data-day="b"'));
 });
 
 test('stop links: buttons in the plan and on Next up; edit mode adds/removes', () => {
@@ -245,5 +262,5 @@ test('Chinese: header, tabs, day screen, spend sheet', () => {
 test('Chinese: today countdown, days list, trip summary', () => {
   assert.match(renderToday(trip, '2026-11-07', { lang: 'zh' }), /还有 24 天[\s\S]*2026年12月1日–6日 · 6 天[\s\S]*查看日程/);
   assert.match(renderDays(trip, '2026-12-01', 'zh'), /<b>1日 周二 · Naha<\/b>/);
-  assert.match(renderTrip(trip, { lang: 'zh' }), /目前总支出[\s\S]*按类别[\s\S]*🍜 餐饮[\s\S]*按天查看支出[\s\S]*12月1日 周二 · Naha[\s\S]*已完成安排：1 \/ 2/);
+  assert.match(renderTrip(trip, { lang: 'zh' }), /目前总支出[\s\S]*按类别[\s\S]*🍜 餐饮[\s\S]*按天查看支出[\s\S]*12月1日 周二<\/b><span class="muted"> · Naha[\s\S]*已完成安排：1 \/ 2/);
 });

@@ -3,8 +3,8 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtMoney, homeSymbol, toHome, CATEGORIES, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed, linkKind,
-} from './lib.js?v=17';
-import { strings, normLang } from './i18n.js?v=17';
+} from './lib.js?v=18';
+import { strings, normLang } from './i18n.js?v=18';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -55,7 +55,7 @@ export function renderStrip(days, { today, selectedId, compact, lang } = {}) {
 export function renderHeader(route, state, dirty, today, { cur = 'JPY', lang } = {}) {
   lang = normLang(lang);
   const T = strings(lang);
-  const right = `<span class="hdr-actions">${langToggle(lang)}${curToggle(cur, state.fx, T)}${syncBtn(dirty, T)}</span>`;
+  const right = `<span class="hdr-actions">${langToggle(lang)}${syncBtn(dirty, T)}</span>`;
   if (route.view === 'day') {
     const days = sortDays(state.days);
     const idx = days.findIndex((d) => d.id === route.id);
@@ -137,7 +137,8 @@ export function renderSpendList(spends, fx, cur = 'JPY', { sort = 'old', confirm
 function renderSpentCard(title, spends, fx, cur, opts = {}) {
   const total = spends.reduce((sum, x) => sum + (x.yen || 0), 0);
   return `<section class="spent-card">
-    <div class="spent-head"><h3>${title}</h3><span class="spent-total">${fmtMoney(total, fx, cur)}</span></div>
+    <div class="spent-head"><h3>${title}</h3>${curToggle(cur, fx, strings(opts.lang))}</div>
+    <p class="spent-total">${fmtMoney(total, fx, cur)}</p>
     ${spends.length >= 2 ? sortSwitch(opts.sort || 'old', strings(opts.lang)) : ''}
     ${renderSpendList(spends, fx, cur, opts)}
   </section>`;
@@ -327,19 +328,25 @@ export function renderTrip(state, { cur = 'JPY', sort = 'old', confirmId = null,
     return `<div class="cat-row${cats[c] ? '' : ' zero'}"><span>${CATEGORY_ICON[c]} ${catName(c, T)}</span>`
       + `<span class="amt">${fmtMoney(cats[c], state.fx, cur)}</span><div class="bar"><i style="width:${pct}%"></i></div></div>`;
   }).join('');
-  const groups = sortDays(state.days).filter((d) => d.spends.length).map((d) => `
-    <section class="money-day" data-day="${esc(d.id)}">
-      <h3>${esc([longDate(d.date, T) || T.undated, d.city].filter(Boolean).join(' · '))} <span class="total">${fmtMoney(dayTotal(d), state.fx, cur)}</span></h3>
+  const spendDays = sortDays(state.days).filter((d) => d.spends.length);
+  const maxDay = Math.max(1, ...spendDays.map(dayTotal));
+  const groups = spendDays.map((d) => `
+    <article class="day-spend" data-day="${esc(d.id)}">
+      <header class="day-spend-head"><span class="day-name"><b>${esc(longDate(d.date, T) || T.undated)}</b>`
+    + `${d.city ? `<span class="muted"> · ${esc(d.city)}</span>` : ''}</span>`
+    + `<span class="day-sub">${fmtMoney(dayTotal(d), state.fx, cur)}</span></header>
+      <div class="day-bar"><i style="width:${Math.round((100 * dayTotal(d)) / maxDay)}%"></i></div>
       ${renderSpendList(d.spends, state.fx, cur, { sort, confirmId, lang })}
-    </section>`).join('');
+    </article>`).join('');
   const items = state.days.flatMap((d) => d.items);
   const done = items.filter((i) => i.done).length;
   const pctDone = items.length ? Math.round((100 * done) / items.length) : 0;
-  return `<section class="total"><p class="eyebrow">${T.spentSoFar}</p>
+  return `<section class="total"><div class="total-head"><p class="eyebrow">${T.spentSoFar}</p>${curToggle(cur, state.fx, T)}</div>
       <p class="sum">${fmtMoney(total, state.fx, cur)}</p>
       <p class="muted">1 ${esc(state.fx.home)} = ${esc(state.fx.jpyPerHome)} JPY</p></section>
     <section class="cats"><p class="eyebrow">${T.byCategory}</p>${catRows}</section>
-    <details class="by-day"><summary>${T.spendsByDay}</summary>${state.days.reduce((n, d) => n + d.spends.length, 0) >= 2 ? sortSwitch(sort, T) : ''}${groups || `<p class="muted">${T.noSpends}</p>`}</details>
+    <section class="by-day"><div class="by-day-head"><h3>${T.spendsByDay}</h3>${state.days.reduce((n, d) => n + d.spends.length, 0) >= 2 ? sortSwitch(sort, T) : ''}</div>
+      ${groups || `<p class="muted empty">${T.noSpends}</p>`}</section>
     <p class="muted">${T.plansDone(done, items.length)}</p>
     <div class="progress"><div style="width:${pctDone}%"></div></div>`;
 }

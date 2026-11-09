@@ -34,3 +34,10 @@ test('every app module is in the service worker shell', () => {
   const sw = read('sw.js');
   for (const f of ['app.js', 'lib.js', 'views.js', 'i18n.js']) assert.ok(sw.includes(`'${f}'`), f);
 });
+test('Settings are grouped: exchange rate, backup, sync (labelled in both languages)', async () => {
+  const html = read('index.html');
+  const groups = [...html.matchAll(/<section class="set-group">\s*<h4 data-i18n="(\w+)">/g)].map((m) => m[1]);
+  assert.deepEqual(groups, ['rateHeading', 'backupHeading', 'syncHeading']);
+  const { strings } = await import('../i18n.js');
+  for (const l of ['en', 'zh']) for (const k of groups) assert.ok(strings(l).page[k], `${l}.${k}`);
+});
