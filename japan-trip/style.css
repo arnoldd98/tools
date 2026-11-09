@@ -329,29 +329,32 @@ li.confirm .btn.danger { background: var(--shu); color: #fff; }
 .hdr-actions .btn { padding: 6px 9px; }
 
 /* ---------- screen transitions (View Transitions API) ----------
-   tab:  tabs are siblings, so they just crossfade (like iPhone tab bars)
-   push: opening a day slides it in from the right over the list; pop reverses it
-   next/prev: days page sideways by date (swipe or ← →)
-   The header and tab bar keep their place and only crossfade their contents. */
+   Only the content area (#view) moves. The page, header, tab bar, Spend button and
+   the day strip stay where they are and just crossfade their contents.
+   tab:       content crossfades
+   push/pop:  opening a day eases in from the right; back eases in from the left
+   next/prev: paging between days, same soft slide by date direction
+   Short distances + fade + ease-out keep it smooth rather than swipey. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+#view { view-transition-name: view; }
 .top { view-transition-name: header; }
 .tabs { view-transition-name: tabs; }
-::view-transition-group(*) { animation-duration: .3s; }
-html[data-nav=tab]::view-transition-old(root),
-html[data-nav=tab]::view-transition-new(root) { animation-duration: .15s; }
-html[data-nav=push]::view-transition-old(root) { animation: .32s cubic-bezier(.3, 0, 0, 1) both vt-to-left-behind; }
-html[data-nav=push]::view-transition-new(root) { animation: .32s cubic-bezier(.3, 0, 0, 1) both vt-from-right; }
-html[data-nav=pop]::view-transition-old(root) { animation: .3s cubic-bezier(.3, 0, 0, 1) both vt-to-right; z-index: 1; }
-html[data-nav=pop]::view-transition-new(root) { animation: .3s cubic-bezier(.3, 0, 0, 1) both vt-from-left-behind; }
-html[data-nav=next]::view-transition-old(root) { animation: .3s cubic-bezier(.3, 0, 0, 1) both vt-to-left; }
-html[data-nav=next]::view-transition-new(root) { animation: .3s cubic-bezier(.3, 0, 0, 1) both vt-from-right; }
-html[data-nav=prev]::view-transition-old(root) { animation: .3s cubic-bezier(.3, 0, 0, 1) both vt-to-right; }
-html[data-nav=prev]::view-transition-new(root) { animation: .3s cubic-bezier(.3, 0, 0, 1) both vt-from-left; }
-@keyframes vt-from-right { from { transform: translateX(100%); } }
-@keyframes vt-from-left { from { transform: translateX(-100%); } }
-@keyframes vt-to-left { to { transform: translateX(-100%); } }
-@keyframes vt-to-right { to { transform: translateX(100%); } }
-@keyframes vt-to-left-behind { to { transform: translateX(-30%); opacity: .6; } }
-@keyframes vt-from-left-behind { from { transform: translateX(-30%); opacity: .6; } }
+.fab { view-transition-name: fab; }
+.strip.compact { view-transition-name: strip; }
+::view-transition-group(*) { animation-duration: .3s; animation-timing-function: cubic-bezier(.22, 1, .36, 1); }
+::view-transition-old(*), ::view-transition-new(*) { animation-duration: .22s; }
+html[data-nav=push]::view-transition-old(view), html[data-nav=next]::view-transition-old(view) { animation: .14s ease-in both vt-leave-left; }
+html[data-nav=push]::view-transition-new(view), html[data-nav=next]::view-transition-new(view) { animation: .34s cubic-bezier(.22, 1, .36, 1) .07s both vt-enter-right; }
+html[data-nav=pop]::view-transition-old(view), html[data-nav=prev]::view-transition-old(view) { animation: .14s ease-in both vt-leave-right; }
+html[data-nav=pop]::view-transition-new(view), html[data-nav=prev]::view-transition-new(view) { animation: .34s cubic-bezier(.22, 1, .36, 1) .07s both vt-enter-left; }
+html[data-nav=tab]::view-transition-old(view) { animation: .12s ease-in both vt-fade-out; }
+html[data-nav=tab]::view-transition-new(view) { animation: .2s ease-out .04s both vt-fade-in; }
+@keyframes vt-leave-left { to { opacity: 0; transform: translateX(-16px); } }
+@keyframes vt-leave-right { to { opacity: 0; transform: translateX(16px); } }
+@keyframes vt-enter-right { from { opacity: 0; transform: translateX(28px); } }
+@keyframes vt-enter-left { from { opacity: 0; transform: translateX(-28px); } }
+@keyframes vt-fade-out { to { opacity: 0; } }
+@keyframes vt-fade-in { from { opacity: 0; } }
 
 /* ---------- feedback ---------- */
 .btn, .tab, .fab, .chip, .link-btn, .day-row, .strip .card, .cur-toggle, .sort button, .icon {
