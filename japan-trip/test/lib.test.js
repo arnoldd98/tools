@@ -304,16 +304,16 @@ test('extractUrl keeps brackets the link opened, drops sentence punctuation, rej
   assert.equal(extractUrl('trip.com'), 'https://trip.com');
 });
 import { navDirection, swipeDir } from '../lib.js';
-test('navDirection: tabs slide by position, days by date, opening a day goes deeper', () => {
+test('navDirection: tabs crossfade, opening a day pushes, days page by date', () => {
   const days = [{ id: 'a', date: '2026-11-12' }, { id: 'b', date: '2026-11-13' }, { id: 'c', date: '2026-11-14' }];
   const R = (view, id) => (id ? { view, id } : { view });
-  assert.equal(navDirection(R('home'), R('days'), days), 'forward');
-  assert.equal(navDirection(R('trip'), R('home'), days), 'back');
-  assert.equal(navDirection(R('days'), R('trip'), days), 'forward');
-  assert.equal(navDirection(R('days'), R('day', 'b'), days), 'deeper');
-  assert.equal(navDirection(R('day', 'b'), R('days'), days), 'shallower');
-  assert.equal(navDirection(R('day', 'a'), R('day', 'c'), days), 'forward');
-  assert.equal(navDirection(R('day', 'c'), R('day', 'b'), days), 'back');
+  assert.equal(navDirection(R('home'), R('days'), days), 'tab');
+  assert.equal(navDirection(R('trip'), R('home'), days), 'tab');
+  assert.equal(navDirection(R('days'), R('day', 'b'), days), 'push');
+  assert.equal(navDirection(R('home'), R('day', 'b'), days), 'push');
+  assert.equal(navDirection(R('day', 'b'), R('days'), days), 'pop');
+  assert.equal(navDirection(R('day', 'a'), R('day', 'c'), days), 'next');
+  assert.equal(navDirection(R('day', 'c'), R('day', 'b'), days), 'prev');
   assert.equal(navDirection(R('home'), R('home'), days), 'none');
   assert.equal(navDirection(null, R('home'), days), 'none');
 });

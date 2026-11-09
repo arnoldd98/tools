@@ -6,9 +6,9 @@ import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx,
   extractUrl, linkKind, fmtMoney,
   toHome, fmtHome, navDirection, swipeDir, sortDays,
-} from './lib.js?v=15';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=15';
-import { strings, normLang } from './i18n.js?v=15';
+} from './lib.js?v=16';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=16';
+import { strings, normLang } from './i18n.js?v=16';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -345,22 +345,8 @@ function updateSheetPreview(input) {
 window.addEventListener('hashchange', () => {
   const from = lastRoute;
   const to = parseRoute(location.hash);
-  const dir = navDirection(from, to, state.days);
-  transition(dir, () => {
-    render();
-    // coming back to Days: the day's title shrinks back into its card
-    if (dir === 'shallower' && from?.id) {
-      document.querySelector(`.day-row[href="#/day/${CSS.escape(encodeURIComponent(from.id))}"] b`)
-        ?.style.setProperty('view-transition-name', 'day-title');
-    }
-  });
+  transition(navDirection(from, to, state.days), render);
 });
-
-// Opening a day from its card: the card's title grows into the day page's title.
-document.addEventListener('click', (e) => {
-  const row = e.target.closest?.('a.day-row');
-  row?.querySelector('b')?.style.setProperty('view-transition-name', 'day-title');
-}, true);
 
 // Swipe left/right on a day page for the next/previous day (not on the strip or fields).
 let touchStart = null;
@@ -440,7 +426,7 @@ document.addEventListener('click', (e) => {
     const item = day?.items.find((i) => i.id === itemId);
     if (!item) return;
     item.done = !item.done;
-    transition('swap', commit); // Next up crossfades to the following stop
+    commit();
   } else if (action === 'del-item') {
     const gone = day?.items.find((i) => i.id === itemId);
     if (!gone) return;

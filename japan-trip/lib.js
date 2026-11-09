@@ -1,5 +1,5 @@
 // Pure helpers for the Japan trip tracker. No DOM access; unit-tested with `npm test`.
-import { strings } from './i18n.js?v=15';
+import { strings } from './i18n.js?v=16';
 
 export const DEFAULT_FX = { home: 'SGD', jpyPerHome: 115, updatedAt: null };
 export const CATEGORIES = ['food', 'shopping', 'transport', 'tickets', 'misc'];
@@ -305,22 +305,19 @@ export const rateIsStale = (fx, now = new Date()) => {
   return Number.isNaN(t) || now - t > DAY_MS;
 };
 
-// Which way a screen change should animate. Tabs slide by their order, days by
-// date; opening a day from a tab goes 'deeper', leaving it 'shallower'.
-const TAB_ORDER = { home: 0, days: 1, trip: 2 };
+// How a screen change animates, iPhone-style: tabs crossfade ('tab'), opening a day
+// slides it in from the right ('push') and leaving slides it back out ('pop'), and
+// moving between days pages sideways by date ('next' / 'prev').
 export function navDirection(from, to, days) {
   if (!from || !to) return 'none';
   if (from.view === 'day' && to.view === 'day') {
     if (from.id === to.id) return 'none';
     const order = sortDays(days).map((d) => d.id);
-    return order.indexOf(to.id) > order.indexOf(from.id) ? 'forward' : 'back';
+    return order.indexOf(to.id) > order.indexOf(from.id) ? 'next' : 'prev';
   }
-  if (to.view === 'day') return 'deeper';
-  if (from.view === 'day') return 'shallower';
-  const a = TAB_ORDER[from.view] ?? 0;
-  const b = TAB_ORDER[to.view] ?? 0;
-  if (a === b) return 'none';
-  return b > a ? 'forward' : 'back';
+  if (to.view === 'day') return 'push';
+  if (from.view === 'day') return 'pop';
+  return from.view === to.view ? 'none' : 'tab';
 }
 
 // A deliberate horizontal swipe: long enough, mostly sideways, and quick.

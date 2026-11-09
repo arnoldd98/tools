@@ -328,28 +328,30 @@ li.confirm .btn.danger { background: var(--shu); color: #fff; }
 .cur-toggle span { padding: 3px 6px; }
 .hdr-actions .btn { padding: 6px 9px; }
 
-/* ---------- screen transitions (View Transitions API) ---------- */
+/* ---------- screen transitions (View Transitions API) ----------
+   tab:  tabs are siblings, so they just crossfade (like iPhone tab bars)
+   push: opening a day slides it in from the right over the list; pop reverses it
+   next/prev: days page sideways by date (swipe or ← →)
+   The header and tab bar keep their place and only crossfade their contents. */
 .top { view-transition-name: header; }
 .tabs { view-transition-name: tabs; }
-#top .when { view-transition-name: day-title; }
-::view-transition-group(*) { animation-duration: .28s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
-html[data-nav=forward]::view-transition-old(root) { animation: .28s cubic-bezier(.2, .8, .2, 1) both vt-out-left; }
-html[data-nav=forward]::view-transition-new(root) { animation: .28s cubic-bezier(.2, .8, .2, 1) both vt-in-right; }
-html[data-nav=back]::view-transition-old(root) { animation: .28s cubic-bezier(.2, .8, .2, 1) both vt-out-right; }
-html[data-nav=back]::view-transition-new(root) { animation: .28s cubic-bezier(.2, .8, .2, 1) both vt-in-left; }
-html[data-nav=deeper]::view-transition-old(root) { animation: .25s ease both vt-fade-out; }
-html[data-nav=deeper]::view-transition-new(root) { animation: .3s cubic-bezier(.2, .8, .2, 1) both vt-rise; }
-html[data-nav=shallower]::view-transition-old(root) { animation: .22s ease both vt-sink; }
-html[data-nav=shallower]::view-transition-new(root) { animation: .28s ease both vt-fade-in; }
-html[data-nav=swap]::view-transition-old(root), html[data-nav=swap]::view-transition-new(root) { animation-duration: .2s; }
-@keyframes vt-out-left { to { transform: translateX(-30%); opacity: 0; } }
-@keyframes vt-in-right { from { transform: translateX(30%); opacity: 0; } }
-@keyframes vt-out-right { to { transform: translateX(30%); opacity: 0; } }
-@keyframes vt-in-left { from { transform: translateX(-30%); opacity: 0; } }
-@keyframes vt-fade-out { to { opacity: 0; } }
-@keyframes vt-fade-in { from { opacity: 0; } }
-@keyframes vt-rise { from { transform: translateY(24px); opacity: 0; } }
-@keyframes vt-sink { to { transform: translateY(24px); opacity: 0; } }
+::view-transition-group(*) { animation-duration: .3s; }
+html[data-nav=tab]::view-transition-old(root),
+html[data-nav=tab]::view-transition-new(root) { animation-duration: .15s; }
+html[data-nav=push]::view-transition-old(root) { animation: .32s cubic-bezier(.3, 0, 0, 1) both vt-to-left-behind; }
+html[data-nav=push]::view-transition-new(root) { animation: .32s cubic-bezier(.3, 0, 0, 1) both vt-from-right; }
+html[data-nav=pop]::view-transition-old(root) { animation: .3s cubic-bezier(.3, 0, 0, 1) both vt-to-right; z-index: 1; }
+html[data-nav=pop]::view-transition-new(root) { animation: .3s cubic-bezier(.3, 0, 0, 1) both vt-from-left-behind; }
+html[data-nav=next]::view-transition-old(root) { animation: .3s cubic-bezier(.3, 0, 0, 1) both vt-to-left; }
+html[data-nav=next]::view-transition-new(root) { animation: .3s cubic-bezier(.3, 0, 0, 1) both vt-from-right; }
+html[data-nav=prev]::view-transition-old(root) { animation: .3s cubic-bezier(.3, 0, 0, 1) both vt-to-right; }
+html[data-nav=prev]::view-transition-new(root) { animation: .3s cubic-bezier(.3, 0, 0, 1) both vt-from-left; }
+@keyframes vt-from-right { from { transform: translateX(100%); } }
+@keyframes vt-from-left { from { transform: translateX(-100%); } }
+@keyframes vt-to-left { to { transform: translateX(-100%); } }
+@keyframes vt-to-right { to { transform: translateX(100%); } }
+@keyframes vt-to-left-behind { to { transform: translateX(-30%); opacity: .6; } }
+@keyframes vt-from-left-behind { from { transform: translateX(-30%); opacity: .6; } }
 
 /* ---------- feedback ---------- */
 .btn, .tab, .fab, .chip, .link-btn, .day-row, .strip .card, .cur-toggle, .sort button, .icon {
