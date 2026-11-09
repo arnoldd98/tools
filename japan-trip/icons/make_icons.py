@@ -1,4 +1,4 @@
-"""Write the PWA icons (stdlib only): matcha background with a kinari-cream disc.
+"""Write the PWA icons (stdlib only): ocean-blue background with a sand-white disc.
 
 Run from the repo root:  python3 japan-trip/icons/make_icons.py
 """
@@ -6,8 +6,8 @@ import os
 import struct
 import zlib
 
-BG = (0x6E, 0x8C, 0x4F, 0xFF)  # --accent (matcha)
-FG = (0xF6, 0xF3, 0xEA, 0xFF)  # --bg (kinari)
+BG = (0x22, 0x73, 0xB3, 0xFF)  # --accent (Okinawa ocean blue)
+FG = (0xF7, 0xF5, 0xEF, 0xFF)  # --bg (white sand)
 OUT = os.path.dirname(os.path.abspath(__file__))
 
 

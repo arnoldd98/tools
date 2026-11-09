@@ -1,5 +1,5 @@
 // Pure helpers for the Japan trip tracker. No DOM access; unit-tested with `npm test`.
-import { strings } from './i18n.js?v=18';
+import { strings } from './i18n.js?v=19';
 
 export const DEFAULT_FX = { home: 'SGD', jpyPerHome: 115, updatedAt: null };
 export const CATEGORIES = ['food', 'shopping', 'transport', 'tickets', 'misc'];
