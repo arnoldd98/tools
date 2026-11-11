@@ -3,8 +3,8 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtMoney, homeSymbol, toHome, CATEGORIES, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed, linkKind, loc,
-} from './lib.js?v=23';
-import { strings, normLang } from './i18n.js?v=23';
+} from './lib.js?v=24';
+import { strings, normLang } from './i18n.js?v=24';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -192,6 +192,12 @@ const rowsFor = (text, perRow = 30, max = 4) => {
   return Math.min(max, Math.max(1, Math.ceil(width / perRow)));
 };
 
+// A time field with a ✕ that empties it (shown only while it holds a time): phones' time
+// pickers don't all offer a way back to "no time".
+const timeBox = (attrs, value, T) => `<span class="time-box${value ? ' has-time' : ''}">`
+  + `<input type="time" value="${esc(value)}" ${attrs} aria-label="${T.time}">`
+  + `<button type="button" class="clear-time" data-action="clear-time" title="${T.clearTime}" aria-label="${T.clearTime}">✕</button></span>`;
+
 // A stop in edit mode: its name on the full width, then time · must-be-on-time · delete.
 function renderItemEdit(i, T, lang) {
   const text = loc(i, 'text', lang);
@@ -200,7 +206,7 @@ function renderItemEdit(i, T, lang) {
     <li class="${i.fixed ? 'fixed' : ''}" data-item="${esc(i.id)}">
       <textarea rows="${rowsFor(text)}" data-item-field="text" aria-label="${T.stop}">${esc(text)}</textarea>
       <div class="edit-row">
-        <input type="time" value="${esc(i.time)}" data-item-field="time" aria-label="${T.time}">
+        ${timeBox('data-item-field="time"', i.time, T)}
         <button class="fx-toggle${i.fixed ? ' on' : ''}" data-action="toggle-fixed" title="${T.fixedTitle}" aria-pressed="${!!i.fixed}">⏱ ${T.mustMake}</button>
         <button class="icon" data-action="del-item" title="${T.delStop}" aria-label="${T.delStop}">✕</button>
       </div>
@@ -255,7 +261,7 @@ export function renderDayScreen(state, day, today, { page = false, editing = fal
     <ol class="timeline editing">${day.items.map((i) => renderItemEdit(i, T, lang)).join('')}</ol>
     <form class="add-item">
       <input name="text" placeholder="${esc(T.addStop)}" aria-label="${esc(T.addStop)}" required>
-      <div class="edit-row"><input name="time" type="time" aria-label="${T.time}"><button class="btn primary" type="submit">${T.add}</button></div>
+      <div class="edit-row">${timeBox('name="time"', '', T)}<button class="btn primary" type="submit">${T.add}</button></div>
     </form>
     ${renderDayLinks(day, true, linkFormFor, T)}
     <h3>${T.notes}</h3><textarea class="notes-edit" rows="3" placeholder="${esc(T.notesPh)}" data-field="notes">${esc(loc(day, 'notes', lang))}</textarea>

@@ -469,3 +469,17 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; }
 .is-editing .day-links h3 { margin-bottom: 6px; }
 .is-editing .add-link input { flex: 1 1 100%; }
 .is-editing .del-day { display: block; margin: 28px auto 8px; }
+
+/* time field with a ✕ to empty it (only while it holds a time) */
+.time-box { position: relative; flex: 0 0 132px; width: 132px; display: block; }
+.time-box input[type=time] { padding-left: 10px; }
+.edit-row { gap: 6px; }
+.fx-toggle { padding: 0 10px; }
+.edit-row .time-box input[type=time] { width: 100%; flex: none; }
+.time-box .clear-time {
+  display: none; position: absolute; right: 2px; top: 2px; bottom: 2px; width: 32px; padding: 0;
+  border: 0; border-radius: 8px; background: none; color: var(--muted); font-size: 16px; cursor: pointer;
+}
+.time-box.has-time .clear-time { display: block; }
+.time-box.has-time input[type=time] { padding-right: 32px; }
+.time-box.has-time input[type=time]::-webkit-calendar-picker-indicator { display: none; }

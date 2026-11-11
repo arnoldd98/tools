@@ -6,9 +6,9 @@ import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx,
   extractUrl, linkKind, fmtMoney, loc, setLoc,
   toHome, fmtHome, navDirection, swipeDir, sortDays,
-} from './lib.js?v=23';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=23';
-import { strings, normLang } from './i18n.js?v=23';
+} from './lib.js?v=24';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=24';
+import { strings, normLang } from './i18n.js?v=24';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -389,6 +389,13 @@ document.addEventListener('click', (e) => {
     if (!item) return;
     if (item.fixed) delete item.fixed; else item.fixed = true;
     commit();
+  } else if (action === 'clear-time') {
+    // empty the time field beside the ✕; for an existing stop that is saved straight away
+    const box = el.closest('.time-box');
+    box.querySelector('input').value = '';
+    box.classList.remove('has-time');
+    const item = day?.items.find((i) => i.id === itemId);
+    if (item && item.time) { item.time = ''; markDirty(); }
   } else if (action === 'toggle-cur') {
     cur = cur === 'HOME' ? 'JPY' : 'HOME';
     writeLS(CUR_KEY, cur);
@@ -482,6 +489,7 @@ document.addEventListener('click', (e) => {
 
 document.addEventListener('input', (e) => {
   if (e.target.matches('.spend-sheet [name=yen]')) updateSheetPreview(e.target);
+  if (e.target.matches('.time-box input')) e.target.parentElement.classList.toggle('has-time', !!e.target.value);
 });
 
 // Field edits (date/city/notes, stop time/text) — save on change, no re-render while typing.

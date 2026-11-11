@@ -60,9 +60,10 @@ test('edit mode edits stops, date, city and notes in place', () => {
   assert.match(html, /data-action="toggle-edit">Done<\/button>/);
   assert.match(html, /<ol class="timeline editing">/);
   // a stop: its name on the full width, then time · must be on time · delete
-  assert.match(html, /data-item="i2">\s*<textarea rows="1" data-item-field="text" aria-label="Stop">Check in<\/textarea>\s*<div class="edit-row">\s*<input type="time" value="15:00" data-item-field="time"[\s\S]*?data-action="toggle-fixed"[\s\S]*?data-action="del-item"/);
+  assert.match(html, /data-item="i2">\s*<textarea rows="1" data-item-field="text" aria-label="Stop">Check in<\/textarea>\s*<div class="edit-row">\s*<span class="time-box has-time"><input type="time" value="15:00" data-item-field="time" aria-label="Time"><button type="button" class="clear-time" data-action="clear-time" title="Clear time" aria-label="Clear time">✕<\/button><\/span>[\s\S]*?data-action="toggle-fixed"[\s\S]*?data-action="del-item"/);
   assert.ok(!/next-up|fixed-strip|spent-card|class="fab"|day-summary/.test(html), 'only editable things are shown');
-  assert.match(html, /class="add-item">\s*<input name="text"[\s\S]*?<input name="time" type="time"[\s\S]*?type="submit">Add</);
+  assert.match(html, /class="add-item">\s*<input name="text"[\s\S]*?<span class="time-box"><input type="time" value="" name="time"[\s\S]*?type="submit">Add</);
+  assert.match(html, /data-item="i1">[\s\S]*?<span class="time-box has-time">/);
   assert.ok(!/<ol class="timeline editing">[\s\S]*type="checkbox"[\s\S]*<\/ol>/.test(html), 'no tick boxes while editing');
   assert.match(html, /data-field="date"[\s\S]*data-field="city"[\s\S]*class="timeline editing"/);
   assert.match(html, /class="timeline editing"[\s\S]*class="add-item"/);
@@ -164,7 +165,7 @@ test('fixed stops: 12-hour times, marked rows, next-fixed strip with countdown',
   // another day: no countdown
   assert.match(renderDayScreen(st, day, '2026-11-12', { page: true }), /⏱ Fixed: <b>Shuttle bus · 5:10 am<\/b><\/div>/);
   // edit mode has a fixed toggle per stop
-  assert.match(renderDayScreen(st, day, '2026-11-13', { editing: true }), /<li class="fixed" data-item="a">[\s\S]*?<button class="fx-toggle on" data-action="toggle-fixed" title="Fixed time \(must make it\)" aria-pressed="true">⏱ Must be on time<\/button>/);
+  assert.match(renderDayScreen(st, day, '2026-11-13', { editing: true }), /<li class="fixed" data-item="a">[\s\S]*?<button class="fx-toggle on" data-action="toggle-fixed" title="Fixed time \(must make it\)" aria-pressed="true">⏱ Be on time<\/button>/);
   // no fixed stops left → no strip
   const done = { ...day, items: day.items.map((i) => ({ ...i, done: !!i.fixed })) };
   assert.ok(!renderDayScreen(st, done, '2026-11-13', { now: '04:30' }).includes('fixed-strip'));
