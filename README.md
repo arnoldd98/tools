@@ -11,12 +11,13 @@ phone as an app (PWA) and works offline.
     daily from the free [currency API](https://github.com/fawazahmed0/exchange-api) when online.
   - `days[]` — `{ id, date, city, summary, items[], spends[], notes, stay?, links? }`; `summary` is a
     one-line description shown in the Days list and on the day; `stay` is
-    `{ name, address, maps?, note? }` (the hotel for that night); `links` (same shape as a stop's)
-    shows as the day's *Bookings & files*.
+    `{ name, address, maps?, note? }` (the hotel for that night); `links: [{ label, url }]`
+    is the day's *Bookings & files*: tickets, bookings, Drive files (http(s) only: Google Drive files set
+    to Restricted, Trip.com, Klook…; pasting an app's share text works, the link is picked out of it;
+    known sites get an icon and, if left unnamed, a name like *Trip.com*). Links are added per day,
+    not per stop; links that older data kept on a stop are moved to its day on load.
   - `days[].items[]` — `{ id, time, text, done, fixed?, place?, note?, price? }`; array order is the
-    timeline order. `time` is `HH:MM` (shown as 12-hour); `links: [{ label, url }]` holds tickets/bookings (http(s) only: Google
-    Drive files set to Restricted, Trip.com, Klook…; pasting an app's share text works, the link is
-    picked out of it; known sites get an icon and, if left unnamed, a name like *Trip.com*); `fixed: true` marks a must-make time
+    timeline order. `time` is `HH:MM` (shown as 12-hour); `fixed: true` marks a must-make time
     (flights, ferries) with a countdown on Today. `place` is `{ name, address, maps? }` (maps link built from name + address
     when `maps` is absent). `price` is informational text, not a spend.
   - `days[].spends[]` — `{ id, yen, label, category, at }`; `yen` is an integer, S$ is derived.

@@ -241,13 +241,14 @@ test('safeUrl only allows http(s) links', () => {
   assert.equal(safeUrl('drive.google.com/x'), null);
   assert.equal(safeUrl(''), null);
 });
-test('normalise keeps valid stop links, drops bad ones, adds none by default', () => {
-  const s = normalise({ days: [{ id: 'd', items: [
+test('links belong to the day: valid ones kept, bad ones dropped, stop links move up', () => {
+  const s = normalise({ days: [{ id: 'd', links: [{ label: 'Hotel', url: 'https://k.lk/y' }], items: [
     { id: 'a', links: [{ label: 'Boarding pass', url: 'https://drive.google.com/x' }, { label: 'bad', url: 'javascript:x' }, { url: 'https://k.lk/y' }, 'junk'] },
-    { id: 'b' }] }] });
-  assert.deepEqual(s.days[0].items[0].links, [
-    { label: 'Boarding pass', url: 'https://drive.google.com/x' }, { label: 'k.lk', url: 'https://k.lk/y' }]);
-  assert.ok(!('links' in s.days[0].items[1]));
+    { id: 'b' }] }, { id: 'e', items: [{ id: 'c' }] }] });
+  assert.deepEqual(s.days[0].links, [
+    { label: 'Hotel', url: 'https://k.lk/y' }, { label: 'Boarding pass', url: 'https://drive.google.com/x' }], 'moved up, same link once');
+  assert.ok(s.days[0].items.every((i) => !('links' in i)), 'stops carry no links');
+  assert.ok(!('links' in s.days[1]), 'none by default');
 });
 
 import { extractUrl, linkKind } from '../lib.js';
@@ -277,7 +278,7 @@ test('linkKind names known sites (Drive, Trip.com, …) and falls back to the ho
   assert.deepEqual(linkKind('https://www.jreast.co.jp/x'), { icon: '🔗', name: 'jreast.co.jp' });
   assert.equal(k('https://nottrip.com/x'), 'nottrip.com', 'only trip.com itself');
 });
-test('day links (bookings & files) are normalised like stop links', () => {
+test('day links (bookings & files): default names, http(s) only', () => {
   const s = normalise({ days: [{ id: 'd', links: [{ url: 'https://us.trip.com/w/1' }, { url: 'ftp://x' }] }, { id: 'e' }] });
   assert.deepEqual(s.days[0].links, [{ label: 'Trip.com', url: 'https://us.trip.com/w/1' }]);
   assert.ok(!('links' in s.days[1]));

@@ -290,14 +290,11 @@ ul.spends .amt { font-weight: 600; font-variant-numeric: tabular-nums; white-spa
 
 /* ---------- stop links (tickets, bookings) ---------- */
 .links, .link-edit { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.timeline li .links, .timeline li .link-edit { grid-column: 2 / -1; }
-.timeline.editing li .link-edit { grid-column: 1 / -1; }
 .link-btn {
   display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 16px;
   background: var(--today); border: 1px solid var(--line); color: var(--ink);
   font-size: 13px; font-weight: 600; text-decoration: none;
 }
-.next-up .links { margin: 4px 0; }
 .link-chip { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px 2px 10px; border-radius: 16px; background: var(--today); font-size: 13px; }
 .link-chip .icon { min-width: 28px; min-height: 28px; }
 .add-link { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }

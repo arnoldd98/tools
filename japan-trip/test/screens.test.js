@@ -203,19 +203,20 @@ test('spends by day: always open, a card per day with subtotal and a bar vs the 
   assert.ok(html.indexOf('data-day="a"') < html.indexOf('data-day="b"'));
 });
 
-test('stop links: buttons in the plan and on Next up; edit mode adds/removes', () => {
+test('links are per day: stops show and edit none; old stop links appear under Bookings & files', () => {
   const day = normalise({ days: [{ id: 'L', date: '2026-11-13', items: [
     { id: 'f', time: '07:40', text: 'Flight', links: [{ label: 'Boarding <pass>', url: 'https://drive.google.com/a?x=1&y=2' }] },
     { id: 'g', text: 'Lunch' }] }] }).days[0];
   const st = { ...trip, days: [day] };
   const html = renderDayScreen(st, day, '2026-11-13', {});
-  assert.match(html, /data-item="f">[\s\S]*?<a class="link-btn" href="https:\/\/drive\.google\.com\/a\?x=1&amp;y=2" target="_blank" rel="noopener">📁 Boarding &lt;pass&gt;<\/a>/);
-  assert.match(html, /class="next-up[^"]*"[\s\S]*?class="link-btn"[\s\S]*?Boarding &lt;pass&gt;[\s\S]*?Today's plan/);
-  const edit = renderDayScreen(st, day, '2026-11-13', { editing: true });
-  assert.match(edit, /data-item="f">[\s\S]*?📁 Boarding &lt;pass&gt; <button class="icon" data-action="del-link" data-link="0"/);
-  assert.match(edit, /data-item="g">[\s\S]*?<button class="btn small" data-action="show-link-form">＋ Link<\/button>/);
-  const form = renderDayScreen(st, day, '2026-11-13', { editing: true, linkFormFor: 'g' });
-  assert.match(form, /data-item="g">[\s\S]*?<form class="add-link"><input name="url" inputmode="url" [^>]*placeholder="Paste a link \(Google Drive, Trip\.com…\)" required><input name="label" placeholder="Name, e.g\. Boarding pass"><button class="btn small" type="submit">Add<\/button><\/form>/);
+  assert.match(html, /<section class="day-links">[\s\S]*?<a class="link-btn" href="https:\/\/drive\.google\.com\/a\?x=1&amp;y=2" target="_blank" rel="noopener">📁 Boarding &lt;pass&gt;<\/a>/);
+  assert.equal((html.match(/class="link-btn"/g) || []).length, 1, 'not on the stop or Next up');
+  const edit = renderDayScreen(st, day, '2026-11-13', { editing: true, linkFormFor: 'day:L' });
+  assert.equal((edit.match(/data-action="del-link"/g) || []).length, 1);
+  assert.equal((edit.match(/<form class="add-link">/g) || []).length, 1);
+  const plan = edit.slice(edit.indexOf('<ol class="timeline'), edit.indexOf('</ol>'));
+  assert.ok(!/link-edit|add-link|show-link-form|del-link/.test(plan), 'no link controls inside the plan');
+  assert.match(edit, /<form class="add-link"><input name="url" inputmode="url" [^>]*placeholder="Paste a link \(Google Drive, Trip\.com…\)" required><input name="label" placeholder="Name, e.g\. Boarding pass"><button class="btn small" type="submit">Add<\/button><\/form>/);
 });
 test('Trip has no info sections, even for old data that still has them', () => {
   const old = { ...trip, info: [{ title: 'Flights', lines: ['x'] }] };

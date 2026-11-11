@@ -3,8 +3,8 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtMoney, homeSymbol, toHome, CATEGORIES, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed, linkKind, loc,
-} from './lib.js?v=21';
-import { strings, normLang } from './i18n.js?v=21';
+} from './lib.js?v=22';
+import { strings, normLang } from './i18n.js?v=22';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -163,12 +163,11 @@ function renderNextUp(day, T, lang) {
     <p class="what">${next.time ? `<span class="time">${esc(fmtTime(next.time, lang))}</span> ` : ''}${esc(loc(next, 'text', lang))}</p>
     ${next.fixed ? `<p class="ontime">${T.beOnTime}</p>` : ''}
     ${next.place ? `<p class="place">${placeLine(next.place, lang)}</p>` : ''}
-    ${linkBtns(next.links)}
     <div class="actions">${next.place ? mapsBtn(next.place, T.openInMaps) : ''}<button class="btn" data-action="toggle" data-item="${esc(next.id)}">${T.done}</button></div>
   </div>`;
 }
 
-// Links for a stop or (outside any [data-item]) for the whole day. The url box is plain
+// Links belong to the day, not to a stop. The url box is plain
 // text, not type=url, so pasted share text ("…on Trip.com! https://…") can be submitted.
 function renderLinkEditor(links, formOpen, T) {
   const chips = (links || []).map((l, n) =>
@@ -187,7 +186,7 @@ function renderDayLinks(day, editing, linkFormFor, T) {
     ? renderLinkEditor(day.links, linkFormFor === `day:${day.id}`, T) : linkBtns(day.links)}</section>`;
 }
 
-function renderItem(i, nextId, editing, linkFormFor, T, lang) {
+function renderItem(i, nextId, editing, T, lang) {
   const detail = [
     i.fixed && !editing ? `<span class="ontime">${T.beOnTime}</span>` : '',
     i.place ? `${placeLine(i.place, lang)} ${mapsBtn(i.place, T.map, 'maplink')}` : '',
@@ -204,7 +203,6 @@ function renderItem(i, nextId, editing, linkFormFor, T, lang) {
       <span class="time">${esc(fmtTime(i.time, lang))}</span>
       <span class="text">${esc(loc(i, 'text', lang))}</span>`}
       ${detail.length ? `<div class="detail">${detail.join(' ')}</div>` : ''}
-      ${editing ? renderLinkEditor(i.links, i.id === linkFormFor, T) : linkBtns(i.links)}
     </li>`;
 }
 
@@ -241,7 +239,7 @@ export function renderDayScreen(state, day, today, { page = false, editing = fal
       <input class="summary" value="${esc(loc(day, 'summary', lang))}" placeholder="${esc(T.summaryPh)}" data-field="summary" aria-label="${T.summary}">
     </div>` : ''}
     ${day.items.length
-    ? `<ol class="timeline${editing ? ' editing' : ''}">${day.items.map((i) => renderItem(i, next?.id, editing, linkFormFor, T, lang)).join('')}</ol>`
+    ? `<ol class="timeline${editing ? ' editing' : ''}">${day.items.map((i) => renderItem(i, next?.id, editing, T, lang)).join('')}</ol>`
     : `<p class="muted">${T.noStops}</p>`}
     ${editing ? `<form class="add-item">
       <input name="time" type="time" aria-label="${T.time}">

@@ -6,9 +6,9 @@ import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx,
   extractUrl, linkKind, fmtMoney, loc, setLoc,
   toHome, fmtHome, navDirection, swipeDir, sortDays,
-} from './lib.js?v=21';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=21';
-import { strings, normLang } from './i18n.js?v=21';
+} from './lib.js?v=22';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=22';
+import { strings, normLang } from './i18n.js?v=22';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -195,7 +195,7 @@ const restoreFrom = (snap) => () => { state = normalise(JSON.parse(snap)); commi
 let lastRouteKey = null;
 let lastRoute = null;
 let editingId = null; // day whose plan is in edit mode (Edit / Done)
-let linkFormFor = null; // stop whose "add link" form is open (edit mode)
+let linkFormFor = null; // 'day:<id>' while that day's "add link" form is open (edit mode)
 // Which currency amounts show in ('JPY' or 'HOME'); a per-phone preference, not trip data.
 const CUR_KEY = 'jt.cur';
 let cur = readLS(CUR_KEY) === 'HOME' ? 'HOME' : 'JPY';
@@ -399,16 +399,13 @@ document.addEventListener('click', (e) => {
     setStatus(dirty ? T().st.unsynced : '');
     render();
   } else if (action === 'show-link-form') {
-    // a stop's links, or (no data-item) the day's Bookings & files
-    linkFormFor = itemId || (day && `day:${day.id}`);
+    linkFormFor = day ? `day:${day.id}` : null; // the day's Bookings & files
     render();
-    const scope = itemId ? `[data-item="${CSS.escape(itemId)}"]` : '.day-links';
-    document.querySelector(`${scope} .add-link [name=url]`)?.focus();
+    document.querySelector('.day-links .add-link [name=url]')?.focus();
   } else if (action === 'del-link') {
-    const target = itemId ? day?.items.find((i) => i.id === itemId) : day;
-    if (!target?.links) return;
-    target.links.splice(Number(el.dataset.link), 1);
-    if (!target.links.length) delete target.links;
+    if (!day?.links) return;
+    day.links.splice(Number(el.dataset.link), 1);
+    if (!day.links.length) delete day.links;
     commit();
   } else if (action === 'toggle-edit') {
     linkFormFor = null;
@@ -546,11 +543,9 @@ document.addEventListener('submit', (e) => {
     const url = extractUrl(fd.get('url'));
     if (!url) { setStatus(T().st.badLink); return; }
     const day = findDay(form.closest('[data-day]')?.dataset.day);
-    const itemId = form.closest('[data-item]')?.dataset.item;
-    const target = itemId ? day?.items.find((i) => i.id === itemId) : day;
-    if (!target) return;
+    if (!day) return;
     const label = String(fd.get('label') || '').trim() || linkKind(url).name; // e.g. 'Trip.com', 'Google Drive'
-    target.links = [...(target.links || []), { label, url }];
+    day.links = [...(day.links || []), { label, url }];
     linkFormFor = null;
     commit();
   } else if (form.classList.contains('add-item')) {

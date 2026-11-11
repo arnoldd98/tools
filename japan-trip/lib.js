@@ -1,5 +1,5 @@
 // Pure helpers for the Japan trip tracker. No DOM access; unit-tested with `npm test`.
-import { strings } from './i18n.js?v=21';
+import { strings } from './i18n.js?v=22';
 
 export const DEFAULT_FX = { home: 'SGD', jpyPerHome: 115, updatedAt: null };
 export const CATEGORIES = ['food', 'shopping', 'transport', 'tickets', 'misc'];
@@ -101,9 +101,9 @@ const normLinks = (v) => arr(v).map(normLink).filter(Boolean);
 
 function normItem(i) {
   const o = obj(i) || {};
-  const out = { ...o, id: idOf(o.id), time: str(o.time), text: str(o.text), done: Boolean(o.done) };
+  const { links, ...rest } = o; // a stop's links now live on its day (see normDay)
+  const out = { ...rest, id: idOf(o.id), time: str(o.time), text: str(o.text), done: Boolean(o.done) };
   if (o.fixed !== undefined) out.fixed = Boolean(o.fixed); // must-make time (flight, ferry…)
-  if (o.links !== undefined) out.links = normLinks(o.links); // tickets, bookings
   if (o.place !== undefined) out.place = normPlace(o.place);
   if (out.place === undefined) delete out.place;
   return out;
@@ -133,7 +133,10 @@ function normDay(d) {
     spends: arr(o.spends).map(normSpend),
     notes: str(o.notes),
   };
-  if (o.links !== undefined) out.links = normLinks(o.links); // bookings & files for the day
+  // Links (tickets, bookings, files) belong to the day. Older data kept some on stops: move them up.
+  const links = [...normLinks(o.links), ...arr(o.items).flatMap((i) => normLinks(obj(i)?.links))]
+    .filter((l, n, all) => all.findIndex((x) => x.url === l.url) === n);
+  if (o.links !== undefined || links.length) out.links = links;
   if (o.stay !== undefined) {
     const stay = normPlace(o.stay);
     if (stay) out.stay = stay;
