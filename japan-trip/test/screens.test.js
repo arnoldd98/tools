@@ -59,7 +59,10 @@ test('edit mode edits stops, date, city and notes in place', () => {
   const html = renderDayScreen(trip, day, '2026-12-01', { page: false, editing: true });
   assert.match(html, /data-action="toggle-edit">Done<\/button>/);
   assert.match(html, /<ol class="timeline editing">/);
-  assert.match(html, /data-item="i2"[\s\S]*?<input type="time" value="15:00" data-item-field="time"[\s\S]*?<input value="Check in" data-item-field="text"[\s\S]*?data-action="del-item"/);
+  // a stop: its name on the full width, then time · must be on time · delete
+  assert.match(html, /data-item="i2">\s*<textarea rows="1" data-item-field="text" aria-label="Stop">Check in<\/textarea>\s*<div class="edit-row">\s*<input type="time" value="15:00" data-item-field="time"[\s\S]*?data-action="toggle-fixed"[\s\S]*?data-action="del-item"/);
+  assert.ok(!/next-up|fixed-strip|spent-card|class="fab"|day-summary/.test(html), 'only editable things are shown');
+  assert.match(html, /class="add-item">\s*<input name="text"[\s\S]*?<input name="time" type="time"[\s\S]*?type="submit">Add</);
   assert.ok(!/<ol class="timeline editing">[\s\S]*type="checkbox"[\s\S]*<\/ol>/.test(html), 'no tick boxes while editing');
   assert.match(html, /data-field="date"[\s\S]*data-field="city"[\s\S]*class="timeline editing"/);
   assert.match(html, /class="timeline editing"[\s\S]*class="add-item"/);
@@ -161,7 +164,7 @@ test('fixed stops: 12-hour times, marked rows, next-fixed strip with countdown',
   // another day: no countdown
   assert.match(renderDayScreen(st, day, '2026-11-12', { page: true }), /⏱ Fixed: <b>Shuttle bus · 5:10 am<\/b><\/div>/);
   // edit mode has a fixed toggle per stop
-  assert.match(renderDayScreen(st, day, '2026-11-13', { editing: true }), /data-item="a">[\s\S]*?<button class="icon fx-toggle on" data-action="toggle-fixed"/);
+  assert.match(renderDayScreen(st, day, '2026-11-13', { editing: true }), /<li class="fixed" data-item="a">[\s\S]*?<button class="fx-toggle on" data-action="toggle-fixed" title="Fixed time \(must make it\)" aria-pressed="true">⏱ Must be on time<\/button>/);
   // no fixed stops left → no strip
   const done = { ...day, items: day.items.map((i) => ({ ...i, done: !!i.fixed })) };
   assert.ok(!renderDayScreen(st, done, '2026-11-13', { now: '04:30' }).includes('fixed-strip'));
@@ -176,7 +179,7 @@ test('day summary: Days list, day screen, edit field; falls back to stops', () =
   assert.match(renderDayScreen(withSum, day, '2026-12-01', {}), /<p class="day-summary">Land &amp; &lt;explore&gt;<\/p>/);
   assert.ok(!renderDayScreen(trip, trip.days[0], '2026-12-01', {}).includes('day-summary'), 'no empty summary line');
   assert.match(renderDayScreen(withSum, day, '2026-12-01', { editing: true }),
-    /<input class="summary" value="Land &amp; &lt;explore&gt;" placeholder="One-line summary of the day" data-field="summary"/);
+    /<textarea class="summary" rows="1" placeholder="One-line summary of the day" data-field="summary">Land &amp; &lt;explore&gt;<\/textarea>/);
 });
 test('¥ | S$ switch sits where money is shown, not in the header', () => {
   const sw = /<button class="cur-toggle" data-action="toggle-cur" aria-label="Show amounts in S\$"><span class="on">¥<\/span><span>S\$<\/span><\/button>/;
@@ -306,5 +309,5 @@ test('Chinese: title, header city, days list, route and edit fields use the trip
   assert.match(renderToday(bi, '2026-11-01', { lang: 'zh' }), /<p class="route">冲绳 → 京都<\/p>/);
   assert.match(renderToday(bi, '2026-11-01'), /<p class="route">Okinawa → Kyoto<\/p>/);
   const edit = renderDayScreen(bi, bi.days[0], '2026-11-13', { editing: true, lang: 'zh' });
-  assert.match(edit, /class="city" value="冲绳"[\s\S]*class="summary" value="逛市场"[\s\S]*<input value="航班飞那霸" data-item-field="text"/);
+  assert.match(edit, /class="city" value="冲绳"[\s\S]*data-field="summary">逛市场<\/textarea>[\s\S]*data-item-field="text" aria-label="行程">航班飞那霸<\/textarea>[\s\S]*⏱ 必须准时[\s\S]*<p class="about">那霸机场 · 冲绳县那霸市 · 车程 15 分钟<\/p>/);
 });

@@ -6,9 +6,9 @@ import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx,
   extractUrl, linkKind, fmtMoney, loc, setLoc,
   toHome, fmtHome, navDirection, swipeDir, sortDays,
-} from './lib.js?v=22';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=22';
-import { strings, normLang } from './i18n.js?v=22';
+} from './lib.js?v=23';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=23';
+import { strings, normLang } from './i18n.js?v=23';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -115,6 +115,8 @@ function saveDraft() { writeLS(DRAFT_KEY, { dirty, data: state }); }
 function commit() { edits++; dirty = true; saveDraft(); render(); }
 function setStatus(msg) { $('#status').textContent = msg; }
 const findDay = (id) => state.days.find((d) => d.id === id);
+// Stop names, city and summary are typed in boxes that wrap; they are still one line of text.
+const oneLine = (v) => String(v ?? '').replace(/\s+/g, ' ').trim();
 
 // Fetch remote data, giving up after LOAD_TIMEOUT_MS (weak signal must not hang the app).
 async function fetchRemoteWithTimeout() {
@@ -489,7 +491,7 @@ document.addEventListener('change', (e) => {
     const day = findDay(e.target.closest('[data-day]')?.dataset.day);
     const item = day?.items.find((i) => i.id === e.target.closest('[data-item]')?.dataset.item);
     if (!item) return;
-    const value = itemField === 'text' ? e.target.value.trim() : e.target.value;
+    const value = itemField === 'text' ? oneLine(e.target.value) : e.target.value;
     if (itemField === 'text' && !value) { e.target.value = loc(item, 'text', lang); return; } // keep a stop's name
     if (itemField === 'text') setLoc(item, 'text', value, lang); // the stop as shown: its 中文 in Chinese
     else item[itemField] = value;
@@ -500,7 +502,7 @@ document.addEventListener('change', (e) => {
   const day = findDay(e.target.closest('[data-day]')?.dataset.day);
   if (!field || !day) return;
   if (field === 'date') day.date = e.target.value;
-  else setLoc(day, field, e.target.value, lang); // city, summary, notes: the text as shown
+  else setLoc(day, field, field === 'notes' ? e.target.value : oneLine(e.target.value), lang); // the text as shown
   if (field === 'date') commit();
   else markDirty();
 });

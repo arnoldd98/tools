@@ -105,13 +105,10 @@ h3 .total { float: right; font-weight: 600; color: var(--accent); font-variant-n
 /* ---------- exchange rate ---------- */
 .fx { display: block; }
 
-form.add-item { display: flex; gap: 6px; }
-form.add-item input, textarea, #settings input {
+textarea, #settings input {
   font: inherit; color: inherit; background: var(--bg);
   border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px;
 }
-form.add-item input[name=time] { width: 6.5em; }
-form.add-item input[name=text] { flex: 1; min-width: 0; }
 textarea { width: 100%; margin-top: 8px; min-height: 3em; resize: vertical; }
 
 .settings { width: 100%; margin-top: 8px; }
@@ -186,18 +183,6 @@ details > summary { cursor: pointer; }
 .plan-head h3 { margin: 0; }
 .btn.small { font-size: 13px; padding: 4px 10px; }
 .is-editing .plan-head .btn.small { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-.day-fields { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
-.day-fields input, .timeline.editing input:not([type=checkbox]) {
-  font: inherit; color: inherit; background: var(--bg);
-  border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-width: 0;
-}
-.day-fields .date { flex: 0 0 10.5em; }
-.day-fields .city { flex: 1; font-weight: 600; color: var(--accent); }
-.timeline.editing li { grid-template-columns: 6.8em 1fr auto; }
-.timeline.editing .detail { grid-column: 2 / 4; }
-.timeline.editing::before { display: none; }
-.is-editing form.add-item { margin: 4px 0 8px; }
-.is-editing .btn.danger { margin: 8px 0; }
 .notes { margin: 4px 0 8px; white-space: pre-wrap; }
 .icon { min-width: 36px; min-height: 36px; }
 
@@ -252,12 +237,8 @@ h1, h3, .hdr b, .when, .countdown .big, section.total .sum, .day-row b { font-fa
 .timeline li.fixed input[type=checkbox] { outline: 2px solid var(--sun); outline-offset: 1px; border-radius: 3px; }
 .timeline li.fixed.done .time { color: var(--muted); font-weight: 400; }
 .timeline li.fixed.done .ontime { display: none; }
-.row-btns { display: flex; }
-.fx-toggle { opacity: .35; }
-.fx-toggle.on { opacity: 1; color: var(--sun-ink); }
 .timeline li.fixed.next .text { color: var(--sun-ink); }
 .day-summary { margin: 8px 0 0; font-family: var(--mincho); font-size: 16px; line-height: 1.4; color: var(--ink); }
-.day-fields .summary { flex: 1 1 100%; }
 
 /* ---------- spends ---------- */
 .spent-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -445,3 +426,46 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; }
 .top-row .back .when { font-size: 16px; }
 .top-row .nav { min-width: 40px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
 .timeline::before { left: 11px; }
+
+/* ---------- edit mode ----------
+   Only editable things are shown. Each stop is a card: its name on the full width, then
+   time · must be on time · delete. Every field is 44px tall with 16px text. */
+.is-editing :is(input, textarea) {
+  font: inherit; font-size: 16px; color: var(--ink); background: var(--card);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  width: 100%; min-width: 0; min-height: 44px; margin: 0; box-sizing: border-box;
+}
+.is-editing textarea { display: block; resize: none; line-height: 1.35; field-sizing: content; }
+.is-editing .notes-edit { min-height: 88px; }
+.is-editing :is(input, textarea):focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+.is-editing h3 { margin: 20px 0 6px; }
+.is-editing .plan-head { margin-top: 12px; }
+.is-editing .plan-head h3 { margin: 0; }
+
+.day-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 16px; }
+.day-fields label { display: block; min-width: 0; }
+.day-fields label.wide { grid-column: 1 / -1; }
+.day-fields label > span, .is-editing h3 { font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.day-fields label > span { display: block; margin-bottom: 4px; }
+
+.timeline.editing { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.timeline.editing::before { display: none; }
+.timeline.editing li, .is-editing form.add-item {
+  display: block; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg);
+}
+.timeline.editing li.fixed { border-color: var(--sun); }
+.edit-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.edit-row input[type=time] { flex: 0 0 8.6em; width: 8.6em; }
+.edit-row .btn { margin-left: auto; min-height: 44px; padding-inline: 22px; }
+.edit-row .icon { margin-left: auto; flex: none; min-width: 44px; min-height: 44px; border-radius: 10px; }
+.fx-toggle {
+  flex: 0 1 auto; min-width: 0; min-height: 44px; padding: 0 12px; border-radius: 22px;
+  border: 1px solid var(--line); background: var(--card); color: var(--muted);
+  font: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+}
+.fx-toggle.on { background: var(--sun-bg, #fdf1d8); border-color: var(--sun); color: var(--sun-ink); }
+.timeline.editing .about { margin: 8px 2px 0; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.is-editing form.add-item { margin-top: 10px; border-style: dashed; }
+.is-editing .day-links h3 { margin-bottom: 6px; }
+.is-editing .add-link input { flex: 1 1 100%; }
+.is-editing .del-day { display: block; margin: 28px auto 8px; }

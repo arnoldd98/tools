@@ -3,8 +3,8 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtMoney, homeSymbol, toHome, CATEGORIES, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed, linkKind, loc,
-} from './lib.js?v=22';
-import { strings, normLang } from './i18n.js?v=22';
+} from './lib.js?v=23';
+import { strings, normLang } from './i18n.js?v=23';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -186,22 +186,40 @@ function renderDayLinks(day, editing, linkFormFor, T) {
     ? renderLinkEditor(day.links, linkFormFor === `day:${day.id}`, T) : linkBtns(day.links)}</section>`;
 }
 
-function renderItem(i, nextId, editing, T, lang) {
+// Rows a text box needs to show its text without scrolling (CJK characters are twice as wide).
+const rowsFor = (text, perRow = 30, max = 4) => {
+  const width = [...String(text ?? '')].reduce((n, c) => n + (c.charCodeAt(0) > 0x2e7f ? 2 : 1), 0);
+  return Math.min(max, Math.max(1, Math.ceil(width / perRow)));
+};
+
+// A stop in edit mode: its name on the full width, then time · must-be-on-time · delete.
+function renderItemEdit(i, T, lang) {
+  const text = loc(i, 'text', lang);
+  const about = [i.place ? placeLine(i.place, lang) : '', esc(loc(i, 'note', lang))].filter(Boolean).join(' · ');
+  return `
+    <li class="${i.fixed ? 'fixed' : ''}" data-item="${esc(i.id)}">
+      <textarea rows="${rowsFor(text)}" data-item-field="text" aria-label="${T.stop}">${esc(text)}</textarea>
+      <div class="edit-row">
+        <input type="time" value="${esc(i.time)}" data-item-field="time" aria-label="${T.time}">
+        <button class="fx-toggle${i.fixed ? ' on' : ''}" data-action="toggle-fixed" title="${T.fixedTitle}" aria-pressed="${!!i.fixed}">⏱ ${T.mustMake}</button>
+        <button class="icon" data-action="del-item" title="${T.delStop}" aria-label="${T.delStop}">✕</button>
+      </div>
+      ${about ? `<p class="about">${about}</p>` : ''}
+    </li>`;
+}
+
+function renderItem(i, nextId, T, lang) {
   const detail = [
-    i.fixed && !editing ? `<span class="ontime">${T.beOnTime}</span>` : '',
+    i.fixed ? `<span class="ontime">${T.beOnTime}</span>` : '',
     i.place ? `${placeLine(i.place, lang)} ${mapsBtn(i.place, T.map, 'maplink')}` : '',
     i.note ? `<span class="note">${esc(loc(i, 'note', lang))}</span>` : '',
     i.price ? `<span class="price">${esc(loc(i, 'price', lang))}</span>` : '',
   ].filter(Boolean);
   return `
     <li class="${[i.fixed && 'fixed', i.done && 'done', i.id === nextId && 'next'].filter(Boolean).join(' ')}" data-item="${esc(i.id)}">
-      ${editing
-    ? `<input type="time" value="${esc(i.time)}" data-item-field="time" aria-label="${T.time}">
-      <input value="${esc(loc(i, 'text', lang))}" data-item-field="text" aria-label="${T.stop}">
-      <span class="row-btns"><button class="icon fx-toggle${i.fixed ? ' on' : ''}" data-action="toggle-fixed" title="${T.fixedTitle}" aria-pressed="${!!i.fixed}">⏱</button><button class="icon" data-action="del-item" title="${T.delStop}">✕</button></span>`
-    : `<input type="checkbox" ${i.done ? 'checked' : ''} data-action="toggle" aria-label="${T.done}">
+      <input type="checkbox" ${i.done ? 'checked' : ''} data-action="toggle" aria-label="${T.done}">
       <span class="time">${esc(fmtTime(i.time, lang))}</span>
-      <span class="text">${esc(loc(i, 'text', lang))}</span>`}
+      <span class="text">${esc(loc(i, 'text', lang))}</span>
       ${detail.length ? `<div class="detail">${detail.join(' ')}</div>` : ''}
     </li>`;
 }
@@ -223,32 +241,39 @@ export function renderDayScreen(state, day, today, { page = false, editing = fal
   const T = strings(lang);
   const next = nextUp(day);
   const spentLabel = day.date && day.date === today ? T.spentToday : T.spent;
-  const editBtn = `<button class="btn small" data-action="toggle-edit">${editing ? T.done : T.edit}</button>`;
-  const notes = editing
-    ? `<h3>${T.notes}</h3><textarea placeholder="${esc(T.notesPh)}" data-field="notes">${esc(loc(day, 'notes', lang))}</textarea>`
-    : (day.notes ? `<h3>${T.notes}</h3><p class="notes">${esc(loc(day, 'notes', lang))}</p>` : '');
-  return `<section class="day-screen${editing ? ' is-editing' : ''}" data-day="${esc(day.id)}">
+  const head = `<div class="plan-head"><h3>${page ? T.plan : T.todaysPlan}</h3><button class="btn small" data-action="toggle-edit">${editing ? T.done : T.edit}</button></div>`;
+  // Edit mode shows only what can be edited: the day's details, its stops, links and notes.
+  if (editing) {
+    return `<section class="day-screen is-editing" data-day="${esc(day.id)}">
     ${page ? renderStrip(state.days, { today, selectedId: day.id, compact: true, lang }) : ''}
-    ${day.summary && !editing ? `<p class="day-summary">${esc(loc(day, 'summary', lang))}</p>` : ''}
+    ${head}
+    <div class="day-fields">
+      <label><span>${T.date}</span><input class="date" type="date" value="${esc(day.date)}" data-field="date"></label>
+      <label><span>${T.city}</span><input class="city" value="${esc(loc(day, 'city', lang))}" data-field="city"></label>
+      <label class="wide"><span>${T.summary}</span><textarea class="summary" rows="${rowsFor(loc(day, 'summary', lang), 32, 3)}" placeholder="${esc(T.summaryPh)}" data-field="summary">${esc(loc(day, 'summary', lang))}</textarea></label>
+    </div>
+    <ol class="timeline editing">${day.items.map((i) => renderItemEdit(i, T, lang)).join('')}</ol>
+    <form class="add-item">
+      <input name="text" placeholder="${esc(T.addStop)}" aria-label="${esc(T.addStop)}" required>
+      <div class="edit-row"><input name="time" type="time" aria-label="${T.time}"><button class="btn primary" type="submit">${T.add}</button></div>
+    </form>
+    ${renderDayLinks(day, true, linkFormFor, T)}
+    <h3>${T.notes}</h3><textarea class="notes-edit" rows="3" placeholder="${esc(T.notesPh)}" data-field="notes">${esc(loc(day, 'notes', lang))}</textarea>
+    <button class="btn danger del-day" data-action="del-day">${T.delDay}</button>
+  </section>`;
+  }
+  const notes = (day.notes ? `<h3>${T.notes}</h3><p class="notes">${esc(loc(day, 'notes', lang))}</p>` : '');
+  return `<section class="day-screen" data-day="${esc(day.id)}">
+    ${page ? renderStrip(state.days, { today, selectedId: day.id, compact: true, lang }) : ''}
+    ${day.summary ? `<p class="day-summary">${esc(loc(day, 'summary', lang))}</p>` : ''}
     ${renderFixedStrip(day, today, now, T, lang)}
     ${renderNextUp(day, T, lang)}
-    <div class="plan-head"><h3>${page ? T.plan : T.todaysPlan}</h3>${editBtn}</div>
-    ${editing ? `<div class="day-fields">
-      <input class="date" type="date" value="${esc(day.date)}" data-field="date" aria-label="${T.date}">
-      <input class="city" value="${esc(loc(day, 'city', lang))}" placeholder="${T.city}" data-field="city" aria-label="${T.city}">
-      <input class="summary" value="${esc(loc(day, 'summary', lang))}" placeholder="${esc(T.summaryPh)}" data-field="summary" aria-label="${T.summary}">
-    </div>` : ''}
+    ${head}
     ${day.items.length
-    ? `<ol class="timeline${editing ? ' editing' : ''}">${day.items.map((i) => renderItem(i, next?.id, editing, T, lang)).join('')}</ol>`
+    ? `<ol class="timeline">${day.items.map((i) => renderItem(i, next?.id, T, lang)).join('')}</ol>`
     : `<p class="muted">${T.noStops}</p>`}
-    ${editing ? `<form class="add-item">
-      <input name="time" type="time" aria-label="${T.time}">
-      <input name="text" placeholder="${esc(T.addStop)}" required>
-      <button class="btn" type="submit">${T.add}</button>
-    </form>` : ''}
-    ${renderDayLinks(day, editing, linkFormFor, T)}
+    ${renderDayLinks(day, false, linkFormFor, T)}
     ${notes}
-    ${editing ? `<button class="btn danger" data-action="del-day">${T.delDay}</button>` : ''}
     ${renderSpentCard(spentLabel, day.spends, state.fx, cur, { sort, confirmId, lang })}
     <button class="fab" data-action="open-spend" data-day="${esc(day.id)}">${T.spendFab}</button>
   </section>`;
