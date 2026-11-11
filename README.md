@@ -27,7 +27,12 @@ phone as an app (PWA) and works offline.
   `#/trip` (spending totals, categories, spends by day, settings).
 - **Language**: the **中 / EN** button in the header switches the app's own words, dates and
   times between English and Simplified Chinese (remembered per phone; a first visit follows the
-  phone's language). Trip data shows as typed. Strings live in `japan-trip/i18n.js`.
+  phone's language). Strings live in `japan-trip/i18n.js`. Trip text has its Chinese in the data:
+  the trip, a day, a stop and a place (`place`, `stay`) may each carry `zh: { <field>: "中文" }` for
+  `title`; `city`, `summary`, `notes`; `text`, `note`, `price`; `name`, `address`. Anything without
+  one shows as typed. Editing while in 中文 changes the Chinese; editing in English changes the text
+  as typed and drops that line's Chinese (it would no longer match). Maps links always use the
+  name as typed.
 - **Money**: spends are logged in yen; the **¥ | S$** switch in the header shows every amount in
   one currency (remembered per phone).
 - **Motion**: screens slide/morph with the View Transitions API (Chrome, iOS 18+; off with

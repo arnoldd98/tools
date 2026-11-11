@@ -1,5 +1,5 @@
 // Pure helpers for the Japan trip tracker. No DOM access; unit-tested with `npm test`.
-import { strings } from './i18n.js?v=19';
+import { strings } from './i18n.js?v=20';
 
 export const DEFAULT_FX = { home: 'SGD', jpyPerHome: 115, updatedAt: null };
 export const CATEGORIES = ['food', 'shopping', 'transport', 'tickets', 'misc'];
@@ -14,6 +14,22 @@ const arr = (v) => (Array.isArray(v) ? v : []);
 // Hand-written JSON may omit ids; handlers match on them, so they must be unique.
 const genId = () => Math.random().toString(36).slice(2, 9);
 const idOf = (v) => str(v) || genId();
+
+// Trip text in the reader's language. A day, stop, place or the trip itself may carry
+// `zh: { <field>: '中文' }` beside its fields as typed; Chinese falls back to the text as typed.
+export const loc = (o, field, lang) => str((lang === 'zh' && obj(obj(o)?.zh)?.[field]) || obj(o)?.[field]);
+// Save an edit made while reading in `lang`. Chinese edits change the translation where one
+// exists; editing the text as typed drops its translation, which would no longer match.
+export function setLoc(o, field, value, lang) {
+  const zh = obj(o.zh);
+  if (lang === 'zh' && zh?.[field]) {
+    if (value) zh[field] = value; else delete zh[field];
+  } else {
+    o[field] = value;
+    if (zh) delete zh[field];
+  }
+  if (zh && !Object.keys(zh).length) delete o.zh;
+}
 
 function normPlace(p) {
   const o = obj(p);
@@ -261,12 +277,13 @@ export function dayNumber(days, date) {
   return { n: Math.round((utcDay(date) - utcDay(span.start)) / 86400000) + 1, of: span.length };
 }
 
-export function tripOverview(days) {
+export function tripOverview(days, lang) {
   const span = tripSpan(days);
   if (!span) return null;
   const cities = [];
   for (const d of sortDays(days.filter((x) => x.date))) {
-    if (d.city && !cities.includes(d.city)) cities.push(d.city);
+    const city = loc(d, 'city', lang);
+    if (city && !cities.includes(city)) cities.push(city);
   }
   return { ...span, cities };
 }

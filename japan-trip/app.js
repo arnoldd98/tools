@@ -4,11 +4,11 @@
 
 import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx,
-  extractUrl, linkKind, fmtMoney,
+  extractUrl, linkKind, fmtMoney, loc, setLoc,
   toHome, fmtHome, navDirection, swipeDir, sortDays,
-} from './lib.js?v=19';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=19';
-import { strings, normLang } from './i18n.js?v=19';
+} from './lib.js?v=20';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=20';
+import { strings, normLang } from './i18n.js?v=20';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -219,7 +219,7 @@ function render() {
   // replace, not assign: dead or old entries must not trap the Back button
   if (route.view === 'redirect') { location.replace(route.to); return; }
   if (route.view === 'day' && !findDay(route.id)) { location.replace('#/days'); return; }
-  document.title = state.title || 'Japan Trip';
+  document.title = loc(state, 'title', lang) || 'Japan Trip';
   const today = todayISO();
 
   const routeKey = route.view + ':' + (route.id || '');
@@ -432,7 +432,7 @@ document.addEventListener('click', (e) => {
     if (!gone) return;
     const snap = snapshot();
     day.items = day.items.filter((i) => i.id !== itemId); commit();
-    toast(T().st.stopDeleted(gone.text), restoreFrom(snap));
+    toast(T().st.stopDeleted(loc(gone, 'text', lang)), restoreFrom(snap));
   } else if (action === 'del-spend') {
     confirmSpendId = e.target.closest('[data-spend]')?.dataset.spend ?? null;
     render();
@@ -493,15 +493,17 @@ document.addEventListener('change', (e) => {
     const item = day?.items.find((i) => i.id === e.target.closest('[data-item]')?.dataset.item);
     if (!item) return;
     const value = itemField === 'text' ? e.target.value.trim() : e.target.value;
-    if (itemField === 'text' && !value) { e.target.value = item.text; return; } // keep a stop's name
-    item[itemField] = value;
+    if (itemField === 'text' && !value) { e.target.value = loc(item, 'text', lang); return; } // keep a stop's name
+    if (itemField === 'text') setLoc(item, 'text', value, lang); // the stop as shown: its 中文 in Chinese
+    else item[itemField] = value;
     markDirty();
     return;
   }
   const field = e.target.dataset.field;
   const day = findDay(e.target.closest('[data-day]')?.dataset.day);
   if (!field || !day) return;
-  day[field] = e.target.value;
+  if (field === 'date') day.date = e.target.value;
+  else setLoc(day, field, e.target.value, lang); // city, summary, notes: the text as shown
   if (field === 'date') commit();
   else markDirty();
 });

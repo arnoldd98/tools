@@ -14,7 +14,11 @@
       "stay": {
         "name": "Odysis Suites Osaka Airport Hotel",
         "address": "Rinku Town, Izumisano, Osaka",
-        "note": "1 night"
+        "note": "1 night",
+        "zh": {
+          "name": "大阪机场奥德西斯套房酒店",
+          "address": "大阪府泉佐野市临空城"
+        }
       },
       "items": [
         {
@@ -24,7 +28,14 @@
           "done": false,
           "place": {
             "name": "Kansai International Airport Terminal 1",
-            "address": "Izumisano, Osaka"
+            "address": "Izumisano, Osaka",
+            "zh": {
+              "name": "关西国际机场 1号航站楼",
+              "address": "大阪府泉佐野市"
+            }
+          },
+          "zh": {
+            "text": "抵达关西机场 1号航站楼"
           }
         },
         {
@@ -34,9 +45,17 @@
           "done": false,
           "place": {
             "name": "Odysis Suites Osaka Airport Hotel",
-            "address": "Rinku Town, Izumisano, Osaka"
+            "address": "Rinku Town, Izumisano, Osaka",
+            "zh": {
+              "name": "大阪机场奥德西斯套房酒店",
+              "address": "大阪府泉佐野市临空城"
+            }
           },
-          "note": "10 min by train"
+          "note": "10 min by train",
+          "zh": {
+            "text": "乘电车前往大阪机场奥德西斯套房酒店",
+            "note": "电车约 10 分钟"
+          }
         },
         {
           "id": "i3",
@@ -45,13 +64,25 @@
           "done": false,
           "place": {
             "name": "Joyfull Rinku",
-            "address": "Izumisano, Osaka"
+            "address": "Izumisano, Osaka",
+            "zh": {
+              "name": "Joyfull 家庭餐厅 临空店",
+              "address": "大阪府泉佐野市"
+            }
           },
-          "note": "5 min walk"
+          "note": "5 min walk",
+          "zh": {
+            "text": "宵夜 @ Joyfull 临空店",
+            "note": "步行 5 分钟"
+          }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "大阪",
+        "summary": "深夜抵达关西机场，入住机场附近酒店"
+      }
     },
     {
       "id": "d2",
@@ -61,7 +92,11 @@
       "stay": {
         "name": "Mercure Naha",
         "address": "Naha, Okinawa",
-        "note": "Check-in 2:00 pm"
+        "note": "Check-in 2:00 pm",
+        "zh": {
+          "name": "那霸美居酒店",
+          "address": "冲绳县那霸市"
+        }
       },
       "items": [
         {
@@ -70,13 +105,20 @@
           "text": "Shuttle bus to Kansai Airport T2",
           "done": false,
           "fixed": true,
-          "note": "5:10 am or 5:55 am · 15 min drive"
+          "note": "5:10 am or 5:55 am · 15 min drive",
+          "zh": {
+            "text": "乘接驳巴士前往关西机场 2号航站楼",
+            "note": "上午5:10 或 5:55 发车 · 车程 15 分钟"
+          }
         },
         {
           "id": "i5",
           "time": "",
           "text": "Breakfast @ airport",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在机场吃早餐"
+          }
         },
         {
           "id": "i6",
@@ -86,7 +128,14 @@
           "fixed": true,
           "place": {
             "name": "Kansai International Airport Terminal 2",
-            "address": "Izumisano, Osaka"
+            "address": "Izumisano, Osaka",
+            "zh": {
+              "name": "关西国际机场 2号航站楼",
+              "address": "大阪府泉佐野市"
+            }
+          },
+          "zh": {
+            "text": "航班 关西 → 那霸（上午10:05 抵达）"
           }
         },
         {
@@ -96,15 +145,26 @@
           "done": false,
           "place": {
             "name": "Mercure Naha",
-            "address": "Naha, Okinawa"
+            "address": "Naha, Okinawa",
+            "zh": {
+              "name": "那霸美居酒店",
+              "address": "冲绳县那霸市"
+            }
           },
-          "note": "10 min by train · check-in 2:00 pm"
+          "note": "10 min by train · check-in 2:00 pm",
+          "zh": {
+            "text": "乘单轨电车前往那霸美居酒店",
+            "note": "电车约 10 分钟 · 下午2:00 起办理入住"
+          }
         },
         {
           "id": "i8",
           "time": "",
           "text": "Early lunch near hotel",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在酒店附近提早吃午餐"
+          }
         },
         {
           "id": "i9",
@@ -113,7 +173,14 @@
           "done": false,
           "place": {
             "name": "Makishi Public Market",
-            "address": "Naha, Okinawa"
+            "address": "Naha, Okinawa",
+            "zh": {
+              "name": "第一牧志公设市场",
+              "address": "冲绳县那霸市"
+            }
+          },
+          "zh": {
+            "text": "牧志公设市场"
           }
         },
         {
@@ -123,7 +190,14 @@
           "done": false,
           "place": {
             "name": "Kokusai Dori",
-            "address": "Naha, Okinawa"
+            "address": "Naha, Okinawa",
+            "zh": {
+              "name": "国际通",
+              "address": "冲绳县那霸市"
+            }
+          },
+          "zh": {
+            "text": "国际通"
           }
         },
         {
@@ -133,14 +207,24 @@
           "done": false,
           "place": {
             "name": "Tsuboya Yachimun Street",
-            "address": "Naha, Okinawa"
+            "address": "Naha, Okinawa",
+            "zh": {
+              "name": "壶屋陶器街",
+              "address": "冲绳县那霸市"
+            }
+          },
+          "zh": {
+            "text": "壶屋陶器街"
           }
         },
         {
           "id": "i12",
           "time": "",
           "text": "Dinner near Makishi Market",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在牧志市场附近吃晚餐"
+          }
         },
         {
           "id": "i13",
@@ -149,12 +233,23 @@
           "done": false,
           "place": {
             "name": "Fukushuen Garden",
-            "address": "Naha, Okinawa"
+            "address": "Naha, Okinawa",
+            "zh": {
+              "name": "福州园",
+              "address": "冲绳县那霸市"
+            }
+          },
+          "zh": {
+            "text": "福州园"
           }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "冲绳",
+        "summary": "清晨飞往冲绳，逛那霸的市场和国际通"
+      }
     },
     {
       "id": "d3",
@@ -164,14 +259,21 @@
       "stay": {
         "name": "Mercure Naha",
         "address": "Naha, Okinawa",
-        "note": "Check-in 2:00 pm"
+        "note": "Check-in 2:00 pm",
+        "zh": {
+          "name": "那霸美居酒店",
+          "address": "冲绳县那霸市"
+        }
       },
       "items": [
         {
           "id": "i14",
           "time": "",
           "text": "Breakfast near hotel",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在酒店附近吃早餐"
+          }
         },
         {
           "id": "i15",
@@ -180,7 +282,14 @@
           "done": false,
           "place": {
             "name": "Pork Tamago Onigiri Honten",
-            "address": "Naha, Okinawa"
+            "address": "Naha, Okinawa",
+            "zh": {
+              "name": "猪肉蛋饭团本店",
+              "address": "冲绳县那霸市"
+            }
+          },
+          "zh": {
+            "text": "猪肉蛋饭团本店"
           }
         },
         {
@@ -191,9 +300,17 @@
           "fixed": true,
           "place": {
             "name": "Tomari Port",
-            "address": "Naha, Okinawa"
+            "address": "Naha, Okinawa",
+            "zh": {
+              "name": "泊港",
+              "address": "冲绳县那霸市"
+            }
           },
-          "note": "Timetable: https://www.aharen.com/en/day-plan-en/transportation-to-tokashiki-island/"
+          "note": "Timetable: https://www.aharen.com/en/day-plan-en/transportation-to-tokashiki-island/",
+          "zh": {
+            "text": "从泊港乘渡轮前往渡嘉敷岛（上午11:10 抵达）",
+            "note": "时刻表：https://www.aharen.com/en/day-plan-en/transportation-to-tokashiki-island/"
+          }
         },
         {
           "id": "i17",
@@ -202,14 +319,24 @@
           "done": false,
           "place": {
             "name": "Aharen Beach",
-            "address": "Tokashiki, Okinawa"
+            "address": "Tokashiki, Okinawa",
+            "zh": {
+              "name": "阿波连海滩",
+              "address": "冲绳县渡嘉敷村"
+            }
+          },
+          "zh": {
+            "text": "阿波连海滩"
           }
         },
         {
           "id": "i18",
           "time": "",
           "text": "Lunch around Aharen Beach",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在阿波连海滩附近吃午餐"
+          }
         },
         {
           "id": "i19",
@@ -218,7 +345,14 @@
           "done": false,
           "place": {
             "name": "Teruyama Observatory",
-            "address": "Tokashiki, Okinawa"
+            "address": "Tokashiki, Okinawa",
+            "zh": {
+              "name": "照山展望台",
+              "address": "冲绳县渡嘉敷村"
+            }
+          },
+          "zh": {
+            "text": "照山展望台"
           }
         },
         {
@@ -226,7 +360,10 @@
           "time": "17:00",
           "text": "Ferry back to Naha (arrive 5:40 pm)",
           "done": false,
-          "fixed": true
+          "fixed": true,
+          "zh": {
+            "text": "乘船返回那霸（下午5:40 抵达）"
+          }
         },
         {
           "id": "i21",
@@ -235,12 +372,23 @@
           "done": false,
           "place": {
             "name": "Yunangi",
-            "address": "Naha, Okinawa"
+            "address": "Naha, Okinawa",
+            "zh": {
+              "name": "Yunangi 冲绳料理店",
+              "address": "冲绳县那霸市"
+            }
+          },
+          "zh": {
+            "text": "那霸晚餐：Yunangi 冲绳料理店"
           }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "冲绳",
+        "summary": "乘船去渡嘉敷岛一日游：阿波连海滩和展望台"
+      }
     },
     {
       "id": "d4",
@@ -250,14 +398,21 @@
       "stay": {
         "name": "Mercure Naha",
         "address": "Naha, Okinawa",
-        "note": "Check-in 2:00 pm"
+        "note": "Check-in 2:00 pm",
+        "zh": {
+          "name": "那霸美居酒店",
+          "address": "冲绳县那霸市"
+        }
       },
       "items": [
         {
           "id": "i22",
           "time": "",
           "text": "Breakfast near hotel",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在酒店附近吃早餐"
+          }
         },
         {
           "id": "i23",
@@ -265,7 +420,11 @@
           "text": "Pick up rental car at YH Rental Car",
           "done": false,
           "fixed": true,
-          "note": "Go to Naha Airport for the shuttle bus"
+          "note": "Go to Naha Airport for the shuttle bus",
+          "zh": {
+            "text": "到 YH 租车公司取车",
+            "note": "先到那霸机场搭接驳巴士"
+          }
         },
         {
           "id": "i24",
@@ -274,15 +433,26 @@
           "done": false,
           "place": {
             "name": "Okinawa World",
-            "address": "Nanjo, Okinawa"
+            "address": "Nanjo, Okinawa",
+            "zh": {
+              "name": "冲绳世界文化王国",
+              "address": "冲绳县南城市"
+            }
           },
-          "note": "30 min drive"
+          "note": "30 min drive",
+          "zh": {
+            "text": "冲绳世界 / 玉泉洞",
+            "note": "车程 30 分钟"
+          }
         },
         {
           "id": "i25",
           "time": "",
           "text": "Lunch around Okinawa World",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在冲绳世界附近吃午餐"
+          }
         },
         {
           "id": "i26",
@@ -291,7 +461,14 @@
           "done": false,
           "place": {
             "name": "Sefa Utaki",
-            "address": "Nanjo, Okinawa"
+            "address": "Nanjo, Okinawa",
+            "zh": {
+              "name": "斋场御岳",
+              "address": "冲绳县南城市"
+            }
+          },
+          "zh": {
+            "text": "斋场御岳"
           }
         },
         {
@@ -301,19 +478,34 @@
           "done": false,
           "place": {
             "name": "Chinen Cape Park",
-            "address": "Nanjo, Okinawa"
+            "address": "Nanjo, Okinawa",
+            "zh": {
+              "name": "知念岬公园",
+              "address": "冲绳县南城市"
+            }
           },
-          "note": "30 min drive"
+          "note": "30 min drive",
+          "zh": {
+            "text": "知念岬",
+            "note": "车程 30 分钟"
+          }
         },
         {
           "id": "i28",
           "time": "",
           "text": "Dinner in Naha",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在那霸吃晚餐"
+          }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "冲绳",
+        "summary": "取车，冲绳世界的钟乳洞、斋场御岳、知念岬"
+      }
     },
     {
       "id": "d5",
@@ -323,20 +515,30 @@
       "stay": {
         "name": "Hilton Okinawa Sesoko Resort",
         "address": "Sesoko, Motobu, Okinawa",
-        "note": "Check-in 3:00 pm"
+        "note": "Check-in 3:00 pm",
+        "zh": {
+          "name": "冲绳濑底希尔顿度假酒店",
+          "address": "冲绳县本部町濑底"
+        }
       },
       "items": [
         {
           "id": "i29",
           "time": "",
           "text": "Breakfast near hotel",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在酒店附近吃早餐"
+          }
         },
         {
           "id": "i30",
           "time": "",
           "text": "Check out of Mercure Naha",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "那霸美居酒店退房"
+          }
         },
         {
           "id": "i31",
@@ -345,7 +547,14 @@
           "done": false,
           "place": {
             "name": "Shuri Castle",
-            "address": "Naha, Okinawa"
+            "address": "Naha, Okinawa",
+            "zh": {
+              "name": "首里城",
+              "address": "冲绳县那霸市"
+            }
+          },
+          "zh": {
+            "text": "首里城"
           }
         },
         {
@@ -355,7 +564,14 @@
           "done": false,
           "place": {
             "name": "Shuri Soba",
-            "address": "Naha, Okinawa"
+            "address": "Naha, Okinawa",
+            "zh": {
+              "name": "首里荞麦面（首里そば）",
+              "address": "冲绳县那霸市"
+            }
+          },
+          "zh": {
+            "text": "午餐 @ 首里荞麦面"
           }
         },
         {
@@ -365,7 +581,14 @@
           "done": false,
           "place": {
             "name": "Zakimi Castle Ruins",
-            "address": "Yomitan, Okinawa"
+            "address": "Yomitan, Okinawa",
+            "zh": {
+              "name": "座喜味城遗址",
+              "address": "冲绳县读谷村"
+            }
+          },
+          "zh": {
+            "text": "座喜味城遗址"
           }
         },
         {
@@ -375,7 +598,14 @@
           "done": false,
           "place": {
             "name": "Banta Cafe",
-            "address": "Yomitan, Okinawa"
+            "address": "Yomitan, Okinawa",
+            "zh": {
+              "name": "Banta Cafe（星野集团）",
+              "address": "冲绳县读谷村"
+            }
+          },
+          "zh": {
+            "text": "Banta Cafe 海崖咖啡馆"
           }
         },
         {
@@ -385,7 +615,14 @@
           "done": false,
           "place": {
             "name": "Cape Maeda",
-            "address": "Onna, Okinawa"
+            "address": "Onna, Okinawa",
+            "zh": {
+              "name": "真荣田岬",
+              "address": "冲绳县恩纳村"
+            }
+          },
+          "zh": {
+            "text": "真荣田岬"
           }
         },
         {
@@ -395,9 +632,17 @@
           "done": false,
           "place": {
             "name": "Hilton Okinawa Sesoko Resort",
-            "address": "Sesoko, Motobu, Okinawa"
+            "address": "Sesoko, Motobu, Okinawa",
+            "zh": {
+              "name": "冲绳濑底希尔顿度假酒店",
+              "address": "冲绳县本部町濑底"
+            }
           },
-          "note": "1.5 h drive"
+          "note": "1.5 h drive",
+          "zh": {
+            "text": "入住濑底希尔顿度假酒店",
+            "note": "车程 1.5 小时"
+          }
         },
         {
           "id": "i37",
@@ -406,12 +651,23 @@
           "done": false,
           "place": {
             "name": "Sesoko Beach",
-            "address": "Motobu, Okinawa"
+            "address": "Motobu, Okinawa",
+            "zh": {
+              "name": "濑底海滩",
+              "address": "冲绳县本部町"
+            }
+          },
+          "zh": {
+            "text": "濑底海滩"
           }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "冲绳",
+        "summary": "首里城、西海岸的海岬，入住濑底希尔顿"
+      }
     },
     {
       "id": "d6",
@@ -421,14 +677,21 @@
       "stay": {
         "name": "Hilton Okinawa Sesoko Resort",
         "address": "Sesoko, Motobu, Okinawa",
-        "note": "Check-in 3:00 pm"
+        "note": "Check-in 3:00 pm",
+        "zh": {
+          "name": "冲绳濑底希尔顿度假酒店",
+          "address": "冲绳县本部町濑底"
+        }
       },
       "items": [
         {
           "id": "i38",
           "time": "",
           "text": "Breakfast at Hilton",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在希尔顿吃早餐"
+          }
         },
         {
           "id": "i39",
@@ -437,14 +700,24 @@
           "done": false,
           "place": {
             "name": "Okinawa Churaumi Aquarium",
-            "address": "Motobu, Okinawa"
+            "address": "Motobu, Okinawa",
+            "zh": {
+              "name": "冲绳美丽海水族馆",
+              "address": "冲绳县本部町"
+            }
+          },
+          "zh": {
+            "text": "美丽海水族馆"
           }
         },
         {
           "id": "i40",
           "time": "",
           "text": "Lunch near Churaumi Aquarium",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在美丽海水族馆附近吃午餐"
+          }
         },
         {
           "id": "i41",
@@ -453,7 +726,14 @@
           "done": false,
           "place": {
             "name": "Kouri Island",
-            "address": "Nakijin, Okinawa"
+            "address": "Nakijin, Okinawa",
+            "zh": {
+              "name": "古宇利岛",
+              "address": "冲绳县今归仁村"
+            }
+          },
+          "zh": {
+            "text": "古宇利岛"
           }
         },
         {
@@ -463,18 +743,32 @@
           "done": false,
           "place": {
             "name": "Bise Fukugi Tree Road",
-            "address": "Motobu, Okinawa"
+            "address": "Motobu, Okinawa",
+            "zh": {
+              "name": "备濑福木林道",
+              "address": "冲绳县本部町"
+            }
+          },
+          "zh": {
+            "text": "备濑福木林道"
           }
         },
         {
           "id": "i43",
           "time": "",
           "text": "Dinner",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "晚餐"
+          }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "冲绳",
+        "summary": "美丽海水族馆、古宇利岛、备濑福木林道"
+      }
     },
     {
       "id": "d7",
@@ -484,20 +778,30 @@
       "stay": {
         "name": "Chatan hotel (TBC)",
         "address": "Chatan, Okinawa",
-        "note": "1 night"
+        "note": "1 night",
+        "zh": {
+          "name": "北谷酒店（待定）",
+          "address": "冲绳县北谷町"
+        }
       },
       "items": [
         {
           "id": "i44",
           "time": "",
           "text": "Breakfast at Hilton",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在希尔顿吃早餐"
+          }
         },
         {
           "id": "i45",
           "time": "",
           "text": "Check out of Hilton",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "希尔顿退房"
+          }
         },
         {
           "id": "i46",
@@ -506,7 +810,14 @@
           "done": false,
           "place": {
             "name": "Busena Marine Park",
-            "address": "Nago, Okinawa"
+            "address": "Nago, Okinawa",
+            "zh": {
+              "name": "部濑名海中公园",
+              "address": "冲绳县名护市"
+            }
+          },
+          "zh": {
+            "text": "部濑名海中公园"
           }
         },
         {
@@ -516,20 +827,33 @@
           "done": false,
           "place": {
             "name": "Cape Manzamo",
-            "address": "Onna, Okinawa"
+            "address": "Onna, Okinawa",
+            "zh": {
+              "name": "万座毛",
+              "address": "冲绳县恩纳村"
+            }
+          },
+          "zh": {
+            "text": "万座毛"
           }
         },
         {
           "id": "i48",
           "time": "",
           "text": "Lunch",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "午餐"
+          }
         },
         {
           "id": "i49",
           "time": "",
           "text": "Check in to Chatan hotel",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "入住北谷的酒店"
+          }
         },
         {
           "id": "i50",
@@ -538,18 +862,32 @@
           "done": false,
           "place": {
             "name": "American Village",
-            "address": "Chatan, Okinawa"
+            "address": "Chatan, Okinawa",
+            "zh": {
+              "name": "美国村",
+              "address": "冲绳县北谷町"
+            }
+          },
+          "zh": {
+            "text": "美国村"
           }
         },
         {
           "id": "i51",
           "time": "",
           "text": "Dinner",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "晚餐"
+          }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "冲绳",
+        "summary": "部濑名、万座毛、北谷美国村"
+      }
     },
     {
       "id": "d8",
@@ -559,14 +897,21 @@
       "stay": {
         "name": "Hotel MyStays Dojima",
         "address": "Dojima, Kita Ward, Osaka",
-        "note": "Base for Kyoto days"
+        "note": "Base for Kyoto days",
+        "zh": {
+          "name": "MyStays 堂岛酒店",
+          "address": "大阪市北区堂岛"
+        }
       },
       "items": [
         {
           "id": "i52",
           "time": "",
           "text": "Breakfast in Chatan",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在北谷吃早餐"
+          }
         },
         {
           "id": "i53",
@@ -575,14 +920,24 @@
           "done": false,
           "place": {
             "name": "Umikaji Terrace",
-            "address": "Tomigusuku, Okinawa"
+            "address": "Tomigusuku, Okinawa",
+            "zh": {
+              "name": "濑长岛海风露台",
+              "address": "冲绳县丰见城市"
+            }
+          },
+          "zh": {
+            "text": "濑长岛海风露台"
           }
         },
         {
           "id": "i54",
           "time": "",
           "text": "Return rental car",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "还车"
+          }
         },
         {
           "id": "i55",
@@ -591,7 +946,14 @@
           "done": false,
           "place": {
             "name": "Okinawa Outlet Mall Ashibinaa",
-            "address": "Tomigusuku, Okinawa"
+            "address": "Tomigusuku, Okinawa",
+            "zh": {
+              "name": "冲绳奥特莱斯 Ashibinaa",
+              "address": "冲绳县丰见城市"
+            }
+          },
+          "zh": {
+            "text": "奥特莱斯 Ashibinaa"
           }
         },
         {
@@ -602,7 +964,14 @@
           "fixed": true,
           "place": {
             "name": "Naha Airport",
-            "address": "Naha, Okinawa"
+            "address": "Naha, Okinawa",
+            "zh": {
+              "name": "那霸机场",
+              "address": "冲绳县那霸市"
+            }
+          },
+          "zh": {
+            "text": "航班 那霸 → 大阪 2号航站楼（晚上8:50 抵达）"
           }
         },
         {
@@ -612,12 +981,23 @@
           "done": false,
           "place": {
             "name": "Hotel MyStays Dojima",
-            "address": "Dojima, Kita Ward, Osaka"
+            "address": "Dojima, Kita Ward, Osaka",
+            "zh": {
+              "name": "MyStays 堂岛酒店",
+              "address": "大阪市北区堂岛"
+            }
+          },
+          "zh": {
+            "text": "入住 MyStays 堂岛酒店"
           }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "冲绳",
+        "summary": "濑长岛海风露台、奥特莱斯购物，傍晚飞大阪"
+      }
     },
     {
       "id": "d9",
@@ -627,14 +1007,21 @@
       "stay": {
         "name": "Hotel MyStays Dojima",
         "address": "Dojima, Kita Ward, Osaka",
-        "note": "Base for Kyoto days"
+        "note": "Base for Kyoto days",
+        "zh": {
+          "name": "MyStays 堂岛酒店",
+          "address": "大阪市北区堂岛"
+        }
       },
       "items": [
         {
           "id": "i58",
           "time": "",
           "text": "Breakfast near hotel",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在酒店附近吃早餐"
+          }
         },
         {
           "id": "i59",
@@ -643,14 +1030,24 @@
           "done": false,
           "place": {
             "name": "Kinkaku-ji",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "金阁寺",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "金阁寺"
           }
         },
         {
           "id": "i60",
           "time": "",
           "text": "Lunch",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "午餐"
+          }
         },
         {
           "id": "i61",
@@ -659,7 +1056,14 @@
           "done": false,
           "place": {
             "name": "Nijo Castle",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "二条城",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "二条城"
           }
         },
         {
@@ -669,18 +1073,32 @@
           "done": false,
           "place": {
             "name": "Nishiki Market",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "锦市场",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "锦市场"
           }
         },
         {
           "id": "i63",
           "time": "",
           "text": "Dinner at Nishiki Market",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在锦市场吃晚餐"
+          }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "京都",
+        "summary": "京都：金阁寺、二条城、锦市场"
+      }
     },
     {
       "id": "d10",
@@ -690,14 +1108,21 @@
       "stay": {
         "name": "Hotel MyStays Dojima",
         "address": "Dojima, Kita Ward, Osaka",
-        "note": "Base for Kyoto days"
+        "note": "Base for Kyoto days",
+        "zh": {
+          "name": "MyStays 堂岛酒店",
+          "address": "大阪市北区堂岛"
+        }
       },
       "items": [
         {
           "id": "i64",
           "time": "",
           "text": "Breakfast near hotel",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在酒店附近吃早餐"
+          }
         },
         {
           "id": "i65",
@@ -706,9 +1131,17 @@
           "done": false,
           "place": {
             "name": "Kiyomizu-dera",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "清水寺",
+              "address": "京都"
+            }
           },
-          "note": "Train to Kiyomizu-Gojo station"
+          "note": "Train to Kiyomizu-Gojo station",
+          "zh": {
+            "text": "清水寺",
+            "note": "乘电车到清水五条站"
+          }
         },
         {
           "id": "i66",
@@ -717,7 +1150,14 @@
           "done": false,
           "place": {
             "name": "Gion",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "祇园",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "在祇园吃午餐"
           }
         },
         {
@@ -727,7 +1167,14 @@
           "done": false,
           "place": {
             "name": "Sannenzaka",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "三年坂",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "三年坂和二年坂"
           }
         },
         {
@@ -737,14 +1184,24 @@
           "done": false,
           "place": {
             "name": "Yasaka Shrine",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "八坂神社",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "八坂神社"
           }
         },
         {
           "id": "i69",
           "time": "",
           "text": "Dinner in Kyoto",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在京都吃晚餐"
+          }
         },
         {
           "id": "i70",
@@ -753,12 +1210,23 @@
           "done": false,
           "place": {
             "name": "Kodai-ji",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "高台寺",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "高台寺（夜间点灯）"
           }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "京都",
+        "summary": "清水寺、祇园老街，夜游高台寺赏灯"
+      }
     },
     {
       "id": "d11",
@@ -768,14 +1236,21 @@
       "stay": {
         "name": "Hotel MyStays Dojima",
         "address": "Dojima, Kita Ward, Osaka",
-        "note": "Base for Kyoto days"
+        "note": "Base for Kyoto days",
+        "zh": {
+          "name": "MyStays 堂岛酒店",
+          "address": "大阪市北区堂岛"
+        }
       },
       "items": [
         {
           "id": "i71",
           "time": "",
           "text": "Breakfast near hotel",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在酒店附近吃早餐"
+          }
         },
         {
           "id": "i72",
@@ -784,7 +1259,14 @@
           "done": false,
           "place": {
             "name": "Ginkaku-ji",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "银阁寺",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "银阁寺"
           }
         },
         {
@@ -794,14 +1276,24 @@
           "done": false,
           "place": {
             "name": "Philosopher's Path",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "哲学之道",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "哲学之道"
           }
         },
         {
           "id": "i74",
           "time": "",
           "text": "Lunch",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "午餐"
+          }
         },
         {
           "id": "i75",
@@ -810,7 +1302,14 @@
           "done": false,
           "place": {
             "name": "Eikando Zenrin-ji",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "永观堂（禅林寺）",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "永观堂"
           }
         },
         {
@@ -820,7 +1319,14 @@
           "done": false,
           "place": {
             "name": "Nanzen-ji",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "南禅寺",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "南禅寺"
           }
         },
         {
@@ -830,18 +1336,32 @@
           "done": false,
           "place": {
             "name": "Maruyama Park",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "圆山公园",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "圆山公园"
           }
         },
         {
           "id": "i78",
           "time": "",
           "text": "Dinner in Kyoto",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在京都吃晚餐"
+          }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "京都",
+        "summary": "银阁寺、哲学之道、永观堂、南禅寺"
+      }
     },
     {
       "id": "d12",
@@ -851,14 +1371,21 @@
       "stay": {
         "name": "Hotel MyStays Dojima",
         "address": "Dojima, Kita Ward, Osaka",
-        "note": "Base for Kyoto days"
+        "note": "Base for Kyoto days",
+        "zh": {
+          "name": "MyStays 堂岛酒店",
+          "address": "大阪市北区堂岛"
+        }
       },
       "items": [
         {
           "id": "i79",
           "time": "",
           "text": "Breakfast near hotel",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在酒店附近吃早餐"
+          }
         },
         {
           "id": "i80",
@@ -867,14 +1394,24 @@
           "done": false,
           "place": {
             "name": "Tofuku-ji",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "东福寺",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "东福寺"
           }
         },
         {
           "id": "i81",
           "time": "",
           "text": "Lunch in Kyoto",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在京都吃午餐"
+          }
         },
         {
           "id": "i82",
@@ -883,18 +1420,32 @@
           "done": false,
           "place": {
             "name": "Uji",
-            "address": "Kyoto"
+            "address": "Kyoto",
+            "zh": {
+              "name": "宇治",
+              "address": "京都"
+            }
+          },
+          "zh": {
+            "text": "宇治"
           }
         },
         {
           "id": "i83",
           "time": "",
           "text": "Dinner at Uji",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "在宇治吃晚餐"
+          }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "京都",
+        "summary": "东福寺赏红叶，再去茶乡宇治"
+      }
     },
     {
       "id": "d13",
@@ -904,14 +1455,21 @@
       "stay": {
         "name": "Hinode Hotel Osaka",
         "address": "Osaka",
-        "note": "2 nights"
+        "note": "2 nights",
+        "zh": {
+          "name": "大阪日之出酒店",
+          "address": "大阪"
+        }
       },
       "items": [
         {
           "id": "i84",
           "time": "",
           "text": "Check out of Hotel MyStays Dojima",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "MyStays 堂岛酒店退房"
+          }
         },
         {
           "id": "i85",
@@ -920,7 +1478,14 @@
           "done": false,
           "place": {
             "name": "Osaka Castle Park",
-            "address": "Osaka"
+            "address": "Osaka",
+            "zh": {
+              "name": "大阪城公园",
+              "address": "大阪"
+            }
+          },
+          "zh": {
+            "text": "大阪城公园"
           }
         },
         {
@@ -930,7 +1495,14 @@
           "done": false,
           "place": {
             "name": "Midosuji",
-            "address": "Osaka"
+            "address": "Osaka",
+            "zh": {
+              "name": "御堂筋",
+              "address": "大阪"
+            }
+          },
+          "zh": {
+            "text": "御堂筋"
           }
         },
         {
@@ -940,7 +1512,14 @@
           "done": false,
           "place": {
             "name": "Hinode Hotel Osaka",
-            "address": "Osaka"
+            "address": "Osaka",
+            "zh": {
+              "name": "大阪日之出酒店",
+              "address": "大阪"
+            }
+          },
+          "zh": {
+            "text": "入住大阪日之出酒店"
           }
         },
         {
@@ -950,12 +1529,23 @@
           "done": false,
           "place": {
             "name": "Kobe",
-            "address": "Hyogo"
+            "address": "Hyogo",
+            "zh": {
+              "name": "神户",
+              "address": "兵库县"
+            }
+          },
+          "zh": {
+            "text": "晚餐 @ 神户"
           }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "大阪",
+        "summary": "回到大阪：大阪城公园、御堂筋，晚餐在神户"
+      }
     },
     {
       "id": "d14",
@@ -965,7 +1555,11 @@
       "stay": {
         "name": "Hinode Hotel Osaka",
         "address": "Osaka",
-        "note": "2 nights"
+        "note": "2 nights",
+        "zh": {
+          "name": "大阪日之出酒店",
+          "address": "大阪"
+        }
       },
       "items": [
         {
@@ -975,7 +1569,14 @@
           "done": false,
           "place": {
             "name": "Minoh Park",
-            "address": "Minoh, Osaka"
+            "address": "Minoh, Osaka",
+            "zh": {
+              "name": "箕面公园",
+              "address": "大阪府箕面市"
+            }
+          },
+          "zh": {
+            "text": "箕面公园"
           }
         },
         {
@@ -985,12 +1586,23 @@
           "done": false,
           "place": {
             "name": "Katsuo-ji",
-            "address": "Minoh, Osaka"
+            "address": "Minoh, Osaka",
+            "zh": {
+              "name": "胜尾寺",
+              "address": "大阪府箕面市"
+            }
+          },
+          "zh": {
+            "text": "胜尾寺"
           }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "大阪",
+        "summary": "箕面公园瀑布步道和胜尾寺（达摩寺）"
+      }
     },
     {
       "id": "d15",
@@ -1002,7 +1614,10 @@
           "id": "i91",
           "time": "",
           "text": "Check out of Hinode Hotel, store luggage",
-          "done": false
+          "done": false,
+          "zh": {
+            "text": "日之出酒店退房，寄存行李"
+          }
         },
         {
           "id": "i92",
@@ -1011,7 +1626,14 @@
           "done": false,
           "place": {
             "name": "Kuromon Market",
-            "address": "Osaka"
+            "address": "Osaka",
+            "zh": {
+              "name": "黑门市场",
+              "address": "大阪"
+            }
+          },
+          "zh": {
+            "text": "黑门市场"
           }
         },
         {
@@ -1021,7 +1643,14 @@
           "done": false,
           "place": {
             "name": "Shinsaibashi-suji",
-            "address": "Osaka"
+            "address": "Osaka",
+            "zh": {
+              "name": "心斋桥筋商店街",
+              "address": "大阪"
+            }
+          },
+          "zh": {
+            "text": "难波 / 心斋桥"
           }
         },
         {
@@ -1029,11 +1658,21 @@
           "time": "23:20",
           "text": "Flight back to Singapore",
           "done": false,
-          "fixed": true
+          "fixed": true,
+          "zh": {
+            "text": "航班返回新加坡"
+          }
         }
       ],
       "spends": [],
-      "notes": ""
+      "notes": "",
+      "zh": {
+        "city": "大阪",
+        "summary": "黑门市场、难波和心斋桥，深夜航班回国"
+      }
     }
-  ]
+  ],
+  "zh": {
+    "title": "日本 2026"
+  }
 }

@@ -324,3 +324,31 @@ test('swipeDir: clear, quick, mostly-horizontal swipes only', () => {
   assert.equal(swipeDir(-90, 70, 300), null, 'too diagonal');
   assert.equal(swipeDir(-120, 5, 1200), null, 'too slow');
 });
+
+test('loc: Chinese translation when there is one, else the text as typed', async () => {
+  const { loc } = await import('../lib.js');
+  const stop = { text: 'Lunch', note: '5 min walk', zh: { text: '午餐' } };
+  assert.equal(loc(stop, 'text', 'zh'), '午餐');
+  assert.equal(loc(stop, 'text', 'en'), 'Lunch');
+  assert.equal(loc(stop, 'text'), 'Lunch');
+  assert.equal(loc(stop, 'note', 'zh'), '5 min walk');
+  assert.equal(loc({ text: 'Lunch', zh: 'oops' }, 'text', 'zh'), 'Lunch');
+  assert.equal(loc(undefined, 'text', 'zh'), '');
+});
+test('setLoc: Chinese edits change the translation; English edits drop it', async () => {
+  const { setLoc } = await import('../lib.js');
+  const a = { text: 'Lunch', zh: { text: '午餐', note: '步行' } };
+  setLoc(a, 'text', '午餐 @ 拉面店', 'zh');
+  assert.deepEqual(a, { text: 'Lunch', zh: { text: '午餐 @ 拉面店', note: '步行' } });
+  setLoc(a, 'text', 'Lunch @ Ichiran', 'en');
+  assert.deepEqual(a, { text: 'Lunch @ Ichiran', zh: { note: '步行' } }, 'stale Chinese is dropped');
+  const b = { text: 'Dinner' };
+  setLoc(b, 'text', '晚餐', 'zh');
+  assert.deepEqual(b, { text: '晚餐' }, 'no translation yet: it is the text as typed');
+  const c = { summary: 'Markets', zh: { summary: '逛市场' } };
+  setLoc(c, 'summary', '', 'zh');
+  assert.deepEqual(c, { summary: 'Markets' }, 'clearing the Chinese falls back to the text as typed');
+  const d = { city: 'Naha', zh: { city: '那霸' } };
+  setLoc(d, 'city', 'Nago', 'en');
+  assert.deepEqual(d, { city: 'Nago' });
+});

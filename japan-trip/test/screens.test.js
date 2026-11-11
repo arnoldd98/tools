@@ -264,3 +264,46 @@ test('Chinese: today countdown, days list, trip summary', () => {
   assert.match(renderDays(trip, '2026-12-01', 'zh'), /<b>1日 周二 · Naha<\/b>/);
   assert.match(renderTrip(trip, { lang: 'zh' }), /目前总支出[\s\S]*按类别[\s\S]*🍜 餐饮[\s\S]*按天查看支出[\s\S]*12月1日 周二<\/b><span class="muted"> · Naha[\s\S]*已完成安排：1 \/ 2/);
 });
+
+// Trip text carries its own Chinese (`zh` beside the fields); untranslated text shows as typed.
+const bi = normalise({ title: 'Japan 2026', zh: { title: '日本 2026' }, days: [
+  { id: 'a', date: '2026-11-13', city: 'Okinawa', summary: 'Markets', notes: 'Bring cash',
+    zh: { city: '冲绳', summary: '逛市场', notes: '带现金' },
+    stay: { name: 'Mercure Naha', address: 'Naha, Okinawa', zh: { name: '那霸美居酒店', address: '冲绳县那霸市' } },
+    items: [
+      { id: 'x', time: '07:40', text: 'Flight to Naha', fixed: true, note: '15 min drive', zh: { text: '航班飞那霸', note: '车程 15 分钟' },
+        place: { name: 'Naha Airport', address: 'Naha, Okinawa', zh: { name: '那霸机场', address: '冲绳县那霸市' } } },
+      { id: 'y', time: '', text: 'Ramen <shop>' }] },
+  { id: 'b', date: '2026-11-20', city: 'Kyoto', zh: { city: '京都' }, items: [{ id: 'z', text: 'Kinkaku-ji', zh: { text: '金阁寺' } }] }] });
+
+test('Chinese shows the trip text in Chinese; English shows it as typed', () => {
+  const zh = renderDayScreen(bi, bi.days[0], '2026-11-13', { page: true, lang: 'zh', now: '07:00' });
+  assert.match(zh, /<span class="city">冲绳<\/span>/);
+  assert.match(zh, /<p class="day-summary">逛市场<\/p>/);
+  assert.match(zh, /class="fixed-strip">[^<]*<b>航班飞那霸 · 上午7:40<\/b>/);
+  assert.match(zh, /class="what"><span class="time">上午7:40<\/span> 航班飞那霸<\/p>/);
+  assert.match(zh, /<p class="place">那霸机场 · 冲绳县那霸市<\/p>/);
+  assert.match(zh, /<span class="text">航班飞那霸<\/span>[\s\S]*<span class="note">车程 15 分钟<\/span>/);
+  assert.match(zh, /<span class="text">Ramen &lt;shop&gt;<\/span>/, 'no translation: as typed');
+  assert.match(zh, /<p class="notes">带现金<\/p>/);
+  assert.match(zh, /query=Naha%20Airport%2C%20Naha%2C%20Okinawa/, 'Maps searches the name as typed');
+  assert.ok(!/Flight to Naha|Markets|Bring cash|15 min drive/.test(zh));
+
+  const en = renderDayScreen(bi, bi.days[0], '2026-11-13', { page: true });
+  assert.match(en, /<span class="text">Flight to Naha<\/span>[\s\S]*<span class="note">15 min drive<\/span>/);
+  assert.ok(!/航班|冲绳|逛市场/.test(en));
+
+  const allDone = normalise({ days: [{ ...bi.days[0], items: [] }] });
+  assert.match(renderDayScreen(allDone, allDone.days[0], '2026-11-13', { lang: 'zh' }), /<p class="place">那霸美居酒店 · 冲绳县那霸市<\/p>/);
+});
+test('Chinese: title, header city, days list, route and edit fields use the trip text in Chinese', () => {
+  assert.match(renderHeader({ view: 'home' }, bi, false, '2026-11-01', { lang: 'zh' }), /<h1>日本 2026<\/h1>/);
+  assert.match(renderHeader({ view: 'home' }, bi, false, '2026-11-13', { lang: 'zh' }), /<b>11月13日 周五 · 冲绳<\/b>/);
+  const days = renderDays(bi, '2026-11-13', 'zh');
+  assert.match(days, /· 冲绳<\/b><span class="sum">逛市场<\/span>/);
+  assert.match(days, /· 京都<\/b><span class="sum">金阁寺<\/span>/);
+  assert.match(renderToday(bi, '2026-11-01', { lang: 'zh' }), /<p class="route">冲绳 → 京都<\/p>/);
+  assert.match(renderToday(bi, '2026-11-01'), /<p class="route">Okinawa → Kyoto<\/p>/);
+  const edit = renderDayScreen(bi, bi.days[0], '2026-11-13', { editing: true, lang: 'zh' });
+  assert.match(edit, /class="city" value="冲绳"[\s\S]*class="summary" value="逛市场"[\s\S]*<input value="航班飞那霸" data-item-field="text"/);
+});

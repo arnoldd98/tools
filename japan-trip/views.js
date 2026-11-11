@@ -2,14 +2,16 @@
 import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtMoney, homeSymbol, toHome, CATEGORIES, CATEGORY_ICON,
-  dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed, linkKind,
-} from './lib.js?v=19';
-import { strings, normLang } from './i18n.js?v=19';
+  dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed, linkKind, loc,
+} from './lib.js?v=20';
+import { strings, normLang } from './i18n.js?v=20';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 // Every renderer takes `lang` ('en' | 'zh'); `T` is that language's strings (i18n.js).
+// Trip text (cities, summaries, stops, places, notes) goes through loc(): its `zh` translation
+// in Chinese when it has one, otherwise as typed.
 const parseDate = (date) => {
   const d = date ? new Date(date + 'T00:00:00') : null;
   return d && !Number.isNaN(d.getTime()) ? d : null;
@@ -45,7 +47,7 @@ export function renderStrip(days, { today, selectedId, compact, lang } = {}) {
     const cls = `card${d.date && d.date === today ? ' today' : ''}${d.id === selectedId ? ' selected' : ''}`;
     return `<a class="${cls}" href="${dayHref(d.id)}" data-strip="${esc(d.id)}">`
       + `<span class="wd">${dt ? T.wd[dt.getDay()] : '—'}</span><span class="dom">${dt ? dt.getDate() : '?'}</span>`
-      + `<span class="city">${esc(d.city)}</span>`
+      + `<span class="city">${esc(loc(d, 'city', lang))}</span>`
       + `<span class="prog">${d.items.length ? `${done}/${d.items.length}` : ''}</span></a>`;
   }).join('');
   return `<nav class="strip${compact ? ' compact' : ''}">${cards}</nav>`;
@@ -76,11 +78,11 @@ export function renderHeader(route, state, dirty, today, { cur = 'JPY', lang } =
   const num = dayNumber(state.days, today);
   if (num) {
     const day = state.days.find((d) => d.date === today);
-    const title = [longDate(today, T), day?.city].filter(Boolean).map(esc).join(' · ');
+    const title = [longDate(today, T), loc(day, 'city', lang)].filter(Boolean).map(esc).join(' · ');
     return `<div class="hdr"><div class="hdr-title"><b>${title}</b><span class="hanko" aria-label="${T.today}">今日</span></div>`
       + `<span class="muted">${T.dayOf(num.n, num.of)}</span></div>${right}`;
   }
-  return `<h1>${esc(state.title)}</h1>${right}`;
+  return `<h1>${esc(loc(state, 'title', lang))}</h1>${right}`;
 }
 
 export function renderTabs(route, lang) {
@@ -149,18 +151,18 @@ const linkBtns = (links) => (links?.length
   ? `<div class="links">${links.map((l) => `<a class="link-btn" href="${esc(l.url)}" target="_blank" rel="noopener">${linkKind(l.url).icon} ${esc(l.label)}</a>`).join('')}</div>`
   : '');
 
-const placeLine = (p) => [p?.name, p?.address].filter(Boolean).map(esc).join(' · ');
+const placeLine = (p, lang) => [loc(p, 'name', lang), loc(p, 'address', lang)].filter(Boolean).map(esc).join(' · ');
 
 function renderNextUp(day, T, lang) {
   const next = nextUp(day);
   if (!next) {
     return `<div class="next-up done-all"><p class="eyebrow">${T.nextUp}</p><p class="what">${T.allDone}</p>
-      ${day.stay ? `<p class="place">${placeLine(day.stay)}</p>${mapsBtn(day.stay, T.mapsToHotel)}` : ''}</div>`;
+      ${day.stay ? `<p class="place">${placeLine(day.stay, lang)}</p>${mapsBtn(day.stay, T.mapsToHotel)}` : ''}</div>`;
   }
   return `<div class="next-up${next.fixed ? ' fixed' : ''}"><p class="eyebrow">${T.nextUp}</p>
-    <p class="what">${next.time ? `<span class="time">${esc(fmtTime(next.time, lang))}</span> ` : ''}${esc(next.text)}</p>
+    <p class="what">${next.time ? `<span class="time">${esc(fmtTime(next.time, lang))}</span> ` : ''}${esc(loc(next, 'text', lang))}</p>
     ${next.fixed ? `<p class="ontime">${T.beOnTime}</p>` : ''}
-    ${next.place ? `<p class="place">${placeLine(next.place)}</p>` : ''}
+    ${next.place ? `<p class="place">${placeLine(next.place, lang)}</p>` : ''}
     ${linkBtns(next.links)}
     <div class="actions">${next.place ? mapsBtn(next.place, T.openInMaps) : ''}<button class="btn" data-action="toggle" data-item="${esc(next.id)}">${T.done}</button></div>
   </div>`;
@@ -188,19 +190,19 @@ function renderDayLinks(day, editing, linkFormFor, T) {
 function renderItem(i, nextId, editing, linkFormFor, T, lang) {
   const detail = [
     i.fixed && !editing ? `<span class="ontime">${T.beOnTime}</span>` : '',
-    i.place ? `${placeLine(i.place)} ${mapsBtn(i.place, T.map, 'maplink')}` : '',
-    i.note ? `<span class="note">${esc(i.note)}</span>` : '',
-    i.price ? `<span class="price">${esc(i.price)}</span>` : '',
+    i.place ? `${placeLine(i.place, lang)} ${mapsBtn(i.place, T.map, 'maplink')}` : '',
+    i.note ? `<span class="note">${esc(loc(i, 'note', lang))}</span>` : '',
+    i.price ? `<span class="price">${esc(loc(i, 'price', lang))}</span>` : '',
   ].filter(Boolean);
   return `
     <li class="${[i.fixed && 'fixed', i.done && 'done', i.id === nextId && 'next'].filter(Boolean).join(' ')}" data-item="${esc(i.id)}">
       ${editing
     ? `<input type="time" value="${esc(i.time)}" data-item-field="time" aria-label="${T.time}">
-      <input value="${esc(i.text)}" data-item-field="text" aria-label="${T.stop}">
+      <input value="${esc(loc(i, 'text', lang))}" data-item-field="text" aria-label="${T.stop}">
       <span class="row-btns"><button class="icon fx-toggle${i.fixed ? ' on' : ''}" data-action="toggle-fixed" title="${T.fixedTitle}" aria-pressed="${!!i.fixed}">⏱</button><button class="icon" data-action="del-item" title="${T.delStop}">✕</button></span>`
     : `<input type="checkbox" ${i.done ? 'checked' : ''} data-action="toggle" aria-label="${T.done}">
       <span class="time">${esc(fmtTime(i.time, lang))}</span>
-      <span class="text">${esc(i.text)}</span>`}
+      <span class="text">${esc(loc(i, 'text', lang))}</span>`}
       ${detail.length ? `<div class="detail">${detail.join(' ')}</div>` : ''}
       ${editing ? renderLinkEditor(i.links, i.id === linkFormFor, T) : linkBtns(i.links)}
     </li>`;
@@ -211,7 +213,7 @@ function renderFixedStrip(day, today, now, T, lang) {
   const nf = nextFixed(day);
   if (!nf) return '';
   const isToday = day.date && day.date === today;
-  const what = esc(nf.text) + (nf.time ? ` · ${esc(fmtTime(nf.time, lang))}` : '');
+  const what = esc(loc(nf, 'text', lang)) + (nf.time ? ` · ${esc(fmtTime(nf.time, lang))}` : '');
   const until = isToday && now && nf.time ? ` · ${fmtUntil(minutesUntil(nf.time, now), lang)}` : '';
   return `<div class="fixed-strip">⏱ ${isToday ? T.nextFixed : T.fixed}<b>${what}</b>${until}</div>`;
 }
@@ -225,18 +227,18 @@ export function renderDayScreen(state, day, today, { page = false, editing = fal
   const spentLabel = day.date && day.date === today ? T.spentToday : T.spent;
   const editBtn = `<button class="btn small" data-action="toggle-edit">${editing ? T.done : T.edit}</button>`;
   const notes = editing
-    ? `<h3>${T.notes}</h3><textarea placeholder="${esc(T.notesPh)}" data-field="notes">${esc(day.notes)}</textarea>`
-    : (day.notes ? `<h3>${T.notes}</h3><p class="notes">${esc(day.notes)}</p>` : '');
+    ? `<h3>${T.notes}</h3><textarea placeholder="${esc(T.notesPh)}" data-field="notes">${esc(loc(day, 'notes', lang))}</textarea>`
+    : (day.notes ? `<h3>${T.notes}</h3><p class="notes">${esc(loc(day, 'notes', lang))}</p>` : '');
   return `<section class="day-screen${editing ? ' is-editing' : ''}" data-day="${esc(day.id)}">
     ${page ? renderStrip(state.days, { today, selectedId: day.id, compact: true, lang }) : ''}
-    ${day.summary && !editing ? `<p class="day-summary">${esc(day.summary)}</p>` : ''}
+    ${day.summary && !editing ? `<p class="day-summary">${esc(loc(day, 'summary', lang))}</p>` : ''}
     ${renderFixedStrip(day, today, now, T, lang)}
     ${renderNextUp(day, T, lang)}
     <div class="plan-head"><h3>${page ? T.plan : T.todaysPlan}</h3>${editBtn}</div>
     ${editing ? `<div class="day-fields">
       <input class="date" type="date" value="${esc(day.date)}" data-field="date" aria-label="${T.date}">
-      <input class="city" value="${esc(day.city)}" placeholder="${T.city}" data-field="city" aria-label="${T.city}">
-      <input class="summary" value="${esc(day.summary)}" placeholder="${esc(T.summaryPh)}" data-field="summary" aria-label="${T.summary}">
+      <input class="city" value="${esc(loc(day, 'city', lang))}" placeholder="${T.city}" data-field="city" aria-label="${T.city}">
+      <input class="summary" value="${esc(loc(day, 'summary', lang))}" placeholder="${esc(T.summaryPh)}" data-field="summary" aria-label="${T.summary}">
     </div>` : ''}
     ${day.items.length
     ? `<ol class="timeline${editing ? ' editing' : ''}">${day.items.map((i) => renderItem(i, next?.id, editing, linkFormFor, T, lang)).join('')}</ol>`
@@ -288,7 +290,7 @@ export function renderToday(state, today, { editingId, now, cur = 'JPY', linkFor
     </section>`;
   }
   if (ph.phase === 'before') {
-    const ov = tripOverview(state.days);
+    const ov = tripOverview(state.days, lang);
     return `<section class="countdown">
       <p class="big">${T.daysToGo(ph.daysToGo)}</p>
       <p>${fmtRange(ov.start, ov.end, lang)} · ${T.nDays(ov.length)}</p>
@@ -310,8 +312,8 @@ export function renderDays(state, today, lang) {
   const T = strings(lang);
   const rows = sortDays(state.days).map((d) => {
     const done = d.items.filter((i) => i.done).length;
-    const sum = d.summary ? esc(d.summary) : d.items.slice(0, 3).map((i) => esc(i.text)).join(', ');
-    const title = [shortDate(d.date, T), d.city].filter(Boolean).map(esc).join(' · ');
+    const sum = d.summary ? esc(loc(d, 'summary', lang)) : d.items.slice(0, 3).map((i) => esc(loc(i, 'text', lang))).join(lang === 'zh' ? '、' : ', ');
+    const title = [shortDate(d.date, T), loc(d, 'city', lang)].filter(Boolean).map(esc).join(' · ');
     return `<li><a class="day-row" href="${dayHref(d.id)}"><b>${title}</b><span class="sum">${sum}</span>`
       + `<span class="prog">${done}/${d.items.length} ›</span></a></li>`;
   }).join('');
@@ -333,7 +335,7 @@ export function renderTrip(state, { cur = 'JPY', sort = 'old', confirmId = null,
   const groups = spendDays.map((d) => `
     <article class="day-spend" data-day="${esc(d.id)}">
       <header class="day-spend-head"><span class="day-name"><b>${esc(longDate(d.date, T) || T.undated)}</b>`
-    + `${d.city ? `<span class="muted"> · ${esc(d.city)}</span>` : ''}</span>`
+    + `${d.city ? `<span class="muted"> · ${esc(loc(d, 'city', lang))}</span>` : ''}</span>`
     + `<span class="day-sub">${fmtMoney(dayTotal(d), state.fx, cur)}</span></header>
       <div class="day-bar"><i style="width:${Math.round((100 * dayTotal(d)) / maxDay)}%"></i></div>
       ${renderSpendList(d.spends, state.fx, cur, { sort, confirmId, lang })}
