@@ -423,3 +423,28 @@ section.total .sum { margin: 6px 0 2px; }
 #fx-updated { margin: 6px 0 0; }
 .set-group .settings { margin: 0; }
 .set-group .settings > summary { font-weight: 600; }
+
+/* ---------- bigger touch targets ----------
+   Everything tappable is at least ~40px tall. On a day page the whole "‹ date" is the
+   back link, not just the chevron. */
+.btn { min-height: 40px; padding: 8px 14px; }
+a.btn { display: inline-flex; align-items: center; justify-content: center; }
+.btn.small { min-height: 36px; padding: 6px 12px; font-size: 14px; }
+.hdr-actions .btn { padding: 8px 10px; }
+.lang-toggle { min-width: 40px; min-height: 40px; font-size: 14px; }
+.cur-toggle span { padding: 7px 10px; }
+.icon { min-width: 40px; min-height: 40px; font-size: 18px; }
+.link-chip .icon { min-width: 36px; min-height: 36px; }
+.sort button { font-size: 13px; padding: 7px 12px; }
+.link-btn { padding: 8px 12px; }
+.timeline .maplink { display: inline-block; padding: 4px 6px; margin: -4px -2px; font-weight: 600; }
+.timeline li { grid-template-columns: 24px 4.6em 1fr auto; }
+.timeline input[type=checkbox] { width: 24px; height: 24px; }
+.top-row .back {
+  flex: 1; min-width: 0; min-height: 44px; display: flex; align-items: center; gap: 8px;
+  padding: 0 6px 0 0; font-size: inherit;
+}
+.top-row .back .chev { font-size: 28px; line-height: 1; padding: 0 2px 4px; }
+.top-row .back .when { font-size: 16px; }
+.top-row .nav { min-width: 40px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.timeline::before { left: 11px; }

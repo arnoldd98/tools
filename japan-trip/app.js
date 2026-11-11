@@ -6,9 +6,9 @@ import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx,
   extractUrl, linkKind, fmtMoney, loc, setLoc,
   toHome, fmtHome, navDirection, swipeDir, sortDays,
-} from './lib.js?v=20';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=20';
-import { strings, normLang } from './i18n.js?v=20';
+} from './lib.js?v=21';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=21';
+import { strings, normLang } from './i18n.js?v=21';
 
 const LOAD_TIMEOUT_MS = 8000;
 

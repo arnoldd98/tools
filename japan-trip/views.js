@@ -3,8 +3,8 @@ import {
   sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtMoney, homeSymbol, toHome, CATEGORIES, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed, linkKind, loc,
-} from './lib.js?v=20';
-import { strings, normLang } from './i18n.js?v=20';
+} from './lib.js?v=21';
+import { strings, normLang } from './i18n.js?v=21';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -65,8 +65,8 @@ export function renderHeader(route, state, dirty, today, { cur = 'JPY', lang } =
     const nav = (d, label) => (d
       ? `<a class="nav" href="${dayHref(d.id)}">${label}</a>`
       : `<span class="nav disabled">${label}</span>`);
-    return '<a class="back" href="#/days">‹</a>'
-      + `<span class="when">${esc(longDate(day?.date, T) || T.undated)}</span>`
+    // the date is part of the back link: tapping either goes back to Days
+    return `<a class="back" href="#/days"><span class="chev">‹</span><span class="when">${esc(longDate(day?.date, T) || T.undated)}</span></a>`
       + `<span class="navs">${nav(days[idx - 1], '←')}${nav(days[idx + 1], '→')}</span>`
       + right;
   }

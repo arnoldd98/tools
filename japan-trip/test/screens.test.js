@@ -17,7 +17,7 @@ test('header per route', () => {
   assert.match(renderHeader({ view: 'home' }, trip, true, '2026-11-07'), /<h1>Trip &lt;1&gt;<\/h1>[\s\S]*Sync •/);
   assert.match(renderHeader({ view: 'days' }, trip, false, ''), /<h1>Days<\/h1><span class="muted">1–6 Dec 2026<\/span>/);
   const day = renderHeader({ view: 'day', id: 'd1' }, trip, false, '');
-  assert.match(day, /<a class="back" href="#\/days">/);
+  assert.match(day, /<a class="back" href="#\/days"><span class="chev">‹<\/span><span class="when">Tue 1 Dec<\/span><\/a>/, "the date is part of the back link");
   assert.match(day, /<span class="nav disabled">/);
   assert.match(day, /<a class="nav" href="#\/day\/d3">/);
   assert.match(renderHeader({ view: 'trip' }, trip, false, ''), /<h1>Trip<\/h1>/);
