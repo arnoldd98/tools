@@ -1,10 +1,10 @@
 // Pure renderers: (state, …) → HTML string. No DOM access; unit-tested with `npm test`.
 import {
-  sortDays, nextUp, mapsUrl, dayTotal, tripTotal, byCategory, tripPhase,
+  sortDays, nextUp, mapsUrl, recentSpends, tripTotal, byCategory, tripPhase,
   fmtYen, fmtHome, fmtMoney, homeSymbol, toHome, CATEGORIES, CATEGORY_ICON,
   dayNumber, tripSpan, fmtRange, tripOverview, fmtTime, minutesUntil, fmtUntil, nextFixed, linkKind, loc,
-} from './lib.js?v=24';
-import { strings, normLang } from './i18n.js?v=24';
+} from './lib.js?v=25';
+import { strings, normLang } from './i18n.js?v=25';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -97,6 +97,7 @@ const mapsBtn = (place, label, cls = 'btn primary') =>
   `<a class="${cls}" target="_blank" rel="noopener" href="${esc(mapsUrl(place))}">${label}</a>`;
 
 const timeOf = (at) => (/T(\d{2}:\d{2})/.exec(at || '') || [])[1] || '';
+const dateOf = (at) => (/^\d{4}-\d{2}-\d{2}/.exec(at || '') || [])[0] || '';
 
 
 const SPEND_SORTS = {
@@ -111,27 +112,33 @@ const sortSwitch = (sort, T) => `<div class="sort" role="group" aria-label="${T.
 
 const catName = (c, T) => T.cat[c] || c;
 
-export function renderSpendList(spends, fx, cur = 'JPY', { sort = 'old', confirmId = null, lang } = {}) {
+// One spend. Tapping its name opens it for editing (amount, category, date, time…).
+// With `day` (lists that mix days) the row carries its day and shows the date.
+function spendRow(s, fx, cur, { confirmId, lang, day } = {}) {
   const T = strings(lang);
-  if (!spends.length) return `<p class="muted empty">${T.nothingSpent}</p>`;
-  const rows = [...spends].sort(SPEND_SORTS[sort] || SPEND_SORTS.old).map((s) => {
-    const name = esc(s.label || (CATEGORIES.includes(s.category) ? catName(s.category, T) : '') || T.spend);
-    const icon = `<span class="sp-ico" aria-hidden="true">${CATEGORY_ICON[s.category] || CATEGORY_ICON.misc}</span>`;
-    if (s.id === confirmId) {
-      return `
-    <li class="confirm" data-spend="${esc(s.id)}">${icon}
+  const name = esc(s.label || (CATEGORIES.includes(s.category) ? catName(s.category, T) : '') || T.spend);
+  const icon = `<span class="sp-ico" aria-hidden="true">${CATEGORY_ICON[s.category] || CATEGORY_ICON.misc}</span>`;
+  const attrs = `data-spend="${esc(s.id)}"${day ? ` data-day="${esc(day.id)}"` : ''}`;
+  if (s.id === confirmId) {
+    return `
+    <li class="confirm" ${attrs}>${icon}
       <span class="sp-main"><span class="label">${T.confirmDel(fmtMoney(s.yen, fx, cur), name)}</span></span>
       <span class="confirm-btns"><button class="btn danger" data-action="confirm-del-spend">${T.del}</button><button class="btn" data-action="cancel-del-spend">${T.keep}</button></span>
     </li>`;
-    }
-    return `
-    <li data-spend="${esc(s.id)}">${icon}
-      <span class="sp-main"><span class="label">${name}</span>`
-    + `<span class="sub">${[s.label ? esc(catName(s.category, T)) : '', fmtTime(timeOf(s.at), lang)].filter(Boolean).join(' · ')}</span></span>
+  }
+  const sub = [s.label ? esc(catName(s.category, T)) : '', day ? esc(longDate(dateOf(s.at) || day.date, T)) : '', fmtTime(timeOf(s.at), lang)]
+    .filter(Boolean).join(' · ');
+  return `
+    <li ${attrs}>${icon}
+      <button class="sp-main" data-action="edit-spend" title="${T.editSpend}"><span class="label">${name}</span><span class="sub">${sub}</span></button>
       <span class="amt">${fmtMoney(s.yen, fx, cur)}</span>
       <button class="icon" data-action="del-spend" title="${T.delSpend}">✕</button>
     </li>`;
-  }).join('');
+}
+
+export function renderSpendList(spends, fx, cur = 'JPY', { sort = 'old', confirmId = null, lang } = {}) {
+  if (!spends.length) return `<p class="muted empty">${strings(lang).nothingSpent}</p>`;
+  const rows = [...spends].sort(SPEND_SORTS[sort] || SPEND_SORTS.old).map((s) => spendRow(s, fx, cur, { confirmId, lang })).join('');
   return `<ul class="spends">${rows}</ul>`;
 }
 
@@ -285,17 +292,24 @@ export function renderDayScreen(state, day, today, { page = false, editing = fal
   </section>`;
 }
 
-export function renderSpendSheet(dayId, fx, cur = 'JPY', lang) {
+// Logging a new spend, or (with `spend`) changing one: then its date and time can be set too.
+export function renderSpendSheet(dayId, fx, cur = 'JPY', lang, spend = null, dayDate = '') {
   const T = strings(lang);
-  const chips = CATEGORIES.map((c) => `<label class="chip"><input type="radio" name="category" value="${c}"${c === 'food' ? ' checked' : ''}> ${CATEGORY_ICON[c]} ${T.catChip[c] || T.cat[c]}</label>`).join('');
-  return `<form class="spend-sheet"${dayId ? ` data-day="${esc(dayId)}"` : ''}>
+  const picked = spend && CATEGORIES.includes(spend.category) ? spend.category : 'food';
+  const chips = CATEGORIES.map((c) => `<label class="chip"><input type="radio" name="category" value="${c}"${c === picked ? ' checked' : ''}> ${CATEGORY_ICON[c]} ${T.catChip[c] || T.cat[c]}</label>`).join('');
+  const yen = spend?.yen > 0 ? fmtYen(spend.yen) : '';
+  return `<form class="spend-sheet"${dayId ? ` data-day="${esc(dayId)}"` : ''}${spend ? ` data-spend="${esc(spend.id)}"` : ''}>
     <button type="button" class="icon close" data-action="close-spend" title="${T.close}">✕</button>
-    <p class="eyebrow">${T.logSpend}</p>
-    <input name="yen" inputmode="numeric" autocomplete="off" placeholder="¥0" enterkeyhint="done" aria-label="${T.amountYen}">
-    ${cur === 'HOME' ? `<p class="live muted">≈ ${fmtHome(0, fx.home)}</p>` : ''}
-    <button class="btn primary save" type="submit">${T.save}</button>
+    <p class="eyebrow">${spend ? T.editSpend : T.logSpend}</p>
+    <input name="yen" inputmode="numeric" autocomplete="off" placeholder="¥0" enterkeyhint="done" aria-label="${T.amountYen}"${yen ? ` value="${yen}"` : ''}>
+    ${cur === 'HOME' ? `<p class="live muted">≈ ${fmtHome(toHome(spend?.yen || 0, fx), fx.home)}</p>` : ''}
+    <button class="btn primary save" type="submit">${yen ? T.saveYen(yen) : T.save}</button>
     <div class="chips">${chips}</div>
-    <input name="label" placeholder="${esc(T.whatFor)}" autocomplete="off">
+    ${spend ? `<div class="when-row">
+      <label><span>${T.date}</span><input name="date" type="date" value="${esc(dateOf(spend.at) || dayDate)}" required></label>
+      <label><span>${T.time}</span><input name="time" type="time" value="${esc(timeOf(spend.at))}"></label>
+    </div>` : ''}
+    <input name="label" placeholder="${esc(T.whatFor)}" autocomplete="off"${spend?.label ? ` value="${esc(spend.label)}"` : ''}>
   </form>`;
 }
 
@@ -350,7 +364,7 @@ export function renderDays(state, today, lang) {
     <ul class="day-list">${rows}</ul>`;
 }
 
-export function renderTrip(state, { cur = 'JPY', sort = 'old', confirmId = null, lang } = {}) {
+export function renderTrip(state, { cur = 'JPY', confirmId = null, lang } = {}) {
   const T = strings(lang);
   const total = tripTotal(state);
   const cats = byCategory(state);
@@ -359,16 +373,8 @@ export function renderTrip(state, { cur = 'JPY', sort = 'old', confirmId = null,
     return `<div class="cat-row${cats[c] ? '' : ' zero'}"><span>${CATEGORY_ICON[c]} ${catName(c, T)}</span>`
       + `<span class="amt">${fmtMoney(cats[c], state.fx, cur)}</span><div class="bar"><i style="width:${pct}%"></i></div></div>`;
   }).join('');
-  const spendDays = sortDays(state.days).filter((d) => d.spends.length);
-  const maxDay = Math.max(1, ...spendDays.map(dayTotal));
-  const groups = spendDays.map((d) => `
-    <article class="day-spend" data-day="${esc(d.id)}">
-      <header class="day-spend-head"><span class="day-name"><b>${esc(longDate(d.date, T) || T.undated)}</b>`
-    + `${d.city ? `<span class="muted"> · ${esc(loc(d, 'city', lang))}</span>` : ''}</span>`
-    + `<span class="day-sub">${fmtMoney(dayTotal(d), state.fx, cur)}</span></header>
-      <div class="day-bar"><i style="width:${Math.round((100 * dayTotal(d)) / maxDay)}%"></i></div>
-      ${renderSpendList(d.spends, state.fx, cur, { sort, confirmId, lang })}
-    </article>`).join('');
+  const RECENT = 5;
+  const recent = recentSpends(state, RECENT).map(({ spend, day }) => spendRow(spend, state.fx, cur, { confirmId, lang, day })).join('');
   const items = state.days.flatMap((d) => d.items);
   const done = items.filter((i) => i.done).length;
   const pctDone = items.length ? Math.round((100 * done) / items.length) : 0;
@@ -376,14 +382,14 @@ export function renderTrip(state, { cur = 'JPY', sort = 'old', confirmId = null,
       <p class="sum">${fmtMoney(total, state.fx, cur)}</p>
       <p class="muted">1 ${esc(state.fx.home)} = ${esc(state.fx.jpyPerHome)} JPY</p></section>
     <section class="cats"><p class="eyebrow">${T.byCategory}</p>${catRows}</section>
-    <section class="by-day"><div class="by-day-head"><h3>${T.spendsByDay}</h3>${state.days.reduce((n, d) => n + d.spends.length, 0) >= 2 ? sortSwitch(sort, T) : ''}</div>
-      ${groups || `<p class="muted empty">${T.noSpends}</p>`}</section>
+    <section class="recent"><h3>${T.recent(RECENT)}</h3>
+      ${recent ? `<ul class="spends">${recent}</ul>` : `<p class="muted empty">${T.noSpends}</p>`}</section>
     <p class="muted">${T.plansDone(done, items.length)}</p>
     <div class="progress"><div style="width:${pctDone}%"></div></div>`;
 }
 
 export function renderView(route, state, today, { editingId, now, cur = 'JPY', linkFormFor, sort, confirmId, lang } = {}) {
-  if (route.view === 'trip') return renderTrip(state, { cur, sort, confirmId, lang });
+  if (route.view === 'trip') return renderTrip(state, { cur, confirmId, lang });
   if (route.view === 'days') return renderDays(state, today, lang);
   if (route.view === 'day') {
     const day = state.days.find((d) => d.id === route.id);

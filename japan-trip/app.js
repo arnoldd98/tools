@@ -4,11 +4,11 @@
 
 import {
   normalise, parseRoute, parseYen, validRate, insertItem, ensureDay, parseFxRate, fxUrls, rateIsStale, newerFx,
-  extractUrl, linkKind, fmtMoney, loc, setLoc,
+  extractUrl, linkKind, fmtMoney, loc, setLoc, updateSpend,
   toHome, fmtHome, navDirection, swipeDir, sortDays,
-} from './lib.js?v=24';
-import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=24';
-import { strings, normLang } from './i18n.js?v=24';
+} from './lib.js?v=25';
+import { renderHeader, renderTabs, renderView, renderSpendSheet } from './views.js?v=25';
+import { strings, normLang } from './i18n.js?v=25';
 
 const LOAD_TIMEOUT_MS = 8000;
 
@@ -301,11 +301,13 @@ async function refreshRateIfStale() {
 // other way pops that entry again, so no stray entry is ever left behind.
 let sheetOpen = false;
 
-function openSheet(dayId) {
-  $('#sheet-body').innerHTML = renderSpendSheet(dayId, state.fx, cur, lang);
+// With `spend`, the sheet changes that spend (amount, category, date, time, what for).
+function openSheet(dayId, spend = null) {
+  $('#sheet-body').innerHTML = renderSpendSheet(dayId, state.fx, cur, lang, spend, findDay(dayId)?.date || '');
   $('#sheet').hidden = false;
   sheetOpen = true;
-  $('#sheet [name=yen]').focus(); // must stay inside the tap handler for the iPhone keyboard
+  // a new spend starts with the keyboard up; must stay inside the tap handler for the iPhone keyboard
+  if (!spend) $('#sheet [name=yen]').focus();
   history.pushState({ sheet: true }, '');
   window.visualViewport?.addEventListener('resize', liftSheet);
   liftSheet();
@@ -422,6 +424,9 @@ document.addEventListener('click', (e) => {
     render();
   } else if (action === 'open-spend') {
     openSheet(el.dataset.day || null);
+  } else if (action === 'edit-spend') {
+    const spend = day?.spends.find((s) => s.id === e.target.closest('[data-spend]')?.dataset.spend);
+    if (spend) openSheet(day.id, spend);
   } else if (action === 'close-spend') {
     closeSheet();
   } else if (action === 'undo') {
@@ -534,6 +539,17 @@ document.addEventListener('submit', (e) => {
     if (yen === null) {
       toast(T().st.yenInvalid);
       form.querySelector('[name=yen]').focus();
+      return;
+    }
+    if (form.dataset.spend) { // changing a logged spend; a new date moves it to that day
+      const snap = snapshot();
+      const moved = updateSpend(state, form.dataset.day, form.dataset.spend, {
+        yen, label: fd.get('label') || '', category: fd.get('category'), date: fd.get('date'), time: fd.get('time'),
+      }, uid);
+      closeSheet();
+      if (!moved) return;
+      commit();
+      toast(T().st.spendSaved(`¥${yen.toLocaleString('en-US')}`), restoreFrom(snap));
       return;
     }
     const day = form.dataset.day ? findDay(form.dataset.day) : ensureDay(state, todayISO(), uid);

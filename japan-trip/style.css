@@ -178,7 +178,7 @@ textarea { width: 100%; margin-top: 8px; min-height: 3em; resize: vertical; }
 /* ---------- day screen ---------- */
 .timeline li.next .text { font-weight: 700; color: var(--accent); }
 details > summary { cursor: pointer; }
-.by-day summary, .tools > summary { font-weight: 600; }
+.tools > summary { font-weight: 600; }
 .plan-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0 4px; }
 .plan-head h3 { margin: 0; }
 .btn.small { font-size: 13px; padding: 4px 10px; }
@@ -368,25 +368,12 @@ ul.spends li.confirm { animation: row-in .2s ease; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
-/* ---------- Trip: total, spends by day ---------- */
+/* ---------- Trip: total, last few spends ---------- */
 .total-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .total-head .eyebrow { margin: 0; }
 section.total .sum { margin: 6px 0 2px; }
-.by-day { margin: 18px 0 12px; }
-.by-day-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
-.by-day-head h3 { margin: 0; }
-.by-day-head .sort { margin: 0; }
-.day-spend {
-  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-  padding: 10px 12px 4px; margin: 8px 0;
-}
-.day-spend-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.day-name { min-width: 0; }
-.day-name b { font-family: var(--mincho); }
-.day-sub { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.day-bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin: 6px 0 2px; }
-.day-bar i { display: block; height: 100%; background: var(--accent); opacity: .7; border-radius: 2px; }
-.day-spend ul.spends { margin-top: 2px; }
+.recent { margin: 18px 0 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 12px 4px; }
+.recent h3 { margin: 0 0 2px; }
 
 /* ---------- Settings ---------- */
 .tools { padding: 0; overflow: hidden; }
@@ -483,3 +470,16 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; }
 .time-box.has-time .clear-time { display: block; }
 .time-box.has-time input[type=time] { padding-right: 32px; }
 .time-box.has-time input[type=time]::-webkit-calendar-picker-indicator { display: none; }
+
+/* ---------- spends: tap a row to edit it; the sheet's date and time ---------- */
+button.sp-main {
+  font: inherit; color: inherit; text-align: left; background: none; border: 0; padding: 4px 0; margin: -4px 0;
+  min-height: 40px; justify-content: center; cursor: pointer;
+}
+.spend-sheet .when-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; }
+.spend-sheet .when-row label { display: block; min-width: 0; }
+.spend-sheet .when-row span { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.spend-sheet .when-row input {
+  font: inherit; font-size: 16px; color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; min-height: 44px; box-sizing: border-box;
+}

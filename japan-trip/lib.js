@@ -1,5 +1,5 @@
 // Pure helpers for the Japan trip tracker. No DOM access; unit-tested with `npm test`.
-import { strings } from './i18n.js?v=24';
+import { strings } from './i18n.js?v=25';
 
 export const DEFAULT_FX = { home: 'SGD', jpyPerHome: 115, updatedAt: null };
 export const CATEGORIES = ['food', 'shopping', 'transport', 'tickets', 'misc'];
@@ -302,6 +302,40 @@ export function ensureDay(state, date, uid) {
   const day = { id: uid(), date, city: '', items: [], spends: [], notes: '' };
   state.days.push(day);
   return day;
+}
+
+// The newest `n` spends of the whole trip, newest first, each with the day it sits on.
+export function recentSpends(state, n = 5) {
+  return state.days.flatMap((day) => (day.spends || []).map((spend) => ({ spend, day })))
+    .sort((a, b) => (b.spend.at || '').localeCompare(a.spend.at || ''))
+    .slice(0, n);
+}
+
+// '2026-12-01T12:40:00+09:00' with a new date and/or time; seconds and the UTC offset are kept.
+export function withDateTime(at, date, time) {
+  const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(:\d{2})?(.*)$/.exec(str(at));
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(str(date)) ? date : m?.[1];
+  const t = /^\d{2}:\d{2}$/.test(str(time)) ? time : (m?.[2] || '00:00');
+  return d ? `${d}T${t}${m?.[3] || ':00'}${m?.[4] || ''}` : str(at);
+}
+
+// Change a logged spend. A new date moves it to that date's day (made if the trip has none).
+// Returns the day it now sits on, or null when the spend isn't there.
+export function updateSpend(state, dayId, spendId, { yen, label, category, date, time }, uid) {
+  const from = state.days.find((d) => d.id === dayId);
+  const spend = from?.spends.find((s) => s.id === spendId);
+  if (!spend) return null;
+  if (yen > 0) spend.yen = Math.trunc(yen);
+  if (label !== undefined) spend.label = str(label).trim();
+  if (CATEGORIES.includes(category)) spend.category = category;
+  const oldDate = (/^\d{4}-\d{2}-\d{2}/.exec(spend.at) || [])[0] || from.date;
+  const newDate = /^\d{4}-\d{2}-\d{2}$/.test(str(date)) ? date : oldDate;
+  spend.at = withDateTime(spend.at || `${newDate}T00:00:00`, newDate, time);
+  if (newDate === from.date || !newDate) return from;
+  const to = ensureDay(state, newDate, uid);
+  from.spends = from.spends.filter((s) => s !== spend);
+  to.spends.push(spend);
+  return to;
 }
 
 // Exchange rate: Fawaz Ahmed's free currency API (github.com/fawazahmed0/exchange-api),

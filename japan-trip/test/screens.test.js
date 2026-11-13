@@ -127,7 +127,7 @@ test('trip summary', () => {
   const cats = [...html.matchAll(/class="cat-row( zero)?"/g)].map((m) => !m[1]);
   assert.deepEqual(cats, [true, false, false, false, false]);
   assert.match(html, /style="width:100%"/);
-  assert.match(html, /Spends by day[\s\S]*data-day="d1"[\s\S]*lunch/);
+  assert.match(html, /<h3>Last 5 expenses<\/h3>[\s\S]*data-spend="s1" data-day="d1"[\s\S]*lunch/);
   assert.match(html, /Plans done: 1 of 2/);
 });
 test('renderView dispatch and fallbacks', () => {
@@ -192,19 +192,34 @@ test('¥ | S$ switch sits where money is shown, not in the header', () => {
   assert.match(renderTrip(trip, { cur: 'HOME' }), /aria-label="Show amounts in ¥"><span>¥<\/span><span class="on">S\$<\/span>/);
   assert.ok(!renderDays(trip, '2026-12-01').includes('cur-toggle'), 'no money on Days, no switch');
 });
-test('spends by day: always open, a card per day with subtotal and a bar vs the biggest day', () => {
+test('Trip shows the last 5 expenses, newest first, each with its date; no spends by day', () => {
+  const sp = (id, yen, at) => ({ id, yen, label: id, category: 'food', at });
   const st = normalise({ fx: { jpyPerHome: 100 }, days: [
-    { id: 'a', date: '2026-11-12', city: 'Osaka', spends: [{ id: 's1', yen: 1000, label: 'x', category: 'food', at: '2026-11-12T10:00:00+09:00' }] },
-    { id: 'b', date: '2026-11-13', city: 'Naha', spends: [{ id: 's2', yen: 4000, label: 'y', category: 'food', at: '2026-11-13T10:00:00+09:00' },
-      { id: 's3', yen: 0, label: 'z', category: 'misc', at: '2026-11-13T11:00:00+09:00' }] },
+    { id: 'a', date: '2026-11-12', city: 'Osaka', spends: [sp('s1', 100, '2026-11-12T10:00:00+09:00'), sp('s2', 200, '2026-11-12T21:30:00+09:00')] },
+    { id: 'b', date: '2026-11-13', city: 'Naha', spends: [sp('s3', 300, '2026-11-13T08:00:00+09:00'), sp('s4', 400, '2026-11-13T09:00:00+09:00'),
+      sp('s5', 500, '2026-11-13T10:00:00+09:00'), sp('s6', 600, '2026-11-13T11:00:00+09:00')] },
     { id: 'c', date: '2026-11-14', city: 'Kyoto' }] });
   const html = renderTrip(st);
-  assert.ok(!html.includes('<details class="by-day"'), 'not collapsible');
-  assert.match(html, /<section class="by-day"><div class="by-day-head"><h3>Spends by day<\/h3>/);
-  assert.match(html, /<article class="day-spend" data-day="a">[\s\S]*?<span class="day-sub">¥1,000<\/span>[\s\S]*?<div class="day-bar"><i style="width:25%"><\/i><\/div>/);
-  assert.match(html, /<article class="day-spend" data-day="b">[\s\S]*?<span class="day-sub">¥4,000<\/span>[\s\S]*?style="width:100%"/);
-  assert.ok(!html.includes('data-day="c"'), 'days without spends are left out');
-  assert.ok(html.indexOf('data-day="a"') < html.indexOf('data-day="b"'));
+  assert.ok(!/by-day|day-spend|Spends by day|class="sort"/.test(html));
+  assert.deepEqual([...html.matchAll(/<li data-spend="(\w+)" data-day="(\w+)">/g)].map((m) => m[1] + m[2]), ['s6b', 's5b', 's4b', 's3b', 's2a'], 'newest five');
+  assert.match(html, /data-spend="s2" data-day="a">[\s\S]*?<button class="sp-main" data-action="edit-spend" title="Edit spend"><span class="label">s2<\/span><span class="sub">food · Thu 12 Nov · 9:30 pm<\/span><\/button>/);
+  assert.match(html, /<p class="sum">¥2,100<\/p>/, 'the total still counts every spend');
+  assert.match(renderTrip(st, { confirmId: 's5' }), /<li class="confirm" data-spend="s5" data-day="b">/);
+  assert.match(renderTrip(normalise({ days: [{ id: 'x', date: '2026-11-12' }] })), /<h3>Last 5 expenses<\/h3>\s*<p class="muted empty">No spends yet\.<\/p>/);
+});
+test('a spend opens for editing with its amount, category, date, time and label filled in', () => {
+  const spend = { id: 's1', yen: 1200, label: 'lunch <set>', category: 'transport', at: '2026-12-01T12:40:00+09:00' };
+  const html = renderSpendSheet('d1', trip.fx, 'JPY', 'en', spend);
+  assert.match(html, /<form class="spend-sheet" data-day="d1" data-spend="s1">/);
+  assert.match(html, /Edit spend[\s\S]*name="yen"[^>]*value="¥1,200"[\s\S]*type="submit">Save ¥1,200</);
+  assert.match(html, /value="transport" checked/);
+  assert.ok(!/value="food" checked/.test(html));
+  assert.match(html, /<input name="date" type="date" value="2026-12-01" required>[\s\S]*<input name="time" type="time" value="12:40">/);
+  assert.match(html, /name="label"[^>]*value="lunch &lt;set&gt;"/);
+  assert.match(renderSpendSheet('d1', trip.fx, 'HOME', 'en', spend), /≈ S\$10\.43/);
+  assert.match(renderSpendSheet('d1', trip.fx, 'JPY', 'en', { id: 'o', yen: 5, at: '' }, '2026-12-01'), /name="date" type="date" value="2026-12-01"/, 'no timestamp: the day it sits on');
+  assert.ok(!/name="date"|name="time"/.test(renderSpendSheet('d1', trip.fx)), 'a new spend is logged for now');
+  assert.match(renderDayScreen(trip, trip.days[0], '2026-12-01', {}), /<li data-spend="s1">[\s\S]*?data-action="edit-spend"[\s\S]*?<span class="sub">food · 12:40 pm<\/span>/);
 });
 
 test('links are per day: stops show and edit none; old stop links appear under Bookings & files', () => {
@@ -231,7 +246,6 @@ test('Spent card has a sort switch once there are 2+ spends', () => {
   const html = renderDayScreen(trip, two, '2026-12-01', { sort: 'amount' });
   assert.match(html, /<div class="sort" role="group" aria-label="Sort spends"><button data-action="sort-spends" data-sort="old">Oldest<\/button><button data-action="sort-spends" data-sort="new">Newest<\/button><button class="on" data-action="sort-spends" data-sort="amount">Amount<\/button><\/div>/);
   assert.ok(!renderDayScreen(trip, trip.days[0], '2026-12-01', {}).includes('class="sort"'), 'hidden with one spend');
-  assert.match(renderTrip({ ...trip, days: [two] }, { sort: 'amount' }), /class="sort"[\s\S]*?class="on" data-action="sort-spends" data-sort="amount"/);
 });
 
 test('day Bookings & files: shown when there are links; edit mode adds/removes', () => {
@@ -267,7 +281,7 @@ test('Chinese: header, tabs, day screen, spend sheet', () => {
 test('Chinese: today countdown, days list, trip summary', () => {
   assert.match(renderToday(trip, '2026-11-07', { lang: 'zh' }), /还有 24 天[\s\S]*2026年12月1日–6日 · 6 天[\s\S]*查看日程/);
   assert.match(renderDays(trip, '2026-12-01', 'zh'), /<b>1日 周二 · Naha<\/b>/);
-  assert.match(renderTrip(trip, { lang: 'zh' }), /目前总支出[\s\S]*按类别[\s\S]*🍜 餐饮[\s\S]*按天查看支出[\s\S]*12月1日 周二<\/b><span class="muted"> · Naha[\s\S]*已完成安排：1 \/ 2/);
+  assert.match(renderTrip(trip, { lang: 'zh' }), /目前总支出[\s\S]*按类别[\s\S]*🍜 餐饮[\s\S]*最近 5 笔支出[\s\S]*餐饮 · 12月1日 周二 · 下午12:40[\s\S]*已完成安排：1 \/ 2/);
 });
 
 // Trip text carries its own Chinese (`zh` beside the fields); untranslated text shows as typed.

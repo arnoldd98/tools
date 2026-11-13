@@ -25,7 +25,7 @@ phone as an app (PWA) and works offline.
     (older `stay`/`other` load as `misc`).
 - **Screens** (bottom tabs): `#/` Today (next up, today's plan, spent today,
   ＋ ¥ Spend; a countdown before the trip), `#/days` (all days) → `#/day/<id>`,
-  `#/trip` (spending totals, categories, spends by day, settings).
+  `#/trip` (spending totals, categories, the last 5 expenses, settings).
 - **Language**: the **中 / EN** button in the header switches the app's own words, dates and
   times between English and Simplified Chinese (remembered per phone; a first visit follows the
   phone's language). Strings live in `japan-trip/i18n.js`. Trip text has its Chinese in the data:
@@ -36,6 +36,8 @@ phone as an app (PWA) and works offline.
   name as typed.
 - **Money**: spends are logged in yen; the **¥ | S$** switch in the header shows every amount in
   one currency (remembered per phone).
+- **Changing a spend**: tap a logged spend (on a day or under *Last 5 expenses*) to change its
+  amount, category, what-for, date and time. A new date moves it to that day.
 - **Motion**: screens slide/morph with the View Transitions API (Chrome, iOS 18+; off with
   Reduce Motion). Swipe left/right on a day page for the next/previous day. Logging or
   deleting a spend and deleting a stop show a toast with **Undo**.

@@ -353,3 +353,34 @@ test('setLoc: Chinese edits change the translation; English edits drop it', asyn
   setLoc(d, 'city', 'Nago', 'en');
   assert.deepEqual(d, { city: 'Nago' });
 });
+
+test('recentSpends: newest first across days, capped', async () => {
+  const { recentSpends } = await import('../lib.js');
+  const st = normalise({ days: [
+    { id: 'a', spends: [{ id: '1', yen: 1, at: '2026-11-12T10:00:00+09:00' }, { id: '3', yen: 1, at: '2026-11-13T10:00:00+09:00' }] },
+    { id: 'b', spends: [{ id: '2', yen: 1, at: '2026-11-12T12:00:00+09:00' }] }, { id: 'c' }] });
+  assert.deepEqual(recentSpends(st, 2).map((r) => r.spend.id + r.day.id), ['3a', '2b']);
+  assert.equal(recentSpends(st).length, 3);
+});
+test('withDateTime keeps seconds and offset', async () => {
+  const { withDateTime } = await import('../lib.js');
+  assert.equal(withDateTime('2026-12-01T12:40:07+09:00', '2026-12-02', '08:05'), '2026-12-02T08:05:07+09:00');
+  assert.equal(withDateTime('2026-12-01T12:40:07+09:00', '', ''), '2026-12-01T12:40:07+09:00', 'blank fields change nothing');
+  assert.equal(withDateTime('', '2026-12-02', '08:05'), '2026-12-02T08:05:00');
+  assert.equal(withDateTime('', '', '08:05'), '');
+});
+test('updateSpend: edits in place; a new date moves the spend to that day', async () => {
+  const { updateSpend } = await import('../lib.js');
+  const st = normalise({ days: [
+    { id: 'a', date: '2026-11-12', spends: [{ id: 's', yen: 100, label: 'x', category: 'food', at: '2026-11-12T10:00:00+09:00' }] },
+    { id: 'b', date: '2026-11-13' }] });
+  const same = updateSpend(st, 'a', 's', { yen: 250, label: ' taxi ', category: 'transport', date: '2026-11-12', time: '23:15' }, () => 'new');
+  assert.equal(same.id, 'a');
+  assert.deepEqual(st.days[0].spends[0], { id: 's', yen: 250, label: 'taxi', category: 'transport', at: '2026-11-12T23:15:00+09:00' });
+  assert.equal(updateSpend(st, 'a', 's', { yen: 250, date: '2026-11-13', time: '09:00' }, () => 'new').id, 'b');
+  assert.equal(st.days[0].spends.length, 0);
+  assert.equal(st.days[1].spends[0].at, '2026-11-13T09:00:00+09:00');
+  assert.equal(updateSpend(st, 'b', 's', { yen: 250, date: '2026-11-20', time: '' }, () => 'new').id, 'new', 'a date outside the trip gets its own day');
+  assert.equal(st.days.find((d) => d.id === 'new').spends[0].at, '2026-11-20T09:00:00+09:00', 'blank time keeps the old one');
+  assert.equal(updateSpend(st, 'a', 'nope', { yen: 1 }, () => 'z'), null);
+});
